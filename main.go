@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"fold/configurator"
 	"fold/csv"
-	"fold/path"
+	"log"
+	"net/http"
 	"os"
 )
 
@@ -23,8 +25,11 @@ func main() {
 		fmt.Println(index, progLanguage)
 	}
 
-	err := path.WalkPath(dataPath)
-	if err != nil {
-		return
-	}
+	//err := path.WalkPath(dataPath)
+	//if err != nil {
+	//	return
+	//}
+
+	fmt.Println("Starting server")
+	log.Fatal(http.ListenAndServe("localhost:8000", configurator.Configure(dataPath)))
 }

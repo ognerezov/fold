@@ -12,16 +12,32 @@ var (
 	pathLeadingSymbols = regexp.MustCompile(`^./|^/`)
 )
 
-func WalkPath(root string) error {
-	var rootPrefix = pathLeadingSymbols.ReplaceAllString(root, "")
-	fmt.Println("Scanning root path " + root)
-	var err = filepath.Walk(root, func(path string, info os.FileInfo, _ error) error {
+type DirMapper func(path string) string
 
-		fmt.Println("Scanning " + strings.Replace(path, rootPrefix+"/", "", -1))
+func CreateRootCleaner(root string) DirMapper {
+	var rootPrefix = pathLeadingSymbols.ReplaceAllString(root, "")
+
+	return func(path string) string {
+		return strings.Replace(path, rootPrefix+"/", "", -1)
+	}
+}
+
+func WalkPath(root string) error {
+	clean := CreateRootCleaner(root)
+
+	return ProcessPath(root, func(path string, info os.FileInfo, _ error) error {
+
+		fmt.Println("Scanning " + clean(filepath.Dir(path)))
 		fmt.Println(info.IsDir())
+		fmt.Println("Dir: " + filepath.Dir(path))
+		fmt.Println("Ext: " + filepath.Ext(path))
 		fmt.Println(info.Name())
 		return nil
 	})
+}
 
+func ProcessPath(root string, f filepath.WalkFunc) error {
+	fmt.Println("Scanning root path " + root)
+	var err = filepath.Walk(root, f)
 	return err
 }
