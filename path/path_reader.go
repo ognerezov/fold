@@ -18,6 +18,9 @@ func CreateRootCleaner(root string) DirMapper {
 	var rootPrefix = pathLeadingSymbols.ReplaceAllString(root, "")
 
 	return func(path string) string {
+		if path == rootPrefix {
+			return ""
+		}
 		return strings.Replace(path, rootPrefix+"/", "", -1)
 	}
 }
@@ -32,6 +35,9 @@ func WalkPath(root string) error {
 		fmt.Println("Dir: " + filepath.Dir(path))
 		fmt.Println("Ext: " + filepath.Ext(path))
 		fmt.Println(info.Name())
+		fmt.Printf("%s/%s", root, clean(path))
+		fmt.Println("")
+		fmt.Println("---------")
 		return nil
 	})
 }
