@@ -2,6 +2,8 @@ package configurator
 
 import (
 	"fmt"
+	"fold/csv"
+	"fold/mem"
 	"fold/path"
 	goji "goji.io"
 	"io/fs"
@@ -19,7 +21,11 @@ func Configure(dataPath string) *goji.Mux {
 		var filename = fmt.Sprintf("%s/%s", dataPath, clean(path))
 		switch filepath.Ext(path) {
 		case ".csv":
-			SetCSVHandlers(route, filename, mux)
+			records := csv.ReadCsvFile(filename)
+			table := *mem.TableFromRecords(records)
+			store := *mem.TheStore
+			store.SetTable(route, table)
+			SetCSVHandlers(route, mux)
 		}
 
 		return nil

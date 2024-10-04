@@ -25,6 +25,11 @@ func main() {
 		fmt.Println(index, progLanguage)
 	}
 
+	fmt.Println("---------")
+
+	//var table = *mem.TableFromRecords(progLanguages)
+	//table.Print()
+	//fmt.Println(table.GetRow("0"))
 	//err := path.WalkPath(dataPath)
 	//if err != nil {
 	//	return
