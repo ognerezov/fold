@@ -1,5 +1,11 @@
 package mem
 
+import (
+	"fmt"
+	"fold/console"
+	"fold/util"
+)
+
 type Store struct {
 	kv     map[string]any
 	tables map[string]Table
@@ -35,6 +41,36 @@ func (s Store) Get(table string, id string) map[string]any {
 
 func (s Store) All(table string) []map[string]any {
 	return s.tables[table].All()
+}
+
+func (s Store) ReIndex() {
+	for name, table := range s.tables {
+		for _, col := range table.cols {
+			found, tableNames, colNames, err := util.NamingLookups(col.name)
+			if !found || err != nil {
+				continue
+			}
+
+			for nameIndex, tableName := range tableNames {
+				foreignTable, ok := s.tables[util.TableToPath(tableName)]
+				if !ok {
+					continue
+				}
+				foreignColName := colNames[nameIndex]
+				for _, foreignCol := range foreignTable.cols {
+					if foreignCol.name != foreignColName {
+						continue
+					}
+					col.foreignTable = tableName
+					col.foreignColumn = foreignColName
+					console.CyanPrintln(fmt.Sprintf(
+						"Created foreign idex %s -> %s on table: %s, column: %s ",
+						tableName, foreignColName,
+						name, col.name))
+				}
+			}
+		}
+	}
 }
 
 var (

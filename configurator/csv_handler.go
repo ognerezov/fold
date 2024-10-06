@@ -3,6 +3,7 @@ package configurator
 import (
 	"encoding/json"
 	"fmt"
+	"fold/console"
 	"fold/mem"
 	goji "goji.io"
 	"goji.io/pat"
@@ -10,9 +11,9 @@ import (
 )
 
 func SetCSVHandlers(route string, mux *goji.Mux) {
-	fmt.Println("Registering GET " + route)
+	console.BluePrintln("Registering GET " + route)
 	mux.HandleFunc(pat.Get(route), func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Incoming Request GET: " + route)
+		console.MagentaPrintln("Incoming Request GET: " + route)
 		store := *mem.TheStore
 		data := store.All(route)
 		h, err := json.Marshal(data)
@@ -31,7 +32,7 @@ func SetCSVHandlers(route string, mux *goji.Mux) {
 	}
 	mux.HandleFunc(pat.Get(fmt.Sprintf("%s%s", route, paramLiteral)), func(w http.ResponseWriter, r *http.Request) {
 		id := pat.Param(r, "id")
-		fmt.Println(fmt.Sprintf("Incoming Request GET: %s/:%s", route, id))
+		console.MagentaPrintln(fmt.Sprintf("Incoming Request GET: %s/:%s", route, id))
 		store := *mem.TheStore
 		data := store.Get(route, id)
 		h, err := json.Marshal(data)

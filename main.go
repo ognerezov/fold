@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"fold/configurator"
+	"fold/console"
 	"fold/csv"
 	"log"
 	"net/http"
@@ -19,14 +20,11 @@ func main() {
 
 	var dataPath = argsWithoutProg[0]
 
-	var progLanguages = csv.ReadCsvFile(dataPath + "/programming_languages.csv")
+	var progLanguages = csv.ReadCsvFile(dataPath + "/languages.csv")
 
 	for index, progLanguage := range progLanguages {
 		fmt.Println(index, progLanguage)
 	}
-
-	fmt.Println("---------")
-
 	//var table = *mem.TableFromRecords(progLanguages)
 	//table.Print()
 	//fmt.Println(table.GetRow("0"))
@@ -34,7 +32,14 @@ func main() {
 	//if err != nil {
 	//	return
 	//}
-
-	fmt.Println("Starting server")
-	log.Fatal(http.ListenAndServe("localhost:8000", configurator.Configure(dataPath)))
+	console.GreenPrintln("___________________________")
+	console.GreenPrintln("Starting server")
+	console.GreenPrintln("___________________________")
+	mux, err := configurator.Configure(dataPath)
+	if err != nil {
+		console.RedPrintln("Can't start server")
+		console.RedPrintln(err.Error())
+		return
+	}
+	log.Fatal(http.ListenAndServe("localhost:8000", mux))
 }
