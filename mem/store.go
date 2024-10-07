@@ -35,11 +35,11 @@ func (s Store) DeleteTable(key string) {
 	delete(s.tables, key)
 }
 
-func (s Store) Get(table string, id string) map[string]any {
+func (s Store) Get(table string, id string) map[string]string {
 	return s.tables[table].Get(id)
 }
 
-func (s Store) All(table string) []map[string]any {
+func (s Store) All(table string) []map[string]string {
 	return s.tables[table].All()
 }
 
@@ -63,6 +63,7 @@ func (s Store) ReIndex() {
 					}
 					col.foreignTable = tableName
 					col.foreignColumn = foreignColName
+					table.foreignIndexes = append(table.foreignIndexes, col)
 					console.CyanPrintln(fmt.Sprintf(
 						"Created foreign idex %s -> %s on table: %s, column: %s ",
 						tableName, foreignColName,

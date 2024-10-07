@@ -2,13 +2,14 @@ package mem
 
 import "fmt"
 
-type Index = map[string][]any
+type Index = map[string][]Data
 type Indexes map[string]Index
 type Table struct {
-	indexes      Indexes
-	rows         [][]any
-	cols         []ColumnDefinition
-	primaryIndex string
+	indexes        Indexes
+	rows           [][]Data
+	cols           []ColumnDefinition
+	primaryIndex   string
+	foreignIndexes []ColumnDefinition
 }
 
 func (t Table) Print() {
@@ -18,24 +19,35 @@ func (t Table) Print() {
 	}
 }
 
-func (t Table) GetRow(id string) []any {
-	return t.indexes[t.primaryIndex][id]
+func (t Table) GetRowByIndex(col string, id string) []Data {
+	return t.indexes[col][id]
 }
 
-func (t Table) MapRow(row []any) map[string]any {
-	res := make(map[string]any)
+func (t Table) GetRow(id string) []Data {
+	row := t.indexes[t.primaryIndex][id]
+	//store := *TheStore
+	//for index, column := range t.foreignIndexes {
+	//	val := row[column.number]
+	//	join := store.GetTable(column.foreignTable).GetRowByIndex(column.foreignColumn, string(val))
+	//}
+
+	return row
+}
+
+func (t Table) MapRow(row []Data) map[string]string {
+	res := make(map[string]string)
 	for index, value := range row {
-		res[t.cols[index].name] = value
+		res[t.cols[index].name] = value.Str()
 	}
 	return res
 }
 
-func (t Table) Get(id string) map[string]any {
+func (t Table) Get(id string) map[string]string {
 	return t.MapRow(t.GetRow(id))
 }
 
-func (t Table) All() []map[string]any {
-	res := make([]map[string]any, len(t.rows))
+func (t Table) All() []map[string]string {
+	res := make([]map[string]string, len(t.rows))
 	for index, row := range t.rows {
 		res[index] = t.MapRow(row)
 	}
@@ -43,11 +55,11 @@ func (t Table) All() []map[string]any {
 }
 
 func InitTable(indexes Indexes, cols []ColumnDefinition, nColumns int, nRows int, primaryIndex string) *Table {
-	a := make([][]any, nRows)
+	a := make([][]Data, nRows)
 	for i := range a {
-		a[i] = make([]any, nColumns)
+		a[i] = make([]Data, nColumns)
 	}
-	return &Table{indexes: indexes, rows: a, cols: cols, primaryIndex: primaryIndex}
+	return &Table{indexes: indexes, rows: a, cols: cols, primaryIndex: primaryIndex, foreignIndexes: make([]ColumnDefinition, 0)}
 }
 
 type ColumnDefinition struct {
@@ -57,6 +69,7 @@ type ColumnDefinition struct {
 	foreignTable  string
 	foreignColumn string
 	dataType      string
+	number        int
 }
 
 func (c ColumnDefinition) ToString() string {
@@ -77,8 +90,8 @@ func ColumnsPrintln(columns []ColumnDefinition) {
 	fmt.Println()
 }
 
-func SimpleDefinition(name string, isIndex bool) *ColumnDefinition {
-	return &ColumnDefinition{name: name, isIndex: isIndex, isUnique: isIndex}
+func SimpleDefinition(name string, isIndex bool, index int) *ColumnDefinition {
+	return &ColumnDefinition{name: name, isIndex: isIndex, isUnique: isIndex, number: index}
 }
 
 func (c ColumnDefinition) IsIndex() bool {

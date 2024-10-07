@@ -5,7 +5,7 @@ func ReadHeader(header []string) ([]ColumnDefinition, Indexes, string) {
 	var indexes = Indexes{}
 	var primaryIndex = ""
 	for index, element := range header {
-		res[index] = *GetHeaderDefinition(element)
+		res[index] = *GetHeaderDefinition(element, index)
 		if res[index].IsIndex() {
 			indexes[element] = Index{}
 			if primaryIndex == "" {
@@ -23,10 +23,10 @@ func TableFromRecords(records [][]string) *Table {
 	nRows := len(records) - 1
 	table := InitTable(indexes, columns, nCols, nRows, primaryIndex)
 	for rIndex, record := range records[1:] {
-		table.rows[rIndex] = make([]any, nCols)
+		table.rows[rIndex] = make([]Data, nCols)
 		for index, element := range record {
 			column := columns[index]
-			table.rows[rIndex][index] = element
+			table.rows[rIndex][index] = *FromString(element)
 			if column.isIndex {
 				indexes[column.name][element] = table.rows[rIndex]
 			}
@@ -40,7 +40,7 @@ func IsId(column string) bool {
 	return column == "id"
 }
 
-func GetHeaderDefinition(name string) *ColumnDefinition {
+func GetHeaderDefinition(name string, index int) *ColumnDefinition {
 	var isId = IsId(name)
-	return SimpleDefinition(name, isId)
+	return SimpleDefinition(name, isId, index)
 }
