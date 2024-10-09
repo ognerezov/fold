@@ -33,7 +33,7 @@ func Configure(dataPath string) (*goji.Mux, error) {
 		switch filepath.Ext(path) {
 		case ".csv":
 			records := csv.ReadCsvFile(filename)
-			table := *mem.TableFromRecords(records)
+			table := mem.TableFromRecords(records)
 			store.SetTable(route, table)
 			SetCSVHandlers(route, mux)
 		}

@@ -101,3 +101,14 @@ func (d Data) Str() string {
 func (d Data) Is() string {
 	return d.is
 }
+
+func (d Data) Val() any {
+	if d.is == "object" {
+		return *d.o
+	}
+	if d.is == "array" {
+		return d.a
+	}
+
+	return d.s
+}

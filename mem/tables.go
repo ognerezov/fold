@@ -1,15 +1,19 @@
 package mem
 
-import "fmt"
+import (
+	"fmt"
+	"fold/console"
+)
 
 type Index = map[string][]Data
 type Indexes map[string]Index
 type Table struct {
+	name           string
 	indexes        Indexes
 	rows           [][]Data
-	cols           []ColumnDefinition
+	cols           []*ColumnDefinition
 	primaryIndex   string
-	foreignIndexes []ColumnDefinition
+	foreignIndexes []*ColumnDefinition
 }
 
 func (t Table) Print() {
@@ -24,14 +28,7 @@ func (t Table) GetRowByIndex(col string, id string) []Data {
 }
 
 func (t Table) GetRow(id string) []Data {
-	row := t.indexes[t.primaryIndex][id]
-	//store := *TheStore
-	//for index, column := range t.foreignIndexes {
-	//	val := row[column.number]
-	//	join := store.GetTable(column.foreignTable).GetRowByIndex(column.foreignColumn, string(val))
-	//}
-
-	return row
+	return t.indexes[t.primaryIndex][id]
 }
 
 func (t Table) MapRow(row []Data) map[string]string {
@@ -42,8 +39,32 @@ func (t Table) MapRow(row []Data) map[string]string {
 	return res
 }
 
-func (t Table) Get(id string) map[string]string {
-	return t.MapRow(t.GetRow(id))
+func (t Table) MapJoinRow(row []Data, store *Store, tablePathMap *map[string]bool) map[string]any {
+	res := make(map[string]any)
+	for index, value := range row {
+		res[t.cols[index].name] = value.Val()
+	}
+	console.YellowPrintln("Map join on table: " + t.name)
+	pathMap := *tablePathMap
+	for _, column := range t.foreignIndexes {
+		console.YellowPrintln(fmt.Sprintf("Checking foreign index: %s->%s ", column.foreignTable, column.foreignColumn))
+		_, ok := pathMap[column.foreignTable]
+		if ok {
+			continue
+		}
+		pathMap[column.foreignTable] = true
+
+		val := row[column.number]
+		joinTable := store.GetTable(column.foreignTable)
+		joinRow := joinTable.GetRowByIndex(column.foreignColumn, val.Str())
+		res[column.foreignTable] = joinTable.MapJoinRow(joinRow, store, tablePathMap)
+	}
+	return res
+}
+
+func (t Table) Get(id string, store *Store) map[string]any {
+	pathMap := make(map[string]bool)
+	return t.MapJoinRow(t.GetRow(id), store, &pathMap)
 }
 
 func (t Table) All() []map[string]string {
@@ -54,12 +75,12 @@ func (t Table) All() []map[string]string {
 	return res
 }
 
-func InitTable(indexes Indexes, cols []ColumnDefinition, nColumns int, nRows int, primaryIndex string) *Table {
+func InitTable(indexes Indexes, cols []*ColumnDefinition, nColumns int, nRows int, primaryIndex string) *Table {
 	a := make([][]Data, nRows)
 	for i := range a {
 		a[i] = make([]Data, nColumns)
 	}
-	return &Table{indexes: indexes, rows: a, cols: cols, primaryIndex: primaryIndex, foreignIndexes: make([]ColumnDefinition, 0)}
+	return &Table{indexes: indexes, rows: a, cols: cols, primaryIndex: primaryIndex, foreignIndexes: make([]*ColumnDefinition, 0)}
 }
 
 type ColumnDefinition struct {
@@ -68,6 +89,7 @@ type ColumnDefinition struct {
 	isUnique      bool
 	foreignTable  string
 	foreignColumn string
+	foreignUnique bool
 	dataType      string
 	number        int
 }
@@ -82,7 +104,7 @@ func (c ColumnDefinition) ToString() string {
 	return c.name
 }
 
-func ColumnsPrintln(columns []ColumnDefinition) {
+func ColumnsPrintln(columns []*ColumnDefinition) {
 	fmt.Print("_ |")
 	for _, column := range columns {
 		fmt.Print(column.ToString() + " |")

@@ -1,11 +1,11 @@
 package mem
 
-func ReadHeader(header []string) ([]ColumnDefinition, Indexes, string) {
-	res := make([]ColumnDefinition, len(header))
+func ReadHeader(header []string) ([]*ColumnDefinition, Indexes, string) {
+	res := make([]*ColumnDefinition, len(header))
 	var indexes = Indexes{}
 	var primaryIndex = ""
 	for index, element := range header {
-		res[index] = *GetHeaderDefinition(element, index)
+		res[index] = GetHeaderDefinition(element, index)
 		if res[index].IsIndex() {
 			indexes[element] = Index{}
 			if primaryIndex == "" {

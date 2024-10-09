@@ -8,7 +8,7 @@ import (
 
 type Store struct {
 	kv     map[string]any
-	tables map[string]Table
+	tables map[string]*Table
 }
 
 func (s Store) SValue(key string, value any) {
@@ -23,11 +23,12 @@ func (s Store) Delete(key string) {
 	delete(s.kv, key)
 }
 
-func (s Store) SetTable(key string, value Table) {
+func (s Store) SetTable(key string, value *Table) {
+	value.name = key
 	s.tables[key] = value
 }
 
-func (s Store) GetTable(key string) Table {
+func (s Store) GetTable(key string) *Table {
 	return s.tables[key]
 }
 
@@ -35,8 +36,8 @@ func (s Store) DeleteTable(key string) {
 	delete(s.tables, key)
 }
 
-func (s Store) Get(table string, id string) map[string]string {
-	return s.tables[table].Get(id)
+func (s Store) Get(table string, id string) map[string]any {
+	return s.tables[table].Get(id, &s)
 }
 
 func (s Store) All(table string) []map[string]string {
@@ -52,7 +53,8 @@ func (s Store) ReIndex() {
 			}
 
 			for nameIndex, tableName := range tableNames {
-				foreignTable, ok := s.tables[util.TableToPath(tableName)]
+				tablePath := util.TableToPath(tableName)
+				foreignTable, ok := s.tables[tablePath]
 				if !ok {
 					continue
 				}
@@ -61,19 +63,21 @@ func (s Store) ReIndex() {
 					if foreignCol.name != foreignColName {
 						continue
 					}
-					col.foreignTable = tableName
+					col.foreignTable = tablePath
 					col.foreignColumn = foreignColName
+					col.foreignUnique = foreignCol.isUnique
 					table.foreignIndexes = append(table.foreignIndexes, col)
 					console.CyanPrintln(fmt.Sprintf(
 						"Created foreign idex %s -> %s on table: %s, column: %s ",
-						tableName, foreignColName,
+						tablePath, foreignColName,
 						name, col.name))
 				}
 			}
 		}
 	}
+	console.MagentaPrintln(fmt.Sprintf("%v", s.tables))
 }
 
 var (
-	TheStore *Store = &Store{make(map[string]any), make(map[string]Table)}
+	TheStore *Store = &Store{make(map[string]any), make(map[string]*Table)}
 )
