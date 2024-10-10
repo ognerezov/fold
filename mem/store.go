@@ -63,13 +63,13 @@ func (s Store) ReIndex() {
 					if foreignCol.name != foreignColName {
 						continue
 					}
-					col.foreignTable = tablePath
+					col.foreignTable = tableName
 					col.foreignColumn = foreignColName
 					col.foreignUnique = foreignCol.isUnique
 					table.foreignIndexes = append(table.foreignIndexes, col)
 					console.CyanPrintln(fmt.Sprintf(
 						"Created foreign idex %s -> %s on table: %s, column: %s ",
-						tablePath, foreignColName,
+						tableName, foreignColName,
 						name, col.name))
 				}
 			}

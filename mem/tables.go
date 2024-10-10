@@ -3,6 +3,7 @@ package mem
 import (
 	"fmt"
 	"fold/console"
+	"fold/util"
 )
 
 type Index = map[string][]Data
@@ -55,7 +56,7 @@ func (t Table) MapJoinRow(row []Data, store *Store, tablePathMap *map[string]boo
 		pathMap[column.foreignTable] = true
 
 		val := row[column.number]
-		joinTable := store.GetTable(column.foreignTable)
+		joinTable := store.GetTable(util.TableToPath(column.foreignTable))
 		joinRow := joinTable.GetRowByIndex(column.foreignColumn, val.Str())
 		res[column.foreignTable] = joinTable.MapJoinRow(joinRow, store, tablePathMap)
 	}
