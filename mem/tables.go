@@ -17,6 +17,14 @@ type Table struct {
 	foreignIndexes []*ColumnDefinition
 }
 
+func (t Table) DescribeColumns() []ColumnDefinition {
+	result := make([]ColumnDefinition, len(t.cols))
+	for i, col := range t.cols {
+		result[i] = *col
+	}
+	return result
+}
+
 func (t Table) Print() {
 	ColumnsPrintln(t.cols)
 	for index, row := range t.rows {
@@ -56,7 +64,7 @@ func (t Table) MapJoinRow(row []Data, store *Store, tablePathMap *map[string]boo
 		pathMap[column.foreignTable] = true
 
 		val := row[column.number]
-		joinTable := store.GetTable(util.TableToPath(column.foreignTable))
+		joinTable, _ := store.GetTable(util.TableToPath(column.foreignTable))
 		joinRow := joinTable.GetRowByIndex(column.foreignColumn, val.Str())
 		res[column.foreignTable] = joinTable.MapJoinRow(joinRow, store, tablePathMap)
 	}
@@ -74,6 +82,21 @@ func (t Table) All() []map[string]string {
 		res[index] = t.MapRow(row)
 	}
 	return res
+}
+
+func (t Table) Search(query Query) any {
+	if query.all {
+		return t.All()
+	}
+	rows := make([]map[string]any, 0)
+	for _, row := range t.rows {
+		if !query.Matches(row) {
+			continue
+		}
+		pathMap := make(map[string]bool)
+		rows = append(rows, t.MapJoinRow(row, TheStore, &pathMap))
+	}
+	return rows
 }
 
 func InitTable(indexes Indexes, cols []*ColumnDefinition, nColumns int, nRows int, primaryIndex string) *Table {
@@ -102,6 +125,10 @@ func (c ColumnDefinition) ToString() string {
 	if c.isIndex {
 		return fmt.Sprintf("%s*", c.name)
 	}
+	return c.name
+}
+
+func (c ColumnDefinition) Name() string {
 	return c.name
 }
 

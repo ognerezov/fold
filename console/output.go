@@ -41,3 +41,7 @@ func RedPrintln(str string) {
 func YellowPrintln(str string) {
 	ColorPrintln(str, Yellow)
 }
+
+func RedPrint(str string) {
+	ColorPrintln(str, Red)
+}

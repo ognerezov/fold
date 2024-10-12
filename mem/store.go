@@ -28,8 +28,9 @@ func (s Store) SetTable(key string, value *Table) {
 	s.tables[key] = value
 }
 
-func (s Store) GetTable(key string) *Table {
-	return s.tables[key]
+func (s Store) GetTable(key string) (*Table, bool) {
+	t, ok := s.tables[key]
+	return t, ok
 }
 
 func (s Store) DeleteTable(key string) {

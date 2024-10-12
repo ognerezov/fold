@@ -39,12 +39,21 @@ type Data struct {
 	a  []Data
 }
 
+const (
+	String   = "string"
+	Bool     = "bool"
+	Int      = "int"
+	Float    = "float"
+	Datetime = "datetime"
+	Date     = "date"
+)
+
 func FromString(s string) *Data {
 	data := Data{s: s}
-	data.is = "string"
+	data.is = String
 	b, err := strconv.ParseBool(s)
 	if err == nil {
-		data.is = "bool"
+		data.is = Bool
 		data.b = b
 		return &data
 	}
@@ -53,7 +62,7 @@ func FromString(s string) *Data {
 
 	if err == nil {
 		data.i = i
-		data.is = "int"
+		data.is = Int
 		data.f = float64(i)
 		return &data
 	}
@@ -62,7 +71,7 @@ func FromString(s string) *Data {
 
 	if err == nil {
 		data.f = f
-		data.is = "float"
+		data.is = Float
 		data.i = int64(f)
 		return &data
 	}
@@ -71,7 +80,7 @@ func FromString(s string) *Data {
 
 	if err == nil {
 		data.t = t
-		data.is = "datetime"
+		data.is = Datetime
 		return &data
 	}
 
@@ -79,7 +88,7 @@ func FromString(s string) *Data {
 
 	if err == nil {
 		data.t = t
-		data.is = "datetime"
+		data.is = Datetime
 		return &data
 	}
 
@@ -87,7 +96,7 @@ func FromString(s string) *Data {
 
 	if err == nil {
 		data.t = t
-		data.is = "date"
+		data.is = Date
 		return &data
 	}
 
