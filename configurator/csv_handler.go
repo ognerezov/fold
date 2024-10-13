@@ -12,7 +12,6 @@ import (
 func SetCSVHandlers(route string, mux *goji.Mux) {
 	console.BluePrintln("Registering GET " + route)
 	mux.HandleFunc(pat.Get(route), func(w http.ResponseWriter, r *http.Request) {
-		console.MagentaPrintln("Incoming Request GET: " + route)
 		err := router.ProcessSearch(route, w, r)
 		if err != nil {
 			console.RedPrint(err.Error())
@@ -24,7 +23,6 @@ func SetCSVHandlers(route string, mux *goji.Mux) {
 	}
 	mux.HandleFunc(pat.Get(fmt.Sprintf("%s%s", route, paramLiteral)), func(w http.ResponseWriter, r *http.Request) {
 		id := pat.Param(r, "id")
-		console.MagentaPrintln(fmt.Sprintf("Incoming Request GET: %s/:%s", route, id))
 		err := router.ProcessGet(route, id, w)
 		if err != nil {
 			console.RedPrint(err.Error())

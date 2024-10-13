@@ -5,6 +5,7 @@ import (
 	"fold/csv"
 	"fold/mem"
 	"fold/path"
+	"fold/router"
 	"fold/util"
 	goji "goji.io"
 	"io/fs"
@@ -14,6 +15,7 @@ import (
 
 func Configure(dataPath string) (*goji.Mux, error) {
 	mux := goji.NewMux()
+	mux.Use(router.LogRequest)
 	store := *mem.TheStore
 	clean := path.CreateRootCleaner(dataPath)
 	var err = path.ProcessPath(dataPath, func(path string, info fs.FileInfo, err error) error {
