@@ -5,6 +5,7 @@ import (
 	"fold/csv"
 	"fold/mem"
 	"fold/path"
+	"fold/util"
 	goji "goji.io"
 	"io/fs"
 	"path/filepath"
@@ -29,6 +30,7 @@ func Configure(dataPath string) (*goji.Mux, error) {
 				route = fmt.Sprintf("%s/%s", route, name)
 			}
 		}
+		route = util.TableToPath(route)
 		var filename = fmt.Sprintf("%s/%s", dataPath, clean(path))
 		switch filepath.Ext(path) {
 		case ".csv":

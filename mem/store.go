@@ -29,6 +29,7 @@ func (s Store) SetTable(key string, value *Table) {
 }
 
 func (s Store) GetTable(key string) (*Table, bool) {
+	console.CyanPrintln("Get table: " + key)
 	t, ok := s.tables[key]
 	return t, ok
 }
@@ -72,6 +73,15 @@ func (s Store) ReIndex() {
 						"Created foreign idex %s -> %s on table: %s, column: %s ",
 						tableName, foreignColName,
 						name, col.name))
+
+					formattedName := util.PathToTable(name)
+					foreignTable.foreignIndexes = append(foreignTable.foreignIndexes,
+						col.BackReference(formattedName, foreignCol.number))
+
+					console.GreenPrintln(fmt.Sprintf(
+						"Created foreign back reference %s -> %s  table: %s",
+						foreignTable.name,
+						col.name, formattedName))
 				}
 			}
 		}

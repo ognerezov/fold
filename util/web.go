@@ -19,3 +19,11 @@ func MapQuery(r *http.Request) (map[string][]string, error) {
 
 	return q, err
 }
+
+func OneValueQuery(col string, value string) map[string][]string {
+	res := make(map[string][]string)
+	values := make([]string, 1)
+	values[0] = value
+	res[col] = values
+	return res
+}

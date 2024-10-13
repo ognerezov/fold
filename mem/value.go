@@ -36,7 +36,7 @@ type Data struct {
 	t  time.Time
 	is string
 	o  *Data
-	a  []Data
+	a  []*Data
 }
 
 const (
@@ -120,4 +120,16 @@ func (d Data) Val() any {
 	}
 
 	return d.s
+}
+
+func WrapData(d *Data) Data {
+	return Data{is: "object", o: d}
+}
+
+func WrapArray(array []Data) Data {
+	a := make([]*Data, len(array))
+	for i, d := range array {
+		a[i] = &d
+	}
+	return Data{is: "array", a: a}
 }
