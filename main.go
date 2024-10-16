@@ -5,7 +5,6 @@ import (
 	"fold/configurator"
 	"fold/console"
 	"fold/csv"
-	"log"
 	"net/http"
 	"os"
 )
@@ -25,13 +24,6 @@ func main() {
 	for index, progLanguage := range progLanguages {
 		fmt.Println(index, progLanguage)
 	}
-	//var table = *mem.TableFromRecords(progLanguages)
-	//table.Print()
-	//fmt.Println(table.GetRow("0"))
-	//err := path.WalkPath(dataPath)
-	//if err != nil {
-	//	return
-	//}
 	console.GreenPrintln("___________________________")
 	console.GreenPrintln("Starting server")
 	console.GreenPrintln("___________________________")
@@ -41,5 +33,7 @@ func main() {
 		console.RedPrintln(err.Error())
 		return
 	}
-	log.Fatal(http.ListenAndServe("localhost:8000", mux))
+	addr := "localhost:8000"
+	configurator.TheServer = &http.Server{Addr: addr, Handler: mux}
+	configurator.Start()
 }

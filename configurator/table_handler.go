@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func SetCSVHandlers(route string, mux *goji.Mux) {
+func SetTableHandlers(route string, mux *goji.Mux) {
 	console.BluePrintln("Registering GET " + route)
 	mux.HandleFunc(pat.Get(route), func(w http.ResponseWriter, r *http.Request) {
 		err := router.ProcessSearch(route, w, r)

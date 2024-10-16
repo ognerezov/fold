@@ -9,6 +9,7 @@ import (
 type Store struct {
 	kv     map[string]any
 	tables map[string]*Table
+	User   *Principle
 }
 
 func (s Store) SValue(key string, value any) {
@@ -90,5 +91,5 @@ func (s Store) ReIndex() {
 }
 
 var (
-	TheStore *Store = &Store{make(map[string]any), make(map[string]*Table)}
+	TheStore *Store = &Store{kv: make(map[string]any), tables: make(map[string]*Table)}
 )
