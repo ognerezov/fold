@@ -9,7 +9,6 @@ import (
 type Store struct {
 	kv     map[string]any
 	tables map[string]*Table
-	User   *Principle
 }
 
 func (s Store) SValue(key string, value any) {

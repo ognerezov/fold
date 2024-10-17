@@ -3,7 +3,6 @@ package security
 import (
 	"errors"
 	"fold/console"
-	"fold/mem"
 	"fold/router"
 	"net/http"
 )
@@ -19,7 +18,7 @@ type Config struct {
 	lastGuard *Guard
 }
 
-func (c Config) Authenticate(r *http.Request) (*mem.Principle, error) {
+func (c Config) Authenticate(r *http.Request) (*Principle, error) {
 	for _, g := range c.guards {
 		guard := *g
 		if !guard.Matches(r) {
@@ -72,7 +71,6 @@ func (c Config) AuthorizeRequest(f http.Handler) http.Handler {
 				console.RedPrintln(e.Error())
 				return
 			}
-			mem.TheStore.User = principle
-			f.ServeHTTP(w, r)
+			f.ServeHTTP(w, WithPrinciple(r, principle))
 		})
 }

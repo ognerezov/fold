@@ -1,7 +1,6 @@
 package security
 
 import (
-	"fold/mem"
 	"net/http"
 )
 
@@ -15,7 +14,7 @@ var (
 
 type BlindGuard bool
 
-func (b BlindGuard) Authorize(mem.Principle, *http.Request) (bool, error) {
+func (b BlindGuard) Authorize(Principle, *http.Request) (bool, error) {
 	return bool(b), nil
 }
 
@@ -23,6 +22,6 @@ func (b BlindGuard) Matches(*http.Request) bool {
 	return true
 }
 
-func (b BlindGuard) Authenticate(*http.Request) (mem.Principle, error) {
-	return mem.Guest, nil
+func (b BlindGuard) Authenticate(*http.Request) (Principle, error) {
+	return Guest, nil
 }
