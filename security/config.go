@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	Public = &Config{guards: make(Guards, 0), lastGuard: &NoGuard}
+	Public      = &Config{guards: make(Guards, 0), lastGuard: &NoGuard}
+	MasterGuest = &Config{guards: []*Guard{&PubGuard}, lastGuard: &RootGuard}
 )
 
 type Guards []*Guard
@@ -33,19 +34,23 @@ func (c Config) Authenticate(r *http.Request) (*Principle, error) {
 			return nil, err
 		}
 
-		return &principle, nil
+		return principle, nil
 	}
 	if c.lastGuard == nil {
 		return nil, errors.New("no guard found")
 	}
 	guard := *c.lastGuard
 	principle, err := guard.Authenticate(r)
+	if principle == nil || err != nil {
+		return nil, err
+	}
+
 	ok, err := guard.Authorize(principle, r)
 	if !ok || err != nil {
 		return nil, err
 	}
 
-	return &principle, nil
+	return principle, nil
 }
 
 func (c Config) Matches(r *http.Request) bool {
@@ -67,8 +72,11 @@ func (c Config) AuthorizeRequest(f http.Handler) http.Handler {
 		func(w http.ResponseWriter, r *http.Request) {
 			principle, err := c.Authenticate(r)
 			if err != nil {
+				console.RedPrint(err.Error())
 				e := router.WriteError(err, w)
-				console.RedPrintln(e.Error())
+				if e != nil {
+					console.RedPrintln(e.Error())
+				}
 				return
 			}
 			f.ServeHTTP(w, WithPrinciple(r, principle))

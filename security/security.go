@@ -5,7 +5,7 @@ import (
 )
 
 type Guard interface {
-	Authorize(p Principle, r *http.Request) (bool, error)
+	Authorize(p *Principle, r *http.Request) (bool, error)
 	Matches(r *http.Request) bool
-	Authenticate(r *http.Request) (Principle, error)
+	Authenticate(r *http.Request) (*Principle, error)
 }

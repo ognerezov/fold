@@ -3,6 +3,7 @@ package security
 import (
 	"context"
 	"fmt"
+	"fold/console"
 	"net/http"
 )
 
@@ -26,9 +27,15 @@ func WithPrinciple(r *http.Request, p *Principle) *http.Request {
 	return r.Clone(context.WithValue(ctx, "principle", p))
 }
 
-func GetPrinciple(r *http.Request) *Principle {
-	ctx := r.Context()
-	return ctx.Value("principle").(*Principle)
+func Authenticate(r *http.Request) (*Principle, error) {
+	tokenString := r.Header.Get("Authorization")
+	if tokenString == "" {
+		console.RedPrint("Token not found")
+		return nil, fmt.Errorf("no token")
+	}
+
+	principle, err := FromToken(tokenString)
+	return principle, err
 }
 
 func (principle *Principle) BearerToken() (string, error) {

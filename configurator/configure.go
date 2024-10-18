@@ -17,7 +17,7 @@ import (
 func Configure(dataPath string) (*goji.Mux, error) {
 	mux := goji.NewMux()
 	mux.Use(router.LogRequest)
-	mux.Use(security.Public.AuthorizeRequest)
+	mux.Use(security.MasterGuest.AuthorizeRequest)
 	store := *mem.TheStore
 	clean := path.CreateRootCleaner(dataPath)
 	var err = path.ProcessPath(dataPath, func(path string, info fs.FileInfo, err error) error {
