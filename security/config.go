@@ -9,7 +9,7 @@ import (
 
 var (
 	Public      = &Config{guards: make(Guards, 0), lastGuard: &NoGuard}
-	MasterGuest = &Config{guards: []*Guard{&PubGuard}, lastGuard: &RootGuard}
+	MasterGuest = &Config{guards: []*Guard{&PubGuard, &LoginGuard}, lastGuard: &RootGuard}
 )
 
 type Guards []*Guard

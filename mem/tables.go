@@ -110,6 +110,10 @@ func (t Table) Get(id string, store *Store) map[string]any {
 	return t.MapJoinRow(t.GetRow(id), store, t.InitPathTable(), 0)
 }
 
+func (t Table) PlainGet(id string) map[string]string {
+	return t.MapRow(t.GetRow(id))
+}
+
 func (t Table) All() []map[string]string {
 	res := make([]map[string]string, len(t.rows))
 	for index, row := range t.rows {

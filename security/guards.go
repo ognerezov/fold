@@ -5,6 +5,12 @@ import (
 	"regexp"
 )
 
+type Guard interface {
+	Authorize(p *Principle, r *http.Request) (bool, error)
+	Matches(r *http.Request) bool
+	Authenticate(r *http.Request) (*Principle, error)
+}
+
 const (
 	blindGuard = BlindGuard(true)
 	rootGuard  = MasterGuard("root")
@@ -15,9 +21,16 @@ var (
 	pubGuard       = PathGuard{
 		regexp: regexp.MustCompile("/pub/.*"),
 		role:   "guest",
+		public: true,
 	}
-	PubGuard  Guard = pubGuard
-	RootGuard Guard = rootGuard
+	loginGuard = PathGuard{
+		regexp: regexp.MustCompile("/login"),
+		role:   "unauthorized",
+		public: true,
+	}
+	PubGuard   Guard = pubGuard
+	RootGuard  Guard = rootGuard
+	LoginGuard Guard = loginGuard
 )
 
 type BlindGuard bool
@@ -59,6 +72,7 @@ func (m MasterGuard) Authenticate(r *http.Request) (*Principle, error) {
 type PathGuard struct {
 	regexp *regexp.Regexp
 	role   string
+	public bool
 }
 
 func (g PathGuard) PathMatches(s string) bool {
@@ -78,6 +92,9 @@ func (g PathGuard) Matches(r *http.Request) bool {
 }
 
 func (g PathGuard) Authenticate(r *http.Request) (*Principle, error) {
+	if g.public {
+		return &Guest, nil
+	}
 	principle, err := Authenticate(r)
 	return principle, err
 }

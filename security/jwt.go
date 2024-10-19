@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-var secretKey = []byte("secret-key")
-
 func createToken(principle *Principle) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{

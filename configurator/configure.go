@@ -51,5 +51,6 @@ func Configure(dataPath string) (*goji.Mux, error) {
 		return nil, err
 	}
 
+	security.SetAuthHandlers(mux)
 	return mux, nil
 }
