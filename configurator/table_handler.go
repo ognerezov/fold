@@ -12,10 +12,7 @@ import (
 func SetTableHandlers(route string, mux *goji.Mux) {
 	console.BluePrintln("Registering GET " + route)
 	mux.HandleFunc(pat.Get(route), func(w http.ResponseWriter, r *http.Request) {
-		err := router.ProcessSearch(route, w, r)
-		if err != nil {
-			console.RedPrint(err.Error())
-		}
+		router.ProcessSearch(route, w, r)
 	})
 	paramLiteral := "/:id"
 	if route == "/" {
@@ -23,9 +20,6 @@ func SetTableHandlers(route string, mux *goji.Mux) {
 	}
 	mux.HandleFunc(pat.Get(fmt.Sprintf("%s%s", route, paramLiteral)), func(w http.ResponseWriter, r *http.Request) {
 		id := pat.Param(r, "id")
-		err := router.ProcessGet(route, id, w)
-		if err != nil {
-			console.RedPrint(err.Error())
-		}
+		router.ProcessGet(route, id, w)
 	})
 }

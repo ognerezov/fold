@@ -18,12 +18,12 @@ func SetAuthHandlers(mux *goji.Mux) {
 		var login api.LoginRequest
 		err := decoder.Decode(&login)
 		if err != nil {
-			_ = router.WriteError(err, w)
+			router.ReturnError(err, 400, w)
 			return
 		}
 		err = login.Validate()
 		if err != nil {
-			_ = router.WriteError(err, w)
+			router.ReturnError(err, 400, w)
 			return
 		}
 
@@ -31,17 +31,17 @@ func SetAuthHandlers(mux *goji.Mux) {
 		principle, err := FromTable(login.Username, login.Password)
 
 		if err != nil {
-			_ = router.WriteError(err, w)
+			router.ReturnError(err, 401, w)
 			return
 		}
 		token, err := principle.BearerToken()
 
 		if err != nil {
-			_ = router.WriteError(err, w)
+			router.ServerError(err, w)
 			return
 		}
 
-		_ = router.WriteResponse(api.LoginResponse{
+		router.WriteResponse(api.LoginResponse{
 			Token: token,
 		}, w)
 	})

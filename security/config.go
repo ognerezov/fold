@@ -73,10 +73,7 @@ func (c Config) AuthorizeRequest(f http.Handler) http.Handler {
 			principle, err := c.Authenticate(r)
 			if err != nil {
 				console.RedPrint(err.Error())
-				e := router.WriteError(err, w)
-				if e != nil {
-					console.RedPrintln(e.Error())
-				}
+				router.ServerError(err, w)
 				return
 			}
 			f.ServeHTTP(w, WithPrinciple(r, principle))
