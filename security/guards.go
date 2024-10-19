@@ -28,9 +28,15 @@ var (
 		role:   "unauthorized",
 		public: true,
 	}
-	PubGuard   Guard = pubGuard
-	RootGuard  Guard = rootGuard
-	LoginGuard Guard = loginGuard
+	authenticateGuard = PathGuard{
+		regexp: regexp.MustCompile("/me"),
+		role:   "user",
+		public: false,
+	}
+	PubGuard          Guard = pubGuard
+	RootGuard         Guard = rootGuard
+	LoginGuard        Guard = loginGuard
+	AuthenticateGuard Guard = authenticateGuard
 )
 
 type BlindGuard bool
@@ -50,7 +56,7 @@ func (b BlindGuard) Authenticate(*http.Request) (*Principle, error) {
 type MasterGuard string
 
 func (m MasterGuard) Authorize(p *Principle, _ *http.Request) (bool, error) {
-	roles := p.roles
+	roles := p.Roles
 	for _, role := range roles {
 		if role == string(m) {
 			return true, nil

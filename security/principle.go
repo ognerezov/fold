@@ -9,26 +9,31 @@ import (
 )
 
 type Principle struct {
-	roles    []string
-	id       string
+	Roles    []string `json:"Roles"`
+	Id       string   `json:"Id"`
 	password string
 }
 
 var Guest = Principle{
-	id:       "guest",
-	roles:    []string{"pub"},
+	Id:       "guest",
+	Roles:    []string{"pub"},
 	password: guestPassword,
 }
 
 var Root = Principle{
-	id:       "root",
-	roles:    []string{"root", "admin", "user", "pub"},
+	Id:       "root",
+	Roles:    []string{"root", "admin", "user", "pub"},
 	password: adminPassword,
 }
 
 func WithPrinciple(r *http.Request, p *Principle) *http.Request {
 	ctx := r.Context()
 	return r.Clone(context.WithValue(ctx, "principle", p))
+}
+
+func FromRequest(r *http.Request) *Principle {
+	ctx := r.Context()
+	return ctx.Value("principle").(*Principle)
 }
 
 func Authenticate(r *http.Request) (*Principle, error) {
@@ -50,8 +55,8 @@ func (principle *Principle) BearerToken() (string, error) {
 	return fmt.Sprintf("Bearer %s", j), nil
 }
 
-func FromToken(tokeString string) (*Principle, error) {
-	token, err := verifyToken(tokeString)
+func FromToken(tokenString string) (*Principle, error) {
+	token, err := verifyToken(tokenString[len("Bearer "):])
 	if err != nil || token == nil {
 		return nil, err
 	}
@@ -69,8 +74,8 @@ func FromToken(tokeString string) (*Principle, error) {
 		roles = aud
 	}
 	return &Principle{
-		id:    sub,
-		roles: roles,
+		Id:    sub,
+		Roles: roles,
 	}, nil
 }
 
@@ -84,8 +89,8 @@ func FromTable(id string, password string) (*Principle, error) {
 		return nil, e
 	}
 	return &Principle{
-		id:    id,
-		roles: []string{"user"},
+		Id:    id,
+		Roles: []string{"user"},
 	}, nil
 }
 

@@ -12,7 +12,7 @@ import (
 )
 
 func SetAuthHandlers(mux *goji.Mux) {
-	console.BluePrintln("Registering POST /login")
+	console.BluePrintln("Registering security root POST /login (User defined root would be overridden)")
 	mux.HandleFunc(pat.Post("/login"), func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		var login api.LoginRequest
@@ -44,5 +44,14 @@ func SetAuthHandlers(mux *goji.Mux) {
 		router.WriteResponse(api.LoginResponse{
 			Token: token,
 		}, w)
+	})
+
+	console.BluePrintln("Registering security root GET /me (User defined root would be overridden)")
+	mux.HandleFunc(pat.Get("/me"), func(w http.ResponseWriter, r *http.Request) {
+		principle := FromRequest(r)
+		if principle == nil {
+			router.ReturnError(fmt.Errorf("principle not found"), 401, w)
+		}
+		router.WriteResponse(*principle, w)
 	})
 }

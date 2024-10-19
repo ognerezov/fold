@@ -13,6 +13,7 @@ func WriteResponse(data any, w http.ResponseWriter) {
 		ServerError(err, w)
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	fmt.Println(data)
 	_, e := w.Write(h)
 	if e != nil {
 		ServerError(e, w)

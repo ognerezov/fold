@@ -9,8 +9,8 @@ import (
 func createToken(principle *Principle) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
-			"sub": principle.id,
-			"aud": principle.roles,
+			"sub": principle.Id,
+			"aud": principle.Roles,
 			"iss": "fold",
 			"exp": time.Now().Add(time.Hour * 24).Unix(),
 		})
