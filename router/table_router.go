@@ -7,8 +7,7 @@ import (
 )
 
 func ProcessSearch(route string, w http.ResponseWriter, r *http.Request) {
-	store := *mem.TheStore
-	table, ok := store.GetTable(route)
+	table, ok := mem.TheStore.GetTable(route)
 	if !ok {
 		err := errors.New("table not found")
 		ServerError(err, w)

@@ -1,0 +1,4 @@
+id, authorities_id
+user,
+admin,user
+root,admin

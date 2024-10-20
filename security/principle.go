@@ -9,8 +9,8 @@ import (
 )
 
 type Principle struct {
-	Roles    []string `json:"Roles"`
-	Id       string   `json:"Id"`
+	Roles    []string `json:"roles"`
+	Id       string   `json:"id"`
 	password string
 }
 
@@ -88,9 +88,17 @@ func FromTable(id string, password string) (*Principle, error) {
 	if e != nil {
 		return nil, e
 	}
+
+	rolesTable, _ := mem.TheStore.GetTable("/user/roles")
+	roleRows := rolesTable.SearchRows("user_id", id)
+	roles := make([]string, len(roleRows))
+	for i, row := range roleRows {
+		roles[i] = row[2].Str()
+	}
+
 	return &Principle{
 		Id:    id,
-		Roles: []string{"user"},
+		Roles: roles,
 	}, nil
 }
 
