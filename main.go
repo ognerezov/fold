@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"fold/configurator"
 	"fold/console"
-	"fold/csv"
 	"net/http"
 	"os"
 )
@@ -19,11 +18,6 @@ func main() {
 
 	var dataPath = argsWithoutProg[0]
 
-	var progLanguages = csv.ReadCsvFile(dataPath + "/languages.csv")
-
-	for index, progLanguage := range progLanguages {
-		fmt.Println(index, progLanguage)
-	}
 	console.GreenPrintln("___________________________")
 	console.GreenPrintln("Starting server")
 	console.GreenPrintln("___________________________")

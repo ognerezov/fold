@@ -1,4 +1,4 @@
-id,user_id,authorities_id
+id,user_id,security_authorities_id
 1,root,user
 2,root,admin
 3,root,root

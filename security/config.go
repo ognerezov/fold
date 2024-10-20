@@ -19,38 +19,48 @@ type Config struct {
 	lastGuard *Guard
 }
 
-func (c Config) Authenticate(r *http.Request) (*Principle, error) {
+func (c Config) Authenticate(r *http.Request) (*Principle, int, error) {
+	code := 404
+	errorMessage := "resource not found"
 	for _, g := range c.guards {
 		guard := *g
 		if !guard.Matches(r) {
 			continue
 		}
+		code = 401
+		errorMessage = "unauthorized"
 		principle, err := guard.Authenticate(r)
 		if err != nil {
-			return nil, err
+			continue
 		}
 		ok, err := guard.Authorize(principle, r)
 		if !ok || err != nil {
-			return nil, err
+			code = 403
+			errorMessage = "access denied"
+			continue
 		}
 
-		return principle, nil
+		return principle, 200, nil
 	}
 	if c.lastGuard == nil {
-		return nil, errors.New("no guard found")
+		return nil, code, errors.New(errorMessage)
 	}
 	guard := *c.lastGuard
+	if !guard.Matches(r) {
+		return nil, code, errors.New(errorMessage)
+	}
+	code = 401
 	principle, err := guard.Authenticate(r)
 	if principle == nil || err != nil {
-		return nil, err
+		return nil, code, err
 	}
 
 	ok, err := guard.Authorize(principle, r)
 	if !ok || err != nil {
-		return nil, err
+		return nil, code, err
 	}
 
-	return principle, nil
+	return principle, 200, nil
 }
 
 func (c Config) Matches(r *http.Request) bool {
@@ -70,12 +80,23 @@ func (c Config) Matches(r *http.Request) bool {
 func (c Config) AuthorizeRequest(f http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			principle, err := c.Authenticate(r)
+			principle, code, err := c.Authenticate(r)
 			if err != nil {
 				console.RedPrint(err.Error())
-				router.ServerError(err, w)
+				router.ReturnError(err, code, w)
 				return
 			}
 			f.ServeHTTP(w, WithPrinciple(r, principle))
 		})
+}
+
+func RulesSecurityConfig(rules []Rule) *Config {
+	guards := make([]*Guard, len(rules)+1)
+	guards[0] = &LoginGuard
+	for i, rule := range rules {
+		var guard Guard
+		guard = rule
+		guards[i+1] = &guard
+	}
+	return &Config{guards: guards, lastGuard: &PubGuard}
 }

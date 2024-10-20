@@ -2,6 +2,7 @@ package csv
 
 import (
 	"encoding/csv"
+	"fold/console"
 	"log"
 	"os"
 )
@@ -12,7 +13,10 @@ func ReadCsvFile(filePath string) [][]string {
 		log.Fatal("Unable to read input file "+filePath, err)
 	}
 	defer func(f *os.File) {
-		_ = f.Close()
+		err = f.Close()
+		if err != nil {
+			console.RedPrintln(err.Error())
+		}
 	}(f)
 
 	csvReader := csv.NewReader(f)

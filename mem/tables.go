@@ -1,6 +1,8 @@
 package mem
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"fold/console"
 	"fold/util"
@@ -158,6 +160,20 @@ func (t Table) SearchRows(colName string, value string) [][]Data {
 		rows = append(rows, row)
 	}
 	return rows
+}
+
+func TableToStructs[A any](t *Table, query Query, array *[]A) error {
+	data := t.Search(query)
+	h, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	decoder := json.NewDecoder(bytes.NewReader(h))
+	err = decoder.Decode(array)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func InitTable(indexes Indexes, cols []*ColumnDefinition, nColumns int, nRows int, primaryIndex string) *Table {

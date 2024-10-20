@@ -1,0 +1,8 @@
+id,security_authorities_id,security_audience_id,filter,action
+1,guest,pub,,read
+2,root,*,,
+3,user,project,,
+4,user,user,id,
+5,admin,user,,
+6,admin,project,,
+7,admin,security,,read

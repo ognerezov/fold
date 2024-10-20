@@ -2,6 +2,7 @@ package configurator
 
 import (
 	"fmt"
+	"fold/console"
 	"fold/csv"
 	"fold/mem"
 	"fold/path"
@@ -17,7 +18,7 @@ import (
 func Configure(dataPath string) (*goji.Mux, error) {
 	mux := goji.NewMux()
 	mux.Use(router.LogRequest)
-	mux.Use(security.MasterGuest.AuthorizeRequest)
+
 	store := *mem.TheStore
 	clean := path.CreateRootCleaner(dataPath)
 	var err = path.ProcessPath(dataPath, func(path string, info fs.FileInfo, err error) error {
@@ -38,6 +39,7 @@ func Configure(dataPath string) (*goji.Mux, error) {
 		var filename = fmt.Sprintf("%s/%s", dataPath, clean(path))
 		switch filepath.Ext(path) {
 		case ".csv":
+			fmt.Println(filename)
 			records := csv.ReadCsvFile(filename)
 			table := mem.TableFromRecords(records)
 			store.SetTable(route, table)
@@ -50,7 +52,22 @@ func Configure(dataPath string) (*goji.Mux, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	securityRulesTable, _ := store.GetTable("/security/rules")
+	if securityRulesTable != nil {
+		var rules []security.Rule
+		e := mem.TableToStructs(securityRulesTable, mem.AllQuery(), &rules)
+		if e != nil {
+			console.RedPrintln(e.Error())
+		}
+		console.YellowPrintln("Applying security rules")
+		console.YellowPrintln(fmt.Sprintf("%v", rules))
+		if len(rules) > 0 {
+			config := security.RulesSecurityConfig(rules)
+			mux.Use(config.AuthorizeRequest)
+		} else {
+			mux.Use(security.Public.AuthorizeRequest)
+		}
+	}
 	security.SetAuthHandlers(mux)
 	return mux, nil
 }
