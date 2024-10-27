@@ -21,6 +21,7 @@ func Configure(dataPath string) (*goji.Mux, error) {
 
 	store := *mem.TheStore
 	clean := path.CreateRootCleaner(dataPath)
+	path.Root = dataPath
 	var err = path.ProcessPath(dataPath, func(path string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -42,6 +43,7 @@ func Configure(dataPath string) (*goji.Mux, error) {
 			fmt.Println(filename)
 			records := csv.ReadCsvFile(filename)
 			table := mem.TableFromRecords(records)
+			table.File = filename
 			store.SetTable(route, table)
 			SetTableHandlers(route, mux)
 		}

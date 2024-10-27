@@ -3,9 +3,11 @@ package mem
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"fold/console"
 	"fold/util"
+	"github.com/google/uuid"
 	"strconv"
 )
 
@@ -22,11 +24,13 @@ type Table struct {
 	cols           []*ColumnDefinition
 	primaryIndex   string
 	foreignIndexes []*ColumnDefinition
+	primaryColumn  *ColumnDefinition
+	File           string
 }
 
 type JoinPathMap *map[string]int
 
-func (t Table) DescribeColumns() []ColumnDefinition {
+func (t *Table) DescribeColumns() []ColumnDefinition {
 	result := make([]ColumnDefinition, len(t.cols))
 	for i, col := range t.cols {
 		result[i] = *col
@@ -34,28 +38,28 @@ func (t Table) DescribeColumns() []ColumnDefinition {
 	return result
 }
 
-func (t Table) Print() {
+func (t *Table) Print() {
 	ColumnsPrintln(t.cols)
 	for index, row := range t.rows {
 		fmt.Println(index, row)
 	}
 }
 
-func (t Table) InitPathTable() JoinPathMap {
+func (t *Table) InitPathTable() JoinPathMap {
 	result := make(map[string]int)
 	result[util.PathToTable(t.name)] = 0
 	return &result
 }
 
-func (t Table) GetRowByIndex(col string, id string) []Data {
+func (t *Table) GetRowByIndex(col string, id string) []Data {
 	return t.indexes[col][id]
 }
 
-func (t Table) GetRow(id string) []Data {
+func (t *Table) GetRow(id string) []Data {
 	return t.indexes[t.primaryIndex][id]
 }
 
-func (t Table) MapRow(row []Data) map[string]string {
+func (t *Table) MapRow(row []Data) map[string]string {
 	res := make(map[string]string)
 	for index, value := range row {
 		res[t.cols[index].name] = value.Str()
@@ -63,7 +67,7 @@ func (t Table) MapRow(row []Data) map[string]string {
 	return res
 }
 
-func (t Table) MapJoinRow(row []Data, store *Store, tablePathMap JoinPathMap, level int) map[string]any {
+func (t *Table) MapJoinRow(row []Data, store *Store, tablePathMap JoinPathMap, level int) map[string]any {
 	res := make(map[string]any)
 	for index, value := range row {
 		res[t.cols[index].name] = value.Val()
@@ -108,15 +112,15 @@ func (t Table) MapJoinRow(row []Data, store *Store, tablePathMap JoinPathMap, le
 	return res
 }
 
-func (t Table) Get(id string, store *Store) map[string]any {
+func (t *Table) Get(id string, store *Store) map[string]any {
 	return t.MapJoinRow(t.GetRow(id), store, t.InitPathTable(), 0)
 }
 
-func (t Table) PlainGet(id string) map[string]string {
+func (t *Table) PlainGet(id string) map[string]string {
 	return t.MapRow(t.GetRow(id))
 }
 
-func (t Table) All() []map[string]string {
+func (t *Table) All() []map[string]string {
 	res := make([]map[string]string, len(t.rows))
 	for index, row := range t.rows {
 		res[index] = t.MapRow(row)
@@ -124,7 +128,7 @@ func (t Table) All() []map[string]string {
 	return res
 }
 
-func (t Table) Search(query Query) any {
+func (t *Table) Search(query Query) any {
 	if query.all {
 		return t.All()
 	}
@@ -138,7 +142,7 @@ func (t Table) Search(query Query) any {
 	return rows
 }
 
-func (t Table) QueryRows(query Query) []*[]Data {
+func (t *Table) QueryRows(query Query) []*[]Data {
 	rows := make([]*[]Data, 0)
 	for _, row := range t.rows {
 		if !query.Matches(row) {
@@ -149,10 +153,10 @@ func (t Table) QueryRows(query Query) []*[]Data {
 	return rows
 }
 
-func (t Table) SearchRows(colName string, value string) [][]Data {
+func (t *Table) SearchRows(colName string, value string) [][]Data {
 	rows := make([][]Data, 0)
 
-	query := PrepareQuery(util.OneValueQuery(colName, value), &t)
+	query := PrepareQuery(util.OneValueQuery(colName, value), t)
 	for _, row := range t.rows {
 		if !query.Matches(row) {
 			continue
@@ -160,6 +164,87 @@ func (t Table) SearchRows(colName string, value string) [][]Data {
 		rows = append(rows, row)
 	}
 	return rows
+}
+
+func (t *Table) Insert(data map[string]string) (string, error) {
+	row := make([]Data, len(t.cols))
+	var index string
+	for _, column := range t.cols {
+		val, ok := data[column.name]
+		isPrimaryIndex := t.primaryIndex == column.name
+		console.YellowPrintln(fmt.Sprintf("Setting column %s -> value %s ", column.name, val))
+		if ok {
+			row[column.number] = *FromString(val)
+			if isPrimaryIndex {
+				exist := t.GetRow(val)
+				if exist != nil {
+					return "", errors.New("duplicated primary key")
+				}
+				index = val
+			}
+			continue
+		}
+		if t.primaryIndex != column.name {
+			continue
+		}
+		row[column.number] = *t.nextPrimaryIndex()
+		index = row[column.number].Str()
+	}
+	t.rows = append(t.rows, row)
+	t.indexes[t.primaryIndex][index] = row
+	return index, nil
+}
+
+func (t *Table) nextPrimaryIndex() *Data {
+	primaryIndex := t.indexes[t.primaryIndex]
+	if len(primaryIndex) == 0 {
+		return FromString("0")
+	}
+	allNumbers := true
+	var maxIndex int64
+	maxIndex = 0
+	for k := range primaryIndex {
+		i, err := strconv.ParseInt(k, 10, 64)
+		if err != nil {
+			allNumbers = false
+			break
+		}
+		if i > maxIndex {
+			maxIndex = i
+		}
+	}
+	if allNumbers {
+		return FromString(strconv.FormatInt(maxIndex+1, 10))
+	}
+	return FromString(uuid.NewString())
+}
+
+func (t *Table) ToCsv() [][]string {
+	w := len(t.cols)
+	h := len(t.rows)
+
+	res := make([][]string, h+1)
+	header := make([]string, w)
+
+	for i, col := range t.cols {
+		header[i] = col.name
+	}
+	res[0] = header
+
+	for j := range res {
+		if j == 0 {
+			continue
+		}
+		r := j - 1
+		res[j] = make([]string, w)
+
+		for i, data := range t.rows[r] {
+			res[j][i] = data.Str()
+		}
+
+	}
+
+	return res
 }
 
 func TableToStructs[A any](t *Table, query Query, array *[]A) error {
@@ -181,5 +266,10 @@ func InitTable(indexes Indexes, cols []*ColumnDefinition, nColumns int, nRows in
 	for i := range a {
 		a[i] = make([]Data, nColumns)
 	}
-	return &Table{indexes: indexes, rows: a, cols: cols, primaryIndex: primaryIndex, foreignIndexes: make([]*ColumnDefinition, 0)}
+	return &Table{
+		indexes:        indexes,
+		rows:           a,
+		cols:           cols,
+		primaryIndex:   primaryIndex,
+		foreignIndexes: make([]*ColumnDefinition, 0)}
 }

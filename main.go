@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"fold/configurator"
 	"fold/console"
+	"fold/threads"
 	"net/http"
 	"os"
 )
@@ -17,6 +18,10 @@ func main() {
 	fmt.Println(argsWithProg)
 
 	var dataPath = argsWithoutProg[0]
+	console.GreenPrintln("___________________________")
+	console.GreenPrintln("Starting Async service")
+	console.GreenPrintln("___________________________")
+	threads.Start()
 
 	console.GreenPrintln("___________________________")
 	console.GreenPrintln("Starting server")

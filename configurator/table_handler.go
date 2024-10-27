@@ -1,6 +1,7 @@
 package configurator
 
 import (
+	"encoding/json"
 	"fmt"
 	"fold/console"
 	"fold/router"
@@ -21,5 +22,16 @@ func SetTableHandlers(route string, mux *goji.Mux) {
 	mux.HandleFunc(pat.Get(fmt.Sprintf("%s%s", route, paramLiteral)), func(w http.ResponseWriter, r *http.Request) {
 		id := pat.Param(r, "id")
 		router.ProcessGet(route, id, w)
+	})
+
+	mux.HandleFunc(pat.Post(route), func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+		var record map[string]string
+		err := decoder.Decode(&record)
+		if err != nil {
+			router.ServerError(err, w)
+			return
+		}
+		router.ProcessPost(route, record, w)
 	})
 }
