@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"fold/console"
+	"fold/db"
 	"fold/util"
 	"github.com/google/uuid"
 	"strconv"
@@ -137,13 +138,16 @@ func (t *Table) update(row *[]Data, data map[string]string) int {
 	return colUpdates
 }
 
-func (t *Table) Update(id string, record map[string]string, store *Store) (map[string]any, bool, error) {
+func (t *Table) Update(id string, record map[string]string, store *Store) (map[string]any, error) {
 	row := t.GetRow(id)
 	if row == nil {
-		return nil, false, errors.New("entity not found")
+		return nil, errors.New("entity not found")
 	}
 	colsUpdated := t.update(&row, record)
-	return t.MapJoinRow(t.GetRow(id), store, t.InitPathTable(), 0), colsUpdated > 0, nil
+	if colsUpdated > 0 {
+		t.OnUpdate()
+	}
+	return t.MapJoinRow(t.GetRow(id), store, t.InitPathTable(), 0), nil
 }
 
 func (t *Table) PlainGet(id string) map[string]string {
@@ -222,6 +226,7 @@ func (t *Table) Insert(data map[string]string) (string, error) {
 	}
 	t.rows = append(t.rows, row)
 	t.indexes[t.primaryIndex][index] = row
+	t.OnUpdate()
 	return index, nil
 }
 
@@ -289,6 +294,10 @@ func TableToStructs[A any](t *Table, query Query, array *[]A) error {
 		return err
 	}
 	return nil
+}
+
+func (t *Table) OnUpdate() {
+	db.OnTableUpdate(t.File, t.ToCsv())
 }
 
 func InitTable(indexes Indexes, cols []*ColumnDefinition, nColumns int, nRows int, primaryIndex string) *Table {

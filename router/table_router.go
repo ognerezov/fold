@@ -3,7 +3,6 @@ package router
 import (
 	"errors"
 	"fold/api"
-	"fold/csv"
 	"fold/mem"
 	"net/http"
 )
@@ -49,15 +48,11 @@ func ProcessPatch(route string, id string, record map[string]string, w http.Resp
 		return
 	}
 
-	data, shouldSave, err := table.Update(id, record, mem.TheStore)
+	data, err := table.Update(id, record, mem.TheStore)
 
 	if err != nil {
 		ReturnError(err, 404, w)
 		return
-	}
-
-	if shouldSave {
-		csv.WriteCsvAsync(table.File, table.ToCsv())
 	}
 
 	WriteResponse(data, w)
@@ -75,7 +70,6 @@ func ProcessPost(route string, record map[string]string, w http.ResponseWriter) 
 		return
 	}
 
-	csv.WriteCsvAsync(table.File, table.ToCsv())
 	WriteResponse(api.IdResponse{
 		Id: id,
 	}, w)

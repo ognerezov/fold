@@ -3,6 +3,8 @@ package threads
 import (
 	"fmt"
 	"fold/console"
+	"fold/db"
+	"time"
 )
 
 type AsyncCall[A any, T any] interface {
@@ -15,8 +17,12 @@ type CallBackReceiver[T any] interface {
 }
 
 var (
-	Errors  = make(chan ErrorMessage)
-	Results = make(chan Message[string])
+	// FlushInterval this should go to config
+	FlushInterval time.Duration = 5
+	Ticker                      = time.NewTicker(FlushInterval * time.Second)
+	Errors                      = make(chan ErrorMessage)
+	Results                     = make(chan Message[string])
+	Quit                        = make(chan struct{})
 )
 
 func wrap[A any](caller AsyncCall[A, string]) func(A) {
@@ -54,10 +60,28 @@ func readChannels() {
 				}
 			}
 			console.RedPrintln(msg.e.Error())
+		case <-Quit:
+			return
+		}
+	}
+}
+
+func flushDb() {
+	for {
+		select {
+		case <-Ticker.C:
+			tables := db.Db()
+			for file, table := range *tables {
+				WriteCsvAsync(file, table)
+			}
+		case <-Quit:
+			Ticker.Stop()
+			return
 		}
 	}
 }
 
 func Start() {
 	go readChannels()
+	go flushDb()
 }

@@ -2,9 +2,7 @@ package csv
 
 import (
 	"encoding/csv"
-	"fmt"
 	"fold/console"
-	"fold/threads"
 	"log"
 	"os"
 )
@@ -43,22 +41,4 @@ func WriteCsvFile(filePath string, records [][]string) error {
 	}(f)
 	w := csv.NewWriter(f)
 	return w.WriteAll(records)
-}
-
-func WriteCsvAsync(filePath string, records [][]string) {
-	fmt.Println(filePath)
-	fmt.Println(records)
-	writer := Writer(filePath)
-	threads.Async(writer, records)
-}
-
-type Writer string
-
-func (w Writer) Call(args [][]string) (threads.Message[string], threads.ErrorMessage) {
-	e := WriteCsvFile(string(w), args)
-	process := "Save csv to file " + string(w)
-	if e != nil {
-		return threads.EmptyMessage(process), threads.CommonError(process, e)
-	}
-	return threads.CommonMessage(process, "success"), threads.CommonError(process, e)
 }
