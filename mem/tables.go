@@ -116,6 +116,36 @@ func (t *Table) Get(id string, store *Store) map[string]any {
 	return t.MapJoinRow(t.GetRow(id), store, t.InitPathTable(), 0)
 }
 
+func (t *Table) update(row *[]Data, data map[string]string) int {
+	colUpdates := 0
+	for _, column := range t.cols {
+		val, ok := data[column.name]
+		isPrimaryIndex := t.primaryIndex == column.name
+		if isPrimaryIndex {
+			console.YellowPrintln(fmt.Sprintf("Skip updating %s because it's primary key ", column.name))
+			continue
+		}
+		if !ok {
+			continue
+		}
+		if (*row)[column.number].Str() == val {
+			continue
+		}
+		colUpdates++
+		(*row)[column.number] = *FromString(val)
+	}
+	return colUpdates
+}
+
+func (t *Table) Update(id string, record map[string]string, store *Store) (map[string]any, bool, error) {
+	row := t.GetRow(id)
+	if row == nil {
+		return nil, false, errors.New("entity not found")
+	}
+	colsUpdated := t.update(&row, record)
+	return t.MapJoinRow(t.GetRow(id), store, t.InitPathTable(), 0), colsUpdated > 0, nil
+}
+
 func (t *Table) PlainGet(id string) map[string]string {
 	return t.MapRow(t.GetRow(id))
 }

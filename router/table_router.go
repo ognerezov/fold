@@ -42,6 +42,27 @@ func ProcessGet(route string, id string, w http.ResponseWriter) {
 	WriteResponse(data, w)
 }
 
+func ProcessPatch(route string, id string, record map[string]string, w http.ResponseWriter) {
+	table, err := getTable(route)
+	if err != nil {
+		ReturnError(err, 404, w)
+		return
+	}
+
+	data, shouldSave, err := table.Update(id, record, mem.TheStore)
+
+	if err != nil {
+		ReturnError(err, 404, w)
+		return
+	}
+
+	if shouldSave {
+		csv.WriteCsvAsync(table.File, table.ToCsv())
+	}
+
+	WriteResponse(data, w)
+}
+
 func ProcessPost(route string, record map[string]string, w http.ResponseWriter) {
 	table, err := getTable(route)
 	if err != nil {
@@ -53,8 +74,8 @@ func ProcessPost(route string, record map[string]string, w http.ResponseWriter) 
 		ReturnError(err, 409, w)
 		return
 	}
-	records := table.ToCsv()
-	csv.WriteCsvAsync(table.File, records)
+
+	csv.WriteCsvAsync(table.File, table.ToCsv())
 	WriteResponse(api.IdResponse{
 		Id: id,
 	}, w)

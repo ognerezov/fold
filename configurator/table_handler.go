@@ -24,6 +24,18 @@ func SetTableHandlers(route string, mux *goji.Mux) {
 		router.ProcessGet(route, id, w)
 	})
 
+	mux.HandleFunc(pat.Patch(fmt.Sprintf("%s%s", route, paramLiteral)), func(w http.ResponseWriter, r *http.Request) {
+		id := pat.Param(r, "id")
+		decoder := json.NewDecoder(r.Body)
+		var record map[string]string
+		err := decoder.Decode(&record)
+		if err != nil {
+			router.ServerError(err, w)
+			return
+		}
+		router.ProcessPatch(route, id, record, w)
+	})
+
 	mux.HandleFunc(pat.Post(route), func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		var record map[string]string
