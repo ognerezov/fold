@@ -300,6 +300,32 @@ func (t *Table) OnUpdate() {
 	db.OnTableUpdate(t.File, t.ToCsv())
 }
 
+func (t *Table) BatchUpdate(batch Batch) {
+	updatedCount := 0
+	for _, row := range t.rows {
+		err := batch.UpdateRow(&row)
+		if err == nil {
+			updatedCount++
+		}
+	}
+	if updatedCount == 0 {
+		console.YellowPrintln("Batch update 0 rows")
+		return
+	} else {
+		console.GreenPrintln(fmt.Sprintf("Batch update %v rows", updatedCount))
+	}
+	t.OnUpdate()
+}
+
+func (t *Table) ColNumber(name string) int {
+	for _, col := range t.cols {
+		if col.name == name {
+			return col.number
+		}
+	}
+	return -1
+}
+
 func InitTable(indexes Indexes, cols []*ColumnDefinition, nColumns int, nRows int, primaryIndex string) *Table {
 	a := make([][]Data, nRows)
 	for i := range a {

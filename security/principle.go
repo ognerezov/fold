@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"fold/console"
 	"fold/mem"
+	"fold/util"
 	"net/http"
 )
 
@@ -80,7 +81,7 @@ func FromToken(tokenString string) (*Principle, error) {
 }
 
 func FromTable(id string, password string) (*Principle, error) {
-	userData := mem.TheStore.PlainGet("/user", id)
+	userData := mem.TheStore.PlainGet(util.UserPath, id)
 	if userData == nil {
 		return nil, fmt.Errorf("user not found")
 	}
@@ -104,7 +105,7 @@ func FromTable(id string, password string) (*Principle, error) {
 
 func verifyPassword(password string, data map[string]string) error {
 	p := data["password"]
-	if p != password {
+	if !CheckPassword(password, p) {
 		return fmt.Errorf("password missmatch")
 	}
 	return nil

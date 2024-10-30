@@ -27,6 +27,10 @@ func (c ColumnDefinition) Name() string {
 	return c.name
 }
 
+func (c ColumnDefinition) Number() int {
+	return c.number
+}
+
 func ColumnsPrintln(columns []*ColumnDefinition) {
 	fmt.Print("_ |")
 	for _, column := range columns {

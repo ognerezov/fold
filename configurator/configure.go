@@ -54,6 +54,10 @@ func Configure(dataPath string) (*goji.Mux, error) {
 	if err != nil {
 		return nil, err
 	}
+	userTable, _ := store.GetTable(util.UserPath)
+	if userTable != nil {
+		security.EncodePasswords(userTable)
+	}
 	securityRulesTable, _ := store.GetTable("/security/rules")
 	if securityRulesTable != nil {
 		var rules []security.Rule

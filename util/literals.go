@@ -1,5 +1,6 @@
 package util
 
-var (
+const (
 	HeaderDelimiter = "_"
+	UserPath        = "/user"
 )
