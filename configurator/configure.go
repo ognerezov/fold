@@ -46,6 +46,8 @@ func Configure(dataPath string) (*goji.Mux, error) {
 			table.File = filename
 			store.SetTable(route, table)
 			SetTableHandlers(route, mux)
+		default:
+			SetRawHandlers(route, filename, mux)
 		}
 
 		return nil
