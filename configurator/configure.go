@@ -46,6 +46,15 @@ func Configure(dataPath string) (*goji.Mux, error) {
 			table.File = filename
 			store.SetTable(route, table)
 			SetTableHandlers(route, mux)
+		case ".json":
+			fmt.Println(filename)
+			noSql, e := mem.LoadJson(filename)
+			if e != nil {
+				console.RedPrintln(e.Error())
+			} else {
+				store.SetNoSql(route, noSql)
+				SetJsonHandlers(route, noSql, mux)
+			}
 		default:
 			SetRawHandlers(route, filename, mux)
 		}

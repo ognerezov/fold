@@ -28,7 +28,7 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux) {
 		f, err := os.OpenFile(filePath, os.O_RDONLY, 0)
 		if err != nil {
 			if os.IsNotExist(err) {
-				router.ReturnError(err, 404, w)
+				router.NotFound(w)
 				return
 			}
 			router.ServerError(err, w)

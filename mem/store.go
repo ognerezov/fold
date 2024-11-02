@@ -7,20 +7,17 @@ import (
 )
 
 type Store struct {
-	kv     map[string]any
+	noSql  map[string]*NoSql
 	tables map[string]*Table
 }
 
-func (s Store) SValue(key string, value any) {
-	s.kv[key] = value
+func (s Store) SetNoSql(key string, value *NoSql) {
+	s.noSql[key] = value
 }
 
-func (s Store) Value(key string) any {
-	return s.kv[key]
-}
-
-func (s Store) Delete(key string) {
-	delete(s.kv, key)
+func (s Store) NoSql(key string) (*NoSql, bool) {
+	n, ok := s.noSql[key]
+	return n, ok
 }
 
 func (s Store) SetTable(key string, value *Table) {
@@ -94,5 +91,5 @@ func (s Store) ReIndex() {
 }
 
 var (
-	TheStore *Store = &Store{kv: make(map[string]any), tables: make(map[string]*Table)}
+	TheStore *Store = &Store{noSql: make(map[string]*NoSql), tables: make(map[string]*Table)}
 )

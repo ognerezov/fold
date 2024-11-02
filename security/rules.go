@@ -10,7 +10,7 @@ import (
 )
 
 type Rule struct {
-	Id        string `json:"id" validate:"required"`
+	Id        int    `json:"id" validate:"required"`
 	Authority string `json:"security_authorities_id" validate:"required"`
 	Audience  string `json:"security_audience_id" validate:"required"`
 	Filter    string `json:"filter"`

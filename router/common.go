@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"fold/console"
 	"net/http"
@@ -22,6 +23,10 @@ func WriteResponse(data any, w http.ResponseWriter) {
 
 func ServerError(err error, w http.ResponseWriter) {
 	ReturnError(err, 500, w)
+}
+
+func NotFound(w http.ResponseWriter) {
+	ReturnError(errors.New("not found"), 404, w)
 }
 
 func ReturnError(err error, code int, w http.ResponseWriter) {
