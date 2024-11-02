@@ -42,11 +42,11 @@ func (s Store) Get(table string, id string) map[string]any {
 	return s.tables[table].Get(id, &s)
 }
 
-func (s Store) PlainGet(table string, id string) map[string]string {
+func (s Store) PlainGet(table string, id string) map[string]any {
 	return s.tables[table].PlainGet(id)
 }
 
-func (s Store) All(table string) []map[string]string {
+func (s Store) All(table string) []map[string]any {
 	return s.tables[table].All()
 }
 

@@ -43,16 +43,18 @@ const (
 	String   = "string"
 	Bool     = "bool"
 	Int      = "int"
-	Float    = "float"
+	Float    = "float64"
 	Datetime = "datetime"
 	Date     = "date"
+	Array    = "array"
+	Struct   = "struct"
 )
 
 func FromString(s string) *Data {
 	data := Data{s: s}
 	data.is = String
 	b, err := strconv.ParseBool(s)
-	if err == nil {
+	if err == nil && s == "true" || s == "false" {
 		data.is = Bool
 		data.b = b
 		return &data
@@ -112,18 +114,24 @@ func (d Data) Is() string {
 }
 
 func (d Data) Val() any {
-	if d.is == "object" {
+	switch d.is {
+	case Struct:
 		return *d.o
-	}
-	if d.is == "array" {
+	case Array:
 		return d.a
+	case Int:
+		return d.i
+	case Float:
+		return d.f
+	case Bool:
+		return d.b
+	default:
+		return d.s
 	}
-
-	return d.s
 }
 
 func WrapData(d *Data) Data {
-	return Data{is: "object", o: d}
+	return Data{is: Struct, o: d}
 }
 
 func WrapArray(array []Data) Data {
@@ -131,5 +139,5 @@ func WrapArray(array []Data) Data {
 	for i, d := range array {
 		a[i] = &d
 	}
-	return Data{is: "array", a: a}
+	return Data{is: Array, a: a}
 }

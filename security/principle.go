@@ -103,9 +103,9 @@ func FromTable(id string, password string) (*Principle, error) {
 	}, nil
 }
 
-func verifyPassword(password string, data map[string]string) error {
+func verifyPassword(password string, data map[string]any) error {
 	p := data["password"]
-	if !CheckPassword(password, p) {
+	if !CheckPassword(password, p.(string)) {
 		return fmt.Errorf("password missmatch")
 	}
 	return nil

@@ -60,10 +60,10 @@ func (t *Table) GetRow(id string) []Data {
 	return t.indexes[t.primaryIndex][id]
 }
 
-func (t *Table) MapRow(row []Data) map[string]string {
-	res := make(map[string]string)
+func (t *Table) MapRow(row []Data) map[string]any {
+	res := make(map[string]any)
 	for index, value := range row {
-		res[t.cols[index].name] = value.Str()
+		res[t.cols[index].name] = value.Val()
 	}
 	return res
 }
@@ -150,12 +150,12 @@ func (t *Table) Update(id string, record map[string]string, store *Store) (map[s
 	return t.MapJoinRow(t.GetRow(id), store, t.InitPathTable(), 0), nil
 }
 
-func (t *Table) PlainGet(id string) map[string]string {
+func (t *Table) PlainGet(id string) map[string]any {
 	return t.MapRow(t.GetRow(id))
 }
 
-func (t *Table) All() []map[string]string {
-	res := make([]map[string]string, len(t.rows))
+func (t *Table) All() []map[string]any {
+	res := make([]map[string]any, len(t.rows))
 	for index, row := range t.rows {
 		res[index] = t.MapRow(row)
 	}
