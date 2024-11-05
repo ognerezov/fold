@@ -19,7 +19,7 @@ const (
 var (
 	NoGuard  Guard = blindGuard
 	pubGuard       = PathGuard{
-		regexp: regexp.MustCompile("/pub/.*"),
+		regexp: regexp.MustCompile("/pub/.*|/favicon.ico"),
 		role:   "guest",
 		public: true,
 	}

@@ -6,3 +6,4 @@ id,security_authorities_id,security_audience_id,filter,action
 5,admin,user,,
 6,admin,project,,
 7,admin,security,,read
+8,guest,favicon.ico,,read

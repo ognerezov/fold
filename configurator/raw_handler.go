@@ -22,8 +22,8 @@ func GetContentType(filePath string) (string, string, bool) {
 }
 
 func SetRawHandlers(route string, filePath string, mux *goji.Mux) {
-	console.BluePrintln("Registering GET " + route)
 	m, ext, hasExt := GetContentType(filePath)
+	console.BluePrintln("Registering GET " + route + ext)
 	mux.HandleFunc(pat.Get(route+ext), func(w http.ResponseWriter, r *http.Request) {
 		f, err := os.OpenFile(filePath, os.O_RDONLY, 0)
 		if err != nil {
