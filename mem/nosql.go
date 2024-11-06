@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"fold/console"
+	"fold/util"
 	"io"
 	"os"
 	"reflect"
@@ -239,16 +240,26 @@ func (n *NoSql) CollectionVal() []any {
 	return res
 }
 
-func (n *NoSql) Patch(query *map[string][]string, update any) any {
-	if n.is != Array || query == nil || len(*query) == 0 {
-		console.YellowPrintln("taking raw val")
+func (n *NoSql) Patch(query *map[string][]string, update *map[string]any) any {
+
+	if n.is == Struct {
+		util.MergeMaps(n.document, *update)
 		return n.Val()
 	}
 
-	filtered, containers, path, _ := n.CollectionSearch(query)
+	if n.is != Array {
+		n.document = *update
+		n.is = Struct
+		return n.Val()
+	}
+	filtered := n.collection
+	if query != nil && len(*query) > 0 {
+		filtered, _, _, _ = n.CollectionSearch(query)
+	}
+
 	res := make([]any, len(filtered))
 	for i, item := range filtered {
-		containers[i].Set(path, update)
+		util.MergeMaps(item.document, *update)
 		res[i] = item.Val()
 	}
 	return res

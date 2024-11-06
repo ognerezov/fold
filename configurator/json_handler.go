@@ -27,12 +27,12 @@ func SetJsonHandlers(route string, noSql *mem.NoSql, mux *goji.Mux) {
 		}
 		q, _ := util.MapQuery(r)
 		decoder := json.NewDecoder(r.Body)
-		var record any
+		var record map[string]any
 		err := decoder.Decode(&record)
 		if err != nil {
 			router.ServerError(err, w)
 			return
 		}
-		router.WriteResponse(n.RawSearch(&q), w)
+		router.WriteResponse(n.Patch(&q, &record), w)
 	})
 }
