@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func SetJsonHandlers(route string, noSql *mem.NoSql, mux *goji.Mux) {
+func SetJsonHandlers(route string, mux *goji.Mux) {
 	mux.HandleFunc(pat.Get(route), func(w http.ResponseWriter, r *http.Request) {
 		n, ok := (*mem.TheStore).NoSql(route)
 		if !ok {
@@ -34,5 +34,20 @@ func SetJsonHandlers(route string, noSql *mem.NoSql, mux *goji.Mux) {
 			return
 		}
 		router.WriteResponse(n.Patch(&q, &record), w)
+	})
+
+	mux.HandleFunc(pat.Post(route), func(w http.ResponseWriter, r *http.Request) {
+		n, ok := (*mem.TheStore).NoSql(route)
+		if !ok {
+			router.NotFound(w)
+		}
+		decoder := json.NewDecoder(r.Body)
+		var record map[string]any
+		err := decoder.Decode(&record)
+		if err != nil {
+			router.ServerError(err, w)
+			return
+		}
+		router.WriteResponse(n.Post(&record), w)
 	})
 }

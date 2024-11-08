@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"fold/console"
+	"fold/db"
 	"fold/util"
 	"io"
+	"maps"
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 )
@@ -89,14 +90,10 @@ func FromAny(val any) *NoSql {
 	case *NoSql:
 		return x
 	case []any:
-		fmt.Println("collection")
 		return &NoSql{collection: FromAnyArray(x), is: Array}
 	case map[string]any:
-		fmt.Println("json")
 		return &NoSql{document: x, is: Struct}
 	default:
-		fmt.Println("string")
-		fmt.Println(reflect.TypeOf(x))
 		str := fmt.Sprint(x)
 		data := FromString(str)
 		return &NoSql{data: data, is: data.is}
@@ -136,8 +133,6 @@ func LoadJson(file string) (*NoSql, error) {
 	}
 	res := FromAny(data)
 	res.File = file
-	fmt.Println("------")
-	fmt.Println(res.CollectionVal())
 	return res, nil
 }
 
@@ -240,17 +235,25 @@ func (n *NoSql) CollectionVal() []any {
 	return res
 }
 
+func (n *NoSql) OnUpdate() any {
+	val := n.Val()
+	db.OnFileUpdate(n.File, val)
+	return val
+}
+
 func (n *NoSql) Patch(query *map[string][]string, update *map[string]any) any {
 
 	if n.is == Struct {
 		util.MergeMaps(n.document, *update)
-		return n.Val()
+
+		return n.OnUpdate()
 	}
 
 	if n.is != Array {
 		n.document = *update
 		n.is = Struct
-		return n.Val()
+
+		return n.OnUpdate()
 	}
 	filtered := n.collection
 	if query != nil && len(*query) > 0 {
@@ -262,5 +265,25 @@ func (n *NoSql) Patch(query *map[string][]string, update *map[string]any) any {
 		util.MergeMaps(item.document, *update)
 		res[i] = item.Val()
 	}
-	return res
+
+	return n.OnUpdate()
+}
+
+func (n *NoSql) Post(update *map[string]any) any {
+
+	if n.is == Struct {
+		maps.Copy(n.document, *update)
+
+		return n.OnUpdate()
+	}
+
+	if n.is != Array {
+		n.document = *update
+		n.is = Struct
+
+		return n.OnUpdate()
+	}
+	n.collection = append(n.collection, &NoSql{document: *update, is: Struct})
+
+	return n.OnUpdate()
 }

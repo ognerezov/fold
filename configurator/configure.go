@@ -53,7 +53,7 @@ func Configure(dataPath string) (*goji.Mux, error) {
 				console.RedPrintln(e.Error())
 			} else {
 				store.SetNoSql(route, noSql)
-				SetJsonHandlers(route, noSql, mux)
+				SetJsonHandlers(route, mux)
 			}
 		default:
 			SetRawHandlers(route, filename, mux)

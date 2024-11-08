@@ -1,19 +1,23 @@
 package threads
 
-import "fold/csv"
+import (
+	"fold/csv"
+	"fold/db"
+)
 
 func WriteCsvAsync(filePath string, records [][]string) {
-	writer := Writer(filePath)
+	writer := CsvWriter(filePath)
 	Async(writer, records)
 }
 
-type Writer string
+type CsvWriter string
 
-func (w Writer) Call(args [][]string) (Message[string], ErrorMessage) {
+func (w CsvWriter) Call(args [][]string) (Message[string], ErrorMessage) {
 	e := csv.WriteCsvFile(string(w), args)
 	process := "Save csv to file " + string(w)
 	if e != nil {
 		return EmptyMessage(process), CommonError(process, e)
 	}
+	db.ClearTableUpdate(string(w))
 	return CommonMessage(process, "success"), CommonError(process, e)
 }

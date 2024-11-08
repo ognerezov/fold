@@ -31,7 +31,7 @@ func wrap[A any](caller AsyncCall[A, string]) func(A) {
 		if err.e != nil {
 			Errors <- err
 		}
-		if !res.hasResult {
+		if res.hasResult {
 			Results <- res
 		}
 	}
@@ -50,9 +50,9 @@ func readChannels() {
 				for _, receiver := range msg.receivers {
 					receiver.OnResult(msg.t)
 				}
-			} else {
-				console.GreenPrintln(fmt.Sprintf("Process %s returns result %v", msg.process, msg.t))
 			}
+			console.GreenPrintln(fmt.Sprintf("Process %s returns result %v", msg.process, msg.t))
+
 		case msg := <-Errors:
 			if msg.receivers != nil {
 				for _, receiver := range msg.receivers {
@@ -74,6 +74,12 @@ func flushDb() {
 			for file, table := range *tables {
 				WriteCsvAsync(file, table)
 			}
+			updates := db.Pending()
+
+			for file, n := range *updates {
+				WriteNosqlAsync(file, n)
+			}
+
 		case <-Quit:
 			Ticker.Stop()
 			return
