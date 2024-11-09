@@ -50,4 +50,13 @@ func SetJsonHandlers(route string, mux *goji.Mux) {
 		}
 		router.WriteResponse(n.Post(&record), w)
 	})
+
+	mux.HandleFunc(pat.Delete(route), func(w http.ResponseWriter, r *http.Request) {
+		n, ok := (*mem.TheStore).NoSql(route)
+		if !ok {
+			router.NotFound(w)
+		}
+		q, _ := util.MapQuery(r)
+		router.WriteResponse(n.Delete(&q), w)
+	})
 }

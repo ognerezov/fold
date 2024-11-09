@@ -138,10 +138,7 @@ func LoadJson(file string) (*NoSql, error) {
 
 func (n *NoSql) DeepGet(path string) (*NoSql, string, *NoSql, bool) {
 	parts := strings.Split(path, ".")
-	fmt.Println(n)
-	fmt.Println(parts[0])
 	var innerContainer = n.Get(parts[0])
-	fmt.Println(innerContainer)
 	if len(parts) < 2 {
 		return n, parts[0], innerContainer, true
 	}
@@ -163,7 +160,7 @@ func (n *NoSql) RawSearch(query *map[string][]string) any {
 		return n.Val()
 	}
 
-	filtered, _, _, _ := n.CollectionSearch(query)
+	filtered, _, _, _ := n.CollectionSearch(query, false)
 	res := make([]any, len(filtered))
 	for i, item := range filtered {
 		res[i] = item.Val()
@@ -172,12 +169,9 @@ func (n *NoSql) RawSearch(query *map[string][]string) any {
 }
 
 func Matches(n *NoSql, s string) bool {
-	fmt.Println("compare " + s)
-	fmt.Println(n)
 	if n == nil {
 		return s == "" || s == "null"
 	}
-	fmt.Println(n.Str())
 	return n.Str() == s
 }
 
@@ -204,7 +198,7 @@ func (n *NoSql) Matches(query *map[string][]string) (*NoSql, string, *NoSql, boo
 	return container, field, value, true
 }
 
-func (n *NoSql) CollectionSearch(query *map[string][]string) ([]*NoSql, []*NoSql, string, []*NoSql) {
+func (n *NoSql) CollectionSearch(query *map[string][]string, not bool) ([]*NoSql, []*NoSql, string, []*NoSql) {
 	all := n.collection
 	res := make([]*NoSql, 0, len(all))
 	containers := make([]*NoSql, 0, len(all))
@@ -212,7 +206,8 @@ func (n *NoSql) CollectionSearch(query *map[string][]string) ([]*NoSql, []*NoSql
 	field := ""
 	for _, item := range all {
 		container, f, value, ok := item.Matches(query)
-		if ok {
+		matches := (!ok && not) || (ok && !not)
+		if matches {
 			res = append(res, item)
 			containers = append(containers, container)
 			values = append(values, value)
@@ -257,7 +252,7 @@ func (n *NoSql) Patch(query *map[string][]string, update *map[string]any) any {
 	}
 	filtered := n.collection
 	if query != nil && len(*query) > 0 {
-		filtered, _, _, _ = n.CollectionSearch(query)
+		filtered, _, _, _ = n.CollectionSearch(query, false)
 	}
 
 	res := make([]any, len(filtered))
@@ -285,5 +280,28 @@ func (n *NoSql) Post(update *map[string]any) any {
 	}
 	n.collection = append(n.collection, &NoSql{document: *update, is: Struct})
 
+	return n.OnUpdate()
+}
+
+func (n *NoSql) Delete(query *map[string][]string) any {
+	if n.is != Array {
+		n.document = map[string]any{}
+		n.is = Struct
+
+		return n.OnUpdate()
+	}
+
+	if query == nil || len(*query) == 0 {
+		n.collection = []*NoSql{}
+		return n.OnUpdate()
+	}
+
+	filtered, _, _, _ := n.CollectionSearch(query, true)
+	totalFound := len(filtered)
+	if totalFound == len(n.collection) {
+		return n.Val()
+	}
+
+	n.collection = filtered
 	return n.OnUpdate()
 }
