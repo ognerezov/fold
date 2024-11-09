@@ -16,6 +16,7 @@ import (
 )
 
 func ConfigureServer(dataPath string) (*goji.Mux, error) {
+	console.YellowPrintln("Configure server for dir " + dataPath)
 	mux := goji.NewMux()
 	mux.Use(router.LogRequest)
 

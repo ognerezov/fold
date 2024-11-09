@@ -6,6 +6,7 @@ import (
 	"fold/util"
 	"net/http"
 	"os"
+	"sort"
 )
 
 const (
@@ -59,6 +60,7 @@ func ConfigurePorts(dataPath string) PortsConfig {
 		}
 
 		port, found := util.PathToInt(file.Name())
+		console.YellowPrintln("Checking root path " + file.Name())
 
 		if !found {
 			continue
@@ -69,6 +71,10 @@ func ConfigurePorts(dataPath string) PortsConfig {
 	if len(res) == 0 {
 		return SingleServer(dataPath)
 	}
+
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].port < res[j].port
+	})
 
 	return res
 }
