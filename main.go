@@ -5,13 +5,10 @@ import (
 	"fold/configurator"
 	"fold/console"
 	"fold/threads"
-	"net/http"
 	"os"
 )
 
 func main() {
-	fmt.Println("Starting server")
-
 	var argsWithProg = os.Args
 	var argsWithoutProg = os.Args[1:]
 
@@ -26,13 +23,5 @@ func main() {
 	console.GreenPrintln("___________________________")
 	console.GreenPrintln("Starting server")
 	console.GreenPrintln("___________________________")
-	mux, err := configurator.Configure(dataPath)
-	if err != nil {
-		console.RedPrintln("Can't start server")
-		console.RedPrintln(err.Error())
-		return
-	}
-	addr := "localhost:8000"
-	configurator.TheServer = &http.Server{Addr: addr, Handler: mux}
-	configurator.Start()
+	configurator.App = configurator.CreateApplication("localhost", dataPath)
 }

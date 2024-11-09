@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func Configure(dataPath string) (*goji.Mux, error) {
+func ConfigureServer(dataPath string) (*goji.Mux, error) {
 	mux := goji.NewMux()
 	mux.Use(router.LogRequest)
 

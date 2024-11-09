@@ -1,8 +1,7 @@
 package path
 
 import (
-	"fmt"
-	"os"
+	"fold/console"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -30,25 +29,8 @@ func CreateRootCleaner(root string) DirMapper {
 	}
 }
 
-func WalkPath(root string) error {
-	clean := CreateRootCleaner(root)
-
-	return ProcessPath(root, func(path string, info os.FileInfo, _ error) error {
-
-		fmt.Println("Scanning " + clean(filepath.Dir(path)))
-		fmt.Println(info.IsDir())
-		fmt.Println("Dir: " + filepath.Dir(path))
-		fmt.Println("Ext: " + filepath.Ext(path))
-		fmt.Println(info.Name())
-		fmt.Printf("%s/%s", root, clean(path))
-		fmt.Println("")
-		fmt.Println("---------")
-		return nil
-	})
-}
-
 func ProcessPath(root string, f filepath.WalkFunc) error {
-	fmt.Println("Scanning root path " + root)
+	console.GreenPrintln("Scanning root path " + root)
 	var err = filepath.Walk(root, f)
 	return err
 }

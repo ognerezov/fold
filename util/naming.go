@@ -2,6 +2,8 @@ package util
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 )
 
@@ -53,4 +55,18 @@ func SplitArray[t any](arr []t, split int) ([]t, []t) {
 	}
 
 	return head, tail
+}
+
+func PathToInt(path string) (int, bool) {
+	i, err := strconv.ParseInt(strings.Replace(path, "/", "", -1), 10, 16)
+
+	if err == nil {
+		return int(i), true
+	}
+
+	return 0, false
+}
+
+func JoinedPath(root string, entry os.DirEntry) string {
+	return fmt.Sprintf("%s/%s", root, strings.Replace(entry.Name(), "/", "", -1))
 }
