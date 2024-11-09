@@ -150,6 +150,34 @@ func (t *Table) Update(id string, record map[string]string, store *Store) (map[s
 	return t.MapJoinRow(t.GetRow(id), store, t.InitPathTable(), 0), nil
 }
 
+func (t *Table) DeleteById(id string) int {
+	row := t.GetRow(id)
+
+	if row == nil || len(t.rows) == 0 {
+		return 0
+	}
+
+	newLength := len(t.rows) - 1
+	newRows := make([][]Data, newLength)
+	rawQuery := make(map[string][]string)
+	rawQuery[t.primaryIndex] = []string{id}
+	query := PrepareQuery(rawQuery, t)
+	index := 0
+	count := 0
+	for _, r := range t.rows {
+		if query.Matches(r) {
+			count++
+			continue
+		}
+		newRows[index] = r
+		index++
+	}
+
+	t.rows = newRows
+	t.OnUpdate()
+	return count
+}
+
 func (t *Table) PlainGet(id string) map[string]any {
 	return t.MapRow(t.GetRow(id))
 }
@@ -278,7 +306,7 @@ func (t *Table) ToCsv() [][]string {
 		}
 
 	}
-
+	fmt.Println(res)
 	return res
 }
 

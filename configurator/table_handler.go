@@ -46,4 +46,9 @@ func SetTableHandlers(route string, mux *goji.Mux) {
 		}
 		router.ProcessPost(route, record, w)
 	})
+
+	mux.HandleFunc(pat.Delete(fmt.Sprintf("%s%s", route, paramLiteral)), func(w http.ResponseWriter, r *http.Request) {
+		id := pat.Param(r, "id")
+		router.ProcessDelete(route, id, w)
+	})
 }

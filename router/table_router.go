@@ -74,3 +74,15 @@ func ProcessPost(route string, record map[string]string, w http.ResponseWriter) 
 		Id: id,
 	}, w)
 }
+
+func ProcessDelete(route string, id string, w http.ResponseWriter) {
+	table, err := getTable(route)
+	if err != nil {
+		ReturnError(err, 404, w)
+		return
+	}
+
+	count := table.DeleteById(id)
+
+	WriteResponse(api.CountResponse{Count: count}, w)
+}

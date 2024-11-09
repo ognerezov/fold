@@ -29,7 +29,7 @@ func ReadCsvFile(filePath string) [][]string {
 }
 
 func WriteCsvFile(filePath string, records [][]string) error {
-	f, err := os.OpenFile(filePath, os.O_WRONLY, 0)
+	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		log.Fatal("Unable to read output file "+filePath, err)
 	}
