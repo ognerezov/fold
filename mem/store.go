@@ -9,6 +9,16 @@ import (
 type Store struct {
 	noSql  map[string]*NoSql
 	tables map[string]*Table
+	cache  map[string][]byte
+}
+
+func (s Store) Cache(key string, b []byte) {
+	s.cache[key] = b
+}
+
+func (s Store) GetCached(key string) ([]byte, bool) {
+	res, ok := s.cache[key]
+	return res, ok
 }
 
 func (s Store) SetNoSql(key string, value *NoSql) {
@@ -91,5 +101,5 @@ func (s Store) ReIndex() {
 }
 
 var (
-	TheStore *Store = &Store{noSql: make(map[string]*NoSql), tables: make(map[string]*Table)}
+	TheStore *Store = &Store{noSql: make(map[string]*NoSql), tables: make(map[string]*Table), cache: make(map[string][]byte)}
 )

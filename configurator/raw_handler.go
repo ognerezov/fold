@@ -2,14 +2,21 @@ package configurator
 
 import (
 	"fold/console"
+	"fold/mem"
 	"fold/router"
+	"fold/util"
 	goji "goji.io"
 	"goji.io/pat"
-	"io"
 	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
+)
+
+var (
+	FrontendFiles = map[string]bool{
+		".html": true,
+	}
 )
 
 func GetContentType(filePath string) (string, string, bool) {
@@ -23,26 +30,41 @@ func GetContentType(filePath string) (string, string, bool) {
 
 func SetRawHandlers(route string, filePath string, mux *goji.Mux) {
 	m, ext, hasExt := GetContentType(filePath)
+
+	if hasExt && FrontendFiles[ext] {
+		console.BluePrintln("Registering GET " + route)
+		bytes, err := util.ReadFile(filePath)
+		if err != nil {
+			return
+		}
+		mem.TheStore.Cache(route, bytes)
+		mux.HandleFunc(pat.Get(route), func(w http.ResponseWriter, r *http.Request) {
+			console.BluePrintln("Searching cache for " + route)
+			var ok bool
+			bytes, ok = mem.TheStore.GetCached(route)
+			if !ok {
+				router.NotFound(w)
+				return
+			}
+			w.Header().Set("Content-Type", m)
+
+			_, err = w.Write(bytes)
+			if err == nil {
+				return
+			}
+			console.RedPrintln(err.Error())
+			router.ServerError(err, w)
+		})
+	}
 	console.BluePrintln("Registering GET " + route + ext)
 	mux.HandleFunc(pat.Get(route+ext), func(w http.ResponseWriter, r *http.Request) {
-		f, err := os.OpenFile(filePath, os.O_RDONLY, 0)
+		console.BluePrintln("Searching filesystem for " + route)
+		bytes, err := util.ReadFile(filePath)
 		if err != nil {
 			if os.IsNotExist(err) {
 				router.NotFound(w)
 				return
 			}
-			router.ServerError(err, w)
-			return
-		}
-		defer func(f *os.File) {
-			err = f.Close()
-			if err != nil {
-				console.RedPrintln(err.Error())
-			}
-		}(f)
-		bytes, err := io.ReadAll(f)
-		if err != nil {
-			console.RedPrintln(err.Error())
 			router.ServerError(err, w)
 			return
 		}

@@ -41,14 +41,14 @@ func ConfigureServer(dataPath string) (*goji.Mux, error) {
 		var filename = fmt.Sprintf("%s/%s", dataPath, clean(path))
 		switch filepath.Ext(path) {
 		case ".csv":
-			fmt.Println(filename)
+			console.GreenPrintln("Registering table handlers for " + filename)
 			records := csv.ReadCsvFile(filename)
 			table := mem.TableFromRecords(records)
 			table.File = filename
 			store.SetTable(route, table)
 			SetTableHandlers(route, mux)
 		case ".json":
-			fmt.Println(filename)
+			console.GreenPrintln("Registering json handlers for " + filename)
 			noSql, e := mem.LoadJson(filename)
 			if e != nil {
 				console.RedPrintln(e.Error())
