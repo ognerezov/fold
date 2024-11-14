@@ -50,6 +50,14 @@ const (
 	Struct   = "struct"
 )
 
+//
+//func (d Data) Schema() openapi.Schema {
+//	switch d.is {
+//	case String:
+//		return openapi.Schema{}
+//	}
+//}
+
 func FromString(s string) *Data {
 	data := Data{s: s}
 	data.is = String

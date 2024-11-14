@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"fold/console"
 	"fold/db"
+	"fold/openapi"
 	"fold/util"
 	"github.com/google/uuid"
 	"strconv"
@@ -352,6 +353,19 @@ func (t *Table) ColNumber(name string) int {
 		}
 	}
 	return -1
+}
+
+func (t *Table) Schema() openapi.Schema {
+	result := openapi.Schema{
+		Type:       "object",
+		Properties: make(map[string]openapi.Schema),
+	}
+
+	for _, col := range t.cols {
+		result.Properties[col.name] = openapi.Schema{}
+	}
+
+	return result
 }
 
 func InitTable(indexes Indexes, cols []*ColumnDefinition, nColumns int, nRows int, primaryIndex string) *Table {

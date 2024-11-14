@@ -5,6 +5,7 @@ import (
 	"fold/console"
 	"fold/csv"
 	"fold/mem"
+	"fold/openapi"
 	"fold/path"
 	"fold/router"
 	"fold/security"
@@ -15,7 +16,7 @@ import (
 	"strings"
 )
 
-func ConfigureServer(dataPath string) (*goji.Mux, error) {
+func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	console.YellowPrintln("Configure server for dir " + dataPath)
 	mux := goji.NewMux()
 	mux.Use(router.LogRequest)
@@ -23,6 +24,7 @@ func ConfigureServer(dataPath string) (*goji.Mux, error) {
 	store := *mem.TheStore
 	clean := path.CreateRootCleaner(dataPath)
 	path.Root = dataPath
+	apiDescription := openapi.InitApi(dataPath, port, "1")
 	var err = path.ProcessPath(dataPath, func(path string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -46,7 +48,7 @@ func ConfigureServer(dataPath string) (*goji.Mux, error) {
 			table := mem.TableFromRecords(records)
 			table.File = filename
 			store.SetTable(route, table)
-			SetTableHandlers(route, mux)
+			SetTableHandlers(route, mux, apiDescription)
 		case ".json":
 			console.GreenPrintln("Registering json handlers for " + filename)
 			noSql, e := mem.LoadJson(filename)
@@ -57,7 +59,7 @@ func ConfigureServer(dataPath string) (*goji.Mux, error) {
 				SetJsonHandlers(route, mux)
 			}
 		default:
-			SetRawHandlers(route, filename, mux)
+			SetRawHandlers(route, filename, mux, apiDescription)
 		}
 
 		return nil
@@ -87,5 +89,13 @@ func ConfigureServer(dataPath string) (*goji.Mux, error) {
 		}
 	}
 	security.SetAuthHandlers(mux)
+	openapiRoute := "/openapi.json"
+	openapiFileName := dataPath + openapiRoute
+	err = apiDescription.Save(openapiFileName)
+	if err == nil {
+		SetRawHandlers("/openapi", openapiFileName, mux, apiDescription)
+	} else {
+		console.RedPrintln(err.Error())
+	}
 	return mux, nil
 }

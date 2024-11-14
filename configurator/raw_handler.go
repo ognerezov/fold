@@ -1,8 +1,10 @@
 package configurator
 
 import (
+	"fmt"
 	"fold/console"
 	"fold/mem"
+	"fold/openapi"
 	"fold/router"
 	"fold/util"
 	goji "goji.io"
@@ -28,7 +30,7 @@ func GetContentType(filePath string) (string, string, bool) {
 	return m, ext, true
 }
 
-func SetRawHandlers(route string, filePath string, mux *goji.Mux) {
+func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.ApiDescription) {
 	m, ext, hasExt := GetContentType(filePath)
 
 	if hasExt && FrontendFiles[ext] {
@@ -55,10 +57,13 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux) {
 			console.RedPrintln(err.Error())
 			router.ServerError(err, w)
 		})
+		api.DescribeRawGet(route, "Get cached frontend file", m)
+		return
 	}
 	console.BluePrintln("Registering GET " + route + ext)
 	mux.HandleFunc(pat.Get(route+ext), func(w http.ResponseWriter, r *http.Request) {
 		console.BluePrintln("Searching filesystem for " + route)
+		fmt.Println(filePath)
 		bytes, err := util.ReadFile(filePath)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -75,6 +80,7 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux) {
 		if err == nil {
 			return
 		}
+		api.DescribeRawGet(route, "Get raw file from hdd", m)
 		console.RedPrintln(err.Error())
 		router.ServerError(err, w)
 	})

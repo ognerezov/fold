@@ -9,7 +9,7 @@ import (
 )
 
 func WriteResponse(data any, w http.ResponseWriter) {
-	h, err := json.Marshal(data)
+	h, err := json.MarshalIndent(data, "", "    ")
 	if err != nil {
 		ServerError(err, w)
 	}

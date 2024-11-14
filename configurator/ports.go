@@ -80,7 +80,7 @@ func ConfigurePorts(dataPath string) PortsConfig {
 }
 
 func (p *PortConfig) Serve(address string) (*Service, error) {
-	mux, err := ConfigureServer(p.path)
+	mux, err := ConfigureServer(p.path, p.port)
 	if err != nil {
 		console.RedPrintln("Can't start server")
 		console.RedPrintln(err.Error())
