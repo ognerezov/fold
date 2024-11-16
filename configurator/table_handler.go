@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"fold/console"
+	"fold/mem"
 	"fold/openapi"
 	"fold/router"
-	"fold/util"
 	goji "goji.io"
 	"goji.io/pat"
 	"net/http"
@@ -23,7 +23,8 @@ func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) 
 		paramBaseRoute = "/"
 	}
 	paramRoute := fmt.Sprintf("%s%s", paramBaseRoute, paramLiteral)
-
+	table, _ := mem.TheStore.GetTable(route)
+	schema := table.Schema()
 	mux.HandleFunc(pat.Get(paramRoute), func(w http.ResponseWriter, r *http.Request) {
 		id := pat.Param(r, "id")
 		router.ProcessGet(route, id, w)
@@ -56,81 +57,21 @@ func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) 
 		router.ProcessDelete(route, id, w)
 	})
 
-	api.Describe(route, openapi.Path{
-		"get": openapi.Method{
-			Summary: "Get table " + route,
-			Responses: map[string]openapi.Response{
-				"200": {
-					Description: "Raw file",
-					Content: map[string]openapi.Content{
-						util.ApplicationJson: {
-							Schema: openapi.Schema{
-								Type: "array",
-							},
-						},
-					},
-				},
-			},
-		},
-		"post": openapi.Method{
-			Summary: "Post new entity of " + route,
-			Responses: map[string]openapi.Response{
-				"200": {
-					Description: "Raw file",
-					Content: map[string]openapi.Content{
-						util.ApplicationJson: {
-							Schema: openapi.Schema{
-								Type: "object",
-								Properties: map[string]openapi.Schema{
-									"id": {
-										Type: "string",
-									},
-								},
-								Required: []string{"id"},
-							},
-						},
-					},
-				},
-			},
-		},
-	})
+	api.Path(
+		route).GetJson(
+		"Get table "+route, openapi.AnArray).PostJson(
+		"Post new entity of "+route,
+		schema,
+		openapi.IdObject)
+
 	paramApiRoute := fmt.Sprintf("%s{id}", paramBaseRoute)
-	api.Describe(paramApiRoute, openapi.Path{
-		"get": openapi.Method{
-			Summary: "Get entity by id from " + route,
-			Responses: map[string]openapi.Response{
-				"200": {
-					Description: "Raw file",
-					Content: map[string]openapi.Content{
-						util.ApplicationJson: {
-							Schema: openapi.Schema{
-								Type: "array",
-							},
-						},
-					},
-				},
-			},
-		},
-		"post": openapi.Method{
-			Summary: "Post new entity of " + route,
-			Responses: map[string]openapi.Response{
-				"200": {
-					Description: "Raw file",
-					Content: map[string]openapi.Content{
-						util.ApplicationJson: {
-							Schema: openapi.Schema{
-								Type: "object",
-								Properties: map[string]openapi.Schema{
-									"id": {
-										Type: "string",
-									},
-								},
-								Required: []string{"id"},
-							},
-						},
-					},
-				},
-			},
-		},
-	})
+
+	api.Path(
+		paramApiRoute).GetJson(
+		"Get entity by id from "+route,
+		schema).PatchJson(
+		"Update entity of "+route,
+		schema,
+		schema)
+
 }

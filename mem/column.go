@@ -1,6 +1,9 @@
 package mem
 
-import "fmt"
+import (
+	"fmt"
+	"fold/openapi"
+)
 
 type ColumnDefinition struct {
 	name          string
@@ -13,7 +16,7 @@ type ColumnDefinition struct {
 	number        int
 }
 
-func (c ColumnDefinition) ToString() string {
+func (c *ColumnDefinition) ToString() string {
 	if c.isIndex {
 		return fmt.Sprintf("[%s*]", c.name)
 	}
@@ -23,12 +26,52 @@ func (c ColumnDefinition) ToString() string {
 	return c.name
 }
 
-func (c ColumnDefinition) Name() string {
+func (c *ColumnDefinition) Name() string {
 	return c.name
 }
 
-func (c ColumnDefinition) Number() int {
+func (c *ColumnDefinition) Number() int {
 	return c.number
+}
+
+func (c *ColumnDefinition) SetDataType(t string) {
+	if c.dataType == t {
+		return
+	}
+	if c.dataType == "" {
+		c.dataType = t
+		return
+	}
+	c.dataType = String
+}
+
+func (c *ColumnDefinition) Schema() openapi.Schema {
+	switch c.dataType {
+	case Int:
+	case Float:
+		return openapi.Schema{
+			Type: "number",
+		}
+	case Array:
+		return openapi.Schema{
+			Type: "array",
+		}
+	case Struct:
+		return openapi.Schema{
+			Type: "object",
+		}
+	case Bool:
+		return openapi.Schema{
+			Type: "boolean",
+		}
+	default:
+		return openapi.Schema{
+			Type: String,
+		}
+	}
+	return openapi.Schema{
+		Type: String,
+	}
 }
 
 func ColumnsPrintln(columns []*ColumnDefinition) {
@@ -43,11 +86,11 @@ func SimpleDefinition(name string, isIndex bool, index int) *ColumnDefinition {
 	return &ColumnDefinition{name: name, isIndex: isIndex, isUnique: isIndex, number: index}
 }
 
-func (c ColumnDefinition) IsIndex() bool {
+func (c *ColumnDefinition) IsIndex() bool {
 	return c.isIndex
 }
 
-func (c ColumnDefinition) BackReference(tableName string, originalColNumber int) *ColumnDefinition {
+func (c *ColumnDefinition) BackReference(tableName string, originalColNumber int) *ColumnDefinition {
 	return &ColumnDefinition{
 		name:          fmt.Sprintf("%s_%s", tableName, c.name),
 		isIndex:       c.isIndex,

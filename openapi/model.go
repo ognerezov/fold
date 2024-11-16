@@ -29,10 +29,6 @@ func InitApi(path string, port int, version string) *ApiDescription {
 	}
 }
 
-func (a *ApiDescription) Describe(path string, obj Path) {
-	a.Paths[path] = obj
-}
-
 func (a *ApiDescription) DescribeRawGet(route string, summary string, m string) {
 	a.Describe(route, Path{
 		"get": Method{

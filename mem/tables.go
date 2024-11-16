@@ -359,10 +359,11 @@ func (t *Table) Schema() openapi.Schema {
 	result := openapi.Schema{
 		Type:       "object",
 		Properties: make(map[string]openapi.Schema),
+		Required:   []string{t.primaryIndex},
 	}
 
 	for _, col := range t.cols {
-		result.Properties[col.name] = openapi.Schema{}
+		result.Properties[col.name] = col.Schema()
 	}
 
 	return result

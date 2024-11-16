@@ -26,7 +26,9 @@ func TableFromRecords(records [][]string) *Table {
 		table.rows[rIndex] = make([]Data, nCols)
 		for index, element := range record {
 			column := columns[index]
-			table.rows[rIndex][index] = *FromString(element)
+			data := FromString(element)
+			column.SetDataType(data.is)
+			table.rows[rIndex][index] = *data
 			if column.isIndex {
 				indexes[column.name][element] = table.rows[rIndex]
 			}
