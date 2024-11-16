@@ -23,4 +23,7 @@ var (
 		},
 		Required: []string{"id"},
 	}
+	AString = Schema{
+		Type: "string",
+	}
 )

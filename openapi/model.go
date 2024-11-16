@@ -112,7 +112,7 @@ type Response struct {
 	Content     map[string]Content `json:"content,omitempty"`
 }
 
-type Path map[string]Method
+type Path map[string]any
 
 type Method struct {
 	Summary     string              `json:"summary,omitempty"`
@@ -121,8 +121,16 @@ type Method struct {
 	Responses   map[string]Response `json:"responses,omitempty"`
 }
 
+func (m *Method) WithParams(params []Parameter) *Method {
+	if len(params) > 0 {
+		m.Parameters = params
+	}
+	return m
+}
+
 type Components struct {
 	RequestBodies map[string]RequestBody `json:"requestBodies,omitempty"`
 	Schemas       map[string]Schema      `json:"schemas,omitempty"`
 	Examples      map[string]Example     `json:"examples,omitempty"`
+	Parameters    map[string]Parameter   `json:"parameters,omitempty"`
 }
