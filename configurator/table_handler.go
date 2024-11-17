@@ -57,21 +57,21 @@ func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) 
 		router.ProcessDelete(route, id, w)
 	})
 
-	api.Path(
-		route).GetJson(
-		"Get table "+route, openapi.AnArray).PostJson(
+	api.Path(route).GetJson(
+		"Get table "+route,
+		openapi.AnArray,
+		false).PostJson(
 		"Post new entity of "+route,
 		schema,
 		openapi.IdObject)
 
 	paramApiRoute := fmt.Sprintf("%s{id}", paramBaseRoute)
 
-	api.Path(
-		paramApiRoute).GetJson(
+	api.Path(paramApiRoute).GetJson(
 		"Get entity by id from "+route,
-		schema).PatchJson(
+		schema, true).PatchJson(
 		"Update entity of "+route,
 		schema,
-		schema)
+		schema).DeleteById()
 
 }

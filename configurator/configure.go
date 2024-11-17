@@ -56,7 +56,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 				console.RedPrintln(e.Error())
 			} else {
 				store.SetNoSql(route, noSql)
-				SetJsonHandlers(route, mux)
+				SetJsonHandlers(route, mux, apiDescription)
 			}
 		default:
 			SetRawHandlers(route, filename, mux, apiDescription)
@@ -93,7 +93,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	openapiFileName := dataPath + openapiRoute
 	err = apiDescription.Save(openapiFileName)
 	if err == nil {
-		SetRawHandlers("/openapi", openapiFileName, mux, apiDescription)
+		SetRawHandlers("/openapi", openapiFileName, mux, nil)
 	} else {
 		console.RedPrintln(err.Error())
 	}

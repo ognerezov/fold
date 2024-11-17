@@ -1,6 +1,7 @@
 package mem
 
 import (
+	"fold/openapi"
 	"strconv"
 	"time"
 )
@@ -140,4 +141,33 @@ func WrapArray(array []Data) Data {
 		a[i] = &d
 	}
 	return Data{is: Array, a: a}
+}
+
+func (d Data) Schema() openapi.Schema {
+	switch d.is {
+	case Int:
+	case Float:
+		return openapi.Schema{
+			Type: "number",
+		}
+	case Array:
+		return openapi.Schema{
+			Type: "array",
+		}
+	case Struct:
+		return openapi.Schema{
+			Type: "object",
+		}
+	case Bool:
+		return openapi.Schema{
+			Type: "boolean",
+		}
+	default:
+		return openapi.Schema{
+			Type: String,
+		}
+	}
+	return openapi.Schema{
+		Type: String,
+	}
 }

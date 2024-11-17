@@ -57,7 +57,9 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.A
 			console.RedPrintln(err.Error())
 			router.ServerError(err, w)
 		})
-		api.DescribeRawGet(route, "Get cached frontend file", m)
+		if api != nil {
+			api.DescribeRawGet(route, "Get cached frontend file", m)
+		}
 		return
 	}
 	console.BluePrintln("Registering GET " + route + ext)
@@ -80,7 +82,9 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.A
 		if err == nil {
 			return
 		}
-		api.DescribeRawGet(route, "Get raw file from hdd", m)
+		if api != nil {
+			api.DescribeRawGet(route, "Get raw file from hdd", m)
+		}
 		console.RedPrintln(err.Error())
 		router.ServerError(err, w)
 	})

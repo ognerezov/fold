@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"fold/console"
 	"fold/db"
+	"fold/openapi"
 	"fold/util"
 	"io"
 	"maps"
@@ -85,7 +86,6 @@ func FromAnyArray(val []any) []*NoSql {
 }
 
 func FromAny(val any) *NoSql {
-	fmt.Println(val)
 	switch x := val.(type) {
 	case *NoSql:
 		return x
@@ -304,4 +304,41 @@ func (n *NoSql) Delete(query *map[string][]string) any {
 
 	n.collection = filtered
 	return n.OnUpdate()
+}
+
+func (n *NoSql) IsCollection() bool {
+	return n.is == Array
+}
+
+func (n *NoSql) Entity() openapi.Schema {
+	if n.is == Array && len(n.collection) > 0 {
+		return n.collection[0].Schema()
+	}
+	return n.Schema()
+}
+
+func (n *NoSql) Schema() openapi.Schema {
+	if n.is == Struct {
+		properties := make(map[string]openapi.Schema)
+		schema := openapi.Schema{
+			Type:       "object",
+			Properties: properties,
+		}
+		for k, v := range n.document {
+			properties[k] = FromAny(v).Schema()
+		}
+		return schema
+	}
+
+	if n.is != Array {
+		return openapi.Schema{
+			Type: Array,
+		}
+	}
+
+	if n.data == nil {
+		return openapi.Schema{}
+	}
+
+	return n.data.Schema()
 }
