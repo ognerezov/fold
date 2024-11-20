@@ -1,0 +1,6 @@
+{
+  "id" : "pub/ip_address",
+  "query" : "format=json",
+  "store" : "8000/pub/ip.json",
+  "path" : "/"
+}

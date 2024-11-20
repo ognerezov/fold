@@ -15,6 +15,8 @@ type Application struct {
 }
 
 func CreateApplication(address string, dataPath string) *Application {
+	resources := ConfigureResources(dataPath)
+	fmt.Println(resources)
 	ports := ConfigurePorts(dataPath)
 
 	services := make([]*Service, len(ports))
