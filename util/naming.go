@@ -67,6 +67,13 @@ func PathToInt(path string) (int, bool) {
 	return 0, false
 }
 
+func WithLeadingSlash(s string) string {
+	if strings.HasPrefix(s, "/") {
+		return s
+	}
+	return "/" + s
+}
+
 func JoinedPath(root string, entry os.DirEntry) string {
 	return fmt.Sprintf("%s/%s", root, strings.Replace(entry.Name(), "/", "", -1))
 }

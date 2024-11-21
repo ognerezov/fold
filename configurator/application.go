@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"fold/console"
+	"fold/path"
 )
 
 var (
@@ -15,12 +16,17 @@ type Application struct {
 }
 
 func CreateApplication(address string, dataPath string) *Application {
+	path.Root = dataPath
 	resources := ConfigureResources(dataPath)
-	fmt.Println(resources)
+	for _, resource := range resources {
+		console.YellowPrintln("Initial save of resource " + resource.Host)
+		fmt.Println(resource)
+		resource.AllJsons()
+	}
+
 	ports := ConfigurePorts(dataPath)
 
 	services := make([]*Service, len(ports))
-	fmt.Println(len(ports))
 	l := len(ports)
 	for i := 0; i < l-1; i++ {
 		go initPort(address, ports, i, services)

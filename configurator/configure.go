@@ -12,8 +12,6 @@ import (
 	"fold/util"
 	goji "goji.io"
 	"io/fs"
-	"path/filepath"
-	"strings"
 )
 
 func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
@@ -23,25 +21,13 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 
 	store := *mem.TheStore
 	clean := path.CreateRootCleaner(dataPath)
-	path.Root = dataPath
 	apiDescription := openapi.InitApi(dataPath, port, "1")
-	var err = path.ProcessPath(dataPath, func(path string, info fs.FileInfo, err error) error {
+	var err = path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
-		var route = "/" + clean(filepath.Dir(path))
-		var name = strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
-
-		if name != "index" {
-			if strings.HasSuffix(route, "/") {
-				route = fmt.Sprintf("%s%s", route, name)
-			} else {
-				route = fmt.Sprintf("%s/%s", route, name)
-			}
-		}
-		route = util.TableToPath(route)
-		var filename = fmt.Sprintf("%s/%s", dataPath, clean(path))
-		switch filepath.Ext(path) {
+		route, filename, extension := path.Structure(dataPath, p, info, clean)
+		switch extension {
 		case ".csv":
 			console.GreenPrintln("Registering table handlers for " + filename)
 			records := csv.ReadCsvFile(filename)
