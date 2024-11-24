@@ -1,6 +1,13 @@
 {
   "id" : "pub/ip_address",
-  "query" : "format=json",
+  "query" : {
+    "format" : "json"
+  },
+  "invocation": {
+    "onApplicationStart" : true,
+    "onRequest": true,
+    "overrideIfExists": false
+  },
   "store" : "8000/pub/ip.json",
   "path" : "/"
 }

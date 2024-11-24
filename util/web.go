@@ -27,3 +27,16 @@ func OneValueQuery(col string, value string) map[string][]string {
 	res[col] = values
 	return res
 }
+
+func EncodeQuery(m *map[string]string) string {
+	if m == nil || len(*m) == 0 {
+		return ""
+	}
+
+	values := url.Values{}
+
+	for k, v := range *m {
+		values.Add(k, v)
+	}
+	return values.Encode()
+}

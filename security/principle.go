@@ -21,12 +21,6 @@ var Guest = Principle{
 	password: guestPassword,
 }
 
-var Root = Principle{
-	Id:       "root",
-	Roles:    []string{"root", "admin", "user", "pub"},
-	password: adminPassword,
-}
-
 func WithPrinciple(r *http.Request, p *Principle) *http.Request {
 	ctx := r.Context()
 	return r.Clone(context.WithValue(ctx, "principle", p))

@@ -19,9 +19,8 @@ func CreateApplication(address string, dataPath string) *Application {
 	path.Root = dataPath
 	resources := ConfigureResources(dataPath)
 	for _, resource := range resources {
-		console.YellowPrintln("Initial save of resource " + resource.Host)
 		fmt.Println(resource)
-		resource.AllJsons()
+		resource.Start()
 	}
 
 	ports := ConfigurePorts(dataPath)

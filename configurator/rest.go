@@ -3,9 +3,11 @@ package configurator
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"fold/console"
 	"fold/path"
+	"fold/security"
 	"fold/util"
 	"io"
 	"io/fs"
@@ -16,19 +18,41 @@ import (
 )
 
 type RestConfig struct {
-	Protocol  string
-	Host      string
-	Resources []RestResourceConfig
+	Protocol            string
+	Host                string
+	Resources           []RestResourceConfig
+	Credentials         security.Credentials
+	Invocation          InvocationModel
+	temporalCredentials *map[string]string
 }
 
 type RestResourceConfig struct {
-	Id     string `json:"id"`
-	Query  string `json:"query"`
-	Store  string `json:"store"`
-	Path   string `json:"path"`
-	Method string `json:"method"`
-	Body   any    `json:"body"`
+	Id     string            `json:"id"`
+	Query  map[string]string `json:"query"`
+	Store  string            `json:"store"`
+	Path   string            `json:"path"`
+	Method string            `json:"method"`
+	Body   any               `json:"body"`
 	server *RestConfig
+}
+
+type RestIndexConfig struct {
+	Id          string               `json:"id"`
+	Query       map[string]string    `json:"query"`
+	Store       string               `json:"store"`
+	Path        string               `json:"path"`
+	Method      string               `json:"method"`
+	Body        any                  `json:"body"`
+	Protocol    string               `json:"protocol"`
+	Credentials security.Credentials `json:"credentials"`
+	Invocation  InvocationModel      `json:"invocation"`
+}
+
+type InvocationModel struct {
+	OnApplicationStart bool `json:"onApplicationStart"`
+	OnRequest          bool `json:"onRequest"`
+	Repeat             int  `json:"repeat"`
+	OverrideIfExists   bool `json:"overrideIfExists"`
 }
 
 var (
@@ -36,17 +60,89 @@ var (
 	httpClient = &http.Client{}
 )
 
+func BuildConfig(dataPath string, host string) *RestConfig {
+	rootIndex := dataPath + "/index.json"
+	var config RestIndexConfig
+	err := util.FromJson(rootIndex, &config)
+	if err != nil {
+		console.RedPrintln(err.Error())
+		panic("Invalid index.json file: " + rootIndex)
+		return nil
+	}
+	protocol := config.Protocol
+	if protocol == "" {
+		protocol = "https"
+	}
+	resource := &RestConfig{
+		Protocol:    protocol,
+		Host:        host,
+		Resources:   make([]RestResourceConfig, 0),
+		Invocation:  config.Invocation,
+		Credentials: config.Credentials,
+	}
+	if config.Path == "" {
+		return resource
+	}
+	method := config.Method
+	if method == "" {
+		method = "GET"
+	}
+	if config.Path != "" {
+		resource.Resources = append(resource.Resources, RestResourceConfig{
+			Id:     config.Id,
+			Query:  config.Query,
+			Store:  config.Store,
+			Path:   config.Path,
+			Method: method,
+			Body:   config.Body,
+			server: resource,
+		})
+	}
+	clean := path.CreateRootCleaner(dataPath)
+	err = path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		_, filename, extension := path.Structure(dataPath, p, info, clean)
+		if extension != ".json" || filename == rootIndex {
+			return nil
+		}
+		var c *RestResourceConfig
+		c, err = FromJson(filename)
+		c.server = resource
+		if err == nil && c.Path != "" {
+			resource.Resources = append(resource.Resources, *c)
+		}
+		return nil
+	})
+	return resource
+}
+
 func (c *RestConfig) Url() string {
 	return fmt.Sprintf("%s://%s", c.Protocol, c.Host)
 }
 
 func (r *RestResourceConfig) Url() string {
-	res := util.WithLeadingSlash(r.Path)
+	res := util.WithLeadingSlash(r.Path) + r.Q()
 
-	if r.Query != "" {
-		res += "?" + r.Query
-	}
 	return fmt.Sprintf("%s%s", r.server.Url(), res)
+}
+
+func (r *RestResourceConfig) Q() string {
+	q := make(map[string]string)
+	for k, v := range r.Query {
+		q[k] = v
+	}
+
+	for k, v := range *r.server.temporalCredentials {
+		q[k] = v
+	}
+
+	if len(q) == 0 {
+		return ""
+	}
+
+	return "?" + util.EncodeQuery(&q)
 }
 
 func (r *RestResourceConfig) Request() (*http.Request, error) {
@@ -57,7 +153,9 @@ func (r *RestResourceConfig) Request() (*http.Request, error) {
 			body = bytes.NewReader(b)
 		}
 	}
-	res, err := http.NewRequest(r.Method, r.Url(), body)
+	url := r.Url()
+	console.GreenPrintln("Proceed http request to " + url)
+	res, err := http.NewRequest(r.Method, url, body)
 
 	return res, err
 }
@@ -76,10 +174,9 @@ func (r *RestResourceConfig) SaveJson() error {
 		}
 	}(resp.Body)
 
-	filePath := fmt.Sprintf("%s%s", path.Root, util.WithLeadingSlash(r.Store))
+	filePath := r.Filename()
 	out, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
-		console.RedPrintln(err.Error())
 		return err
 	}
 	defer util.CloseFie(out)
@@ -92,13 +189,72 @@ func (r *RestResourceConfig) SaveJson() error {
 	return nil
 }
 
+func (r *RestResourceConfig) Filename() string {
+	return fmt.Sprintf("%s%s", path.Root, util.WithLeadingSlash(r.Store))
+}
+
+func (r *RestResourceConfig) SaveRequired() bool {
+	if r.server.Invocation.OverrideIfExists {
+		return true
+	}
+
+	return !util.DoesFileExist(r.Filename())
+}
+
+func (c *RestConfig) Start() {
+	console.CyanPrintln("Starting rest handler " + c.Host)
+	err := c.InitCredentials()
+	if err != nil {
+		console.RedPrintln(err.Error())
+	}
+	if c.Invocation.OnApplicationStart {
+		console.CyanPrintln("Save data locally for " + c.Host)
+		c.AllJsons()
+	}
+}
+
 func (c *RestConfig) AllJsons() {
 	for _, resource := range c.Resources {
+		if !resource.SaveRequired() {
+			console.YellowPrintln("File already exists " + resource.Filename())
+			continue
+		}
 		err := resource.SaveJson()
 		if err != nil {
 			console.RedPrintln(err.Error())
 		}
 	}
+}
+
+func (c *RestConfig) InitCredentials() error {
+	if c.temporalCredentials != nil {
+		return nil
+	}
+	return c.ResetCredentials()
+}
+
+func (c *RestConfig) ResetCredentials() error {
+	console.CyanPrintln("Configure credentials for " + c.Host)
+	if c.Credentials.Usage.ExchangeRequired {
+		return errors.New("not implemented yet")
+	}
+	if c.Credentials.SecretInputRequired() {
+		cred := map[string]string{}
+		console.YellowPrintln("Input secrets required for " + c.Host)
+		fmt.Println()
+		for k, v := range c.Credentials.Secrets {
+			if v != "" {
+				console.YellowPrintln("Secret exists " + k)
+				cred[k] = v
+			} else {
+				console.YellowPrintln("Input secret " + k)
+				cred[k] = console.ReadStr(fmt.Sprintf("Enter %s: ", k))
+			}
+		}
+		c.Credentials.Secrets = cred
+	}
+	c.temporalCredentials = &c.Credentials.Secrets
+	return nil
 }
 
 func ConfigureResources(dataPath string) []*RestConfig {
@@ -116,8 +272,10 @@ func ConfigureResources(dataPath string) []*RestConfig {
 			continue
 		}
 		var config *RestConfig
-		config, err = ConfigureResource(fmt.Sprintf("%s/www/%s", dataPath, host), host)
-		resources = append(resources, config)
+		config = BuildConfig(fmt.Sprintf("%s/www/%s", dataPath, host), host)
+		if config != nil {
+			resources = append(resources, config)
+		}
 	}
 
 	if len(resources) == 0 {
@@ -127,20 +285,11 @@ func ConfigureResources(dataPath string) []*RestConfig {
 }
 
 func FromJson(filename string) (*RestResourceConfig, error) {
-	f, err := os.OpenFile(filename, os.O_RDONLY, 0)
+	var config RestResourceConfig
+	err := util.FromJson(filename, &config)
 	if err != nil {
 		return nil, err
 	}
-	defer func(f *os.File) {
-		err = f.Close()
-		if err != nil {
-			console.RedPrintln(err.Error())
-		}
-	}(f)
-
-	decoder := json.NewDecoder(f)
-	var config RestResourceConfig
-	err = decoder.Decode(&config)
 	if config.Method == "" {
 		config.Method = "GET"
 	} else {
@@ -148,42 +297,4 @@ func FromJson(filename string) (*RestResourceConfig, error) {
 	}
 
 	return &config, nil
-}
-
-func ConfigureResource(dataPath string, host string) (*RestConfig, error) {
-	rootIndex := dataPath + "/index.json"
-	c, err := FromJson(rootIndex)
-	if err != nil {
-		console.RedPrintln("Invalid REST json config " + host)
-		panic(err)
-		return nil, err
-	}
-	resource := &RestConfig{
-		Protocol:  "https",
-		Host:      host,
-		Resources: make([]RestResourceConfig, 0),
-	}
-	config := *c
-	config.server = resource
-	if config.Path != "" {
-		resource.Resources = append(resource.Resources, config)
-	}
-
-	clean := path.CreateRootCleaner(dataPath)
-	err = path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
-		if info.IsDir() {
-			return nil
-		}
-		_, filename, extension := path.Structure(dataPath, p, info, clean)
-		if extension != ".json" || filename == rootIndex {
-			return nil
-		}
-		c, err = FromJson(filename)
-		c.server = resource
-		if err == nil && c.Path != "" {
-			resource.Resources = append(resource.Resources, *c)
-		}
-		return nil
-	})
-	return resource, nil
 }
