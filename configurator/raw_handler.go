@@ -15,9 +15,15 @@ import (
 	"path/filepath"
 )
 
+const (
+	HTML = ".html"
+)
+
 var (
 	FrontendFiles = map[string]bool{
-		".html": true,
+		HTML:   true,
+		".js":  true,
+		".css": true,
 	}
 )
 
@@ -32,18 +38,21 @@ func GetContentType(filePath string) (string, string, bool) {
 
 func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.ApiDescription) {
 	m, ext, hasExt := GetContentType(filePath)
-
+	feRoute := route + ext
+	if ext == HTML || !hasExt {
+		feRoute = route
+	}
 	if hasExt && FrontendFiles[ext] {
-		console.BluePrintln("Registering GET " + route)
+		console.BluePrintln("Registering GET " + feRoute)
 		bytes, err := util.ReadFile(filePath)
 		if err != nil {
 			return
 		}
-		mem.TheStore.Cache(route, bytes)
-		mux.HandleFunc(pat.Get(route), func(w http.ResponseWriter, r *http.Request) {
-			console.BluePrintln("Searching cache for " + route)
+		mem.TheStore.Cache(feRoute, bytes)
+		mux.HandleFunc(pat.Get(feRoute), func(w http.ResponseWriter, r *http.Request) {
+			console.BluePrintln("Searching cache for " + feRoute)
 			var ok bool
-			bytes, ok = mem.TheStore.GetCached(route)
+			bytes, ok = mem.TheStore.GetCached(feRoute)
 			if !ok {
 				router.NotFound(w)
 				return
@@ -58,13 +67,13 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.A
 			router.ServerError(err, w)
 		})
 		if api != nil {
-			api.DescribeRawGet(route, "Get cached frontend file", m)
+			api.DescribeRawGet(feRoute, "Get cached frontend file", m)
 		}
 		return
 	}
-	console.BluePrintln("Registering GET " + route + ext)
-	mux.HandleFunc(pat.Get(route+ext), func(w http.ResponseWriter, r *http.Request) {
-		console.BluePrintln("Searching filesystem for " + route)
+	console.BluePrintln("Registering GET " + feRoute)
+	mux.HandleFunc(pat.Get(feRoute), func(w http.ResponseWriter, r *http.Request) {
+		console.BluePrintln("Searching filesystem for " + feRoute)
 		fmt.Println(filePath)
 		bytes, err := util.ReadFile(filePath)
 		if err != nil {
@@ -83,7 +92,7 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.A
 			return
 		}
 		if api != nil {
-			api.DescribeRawGet(route, "Get raw file from hdd", m)
+			api.DescribeRawGet(feRoute, "Get raw file from hdd", m)
 		}
 		console.RedPrintln(err.Error())
 		router.ServerError(err, w)

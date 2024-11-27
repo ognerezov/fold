@@ -31,6 +31,9 @@ func CreateApplication(address string, dataPath string) *Application {
 		go initPort(address, ports, i, services)
 	}
 	// last port goes to console
+	console.GreenPrintln("___________________________")
+	console.GreenPrintln("Server configured.")
+	console.GreenPrintln("___________________________")
 	initPort(address, ports, l-1, services)
 
 	return &Application{services: services}

@@ -60,11 +60,11 @@ func ConfigurePorts(dataPath string) PortsConfig {
 		}
 
 		port, found := util.PathToInt(file.Name())
-		console.YellowPrintln("Checking root path " + file.Name())
 
 		if !found {
 			continue
 		}
+		console.YellowPrintln("Checking root path " + file.Name())
 		res = append(res, PortConfig{port: port, path: util.JoinedPath(dataPath, file)})
 	}
 

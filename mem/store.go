@@ -97,7 +97,6 @@ func (s Store) ReIndex() {
 			}
 		}
 	}
-	console.MagentaPrintln(fmt.Sprintf("%v", s.tables))
 }
 
 var (

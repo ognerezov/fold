@@ -5,7 +5,7 @@
     "q": "lowcode server"
   },
   "invocation": {
-    "onApplicationStart" : true,
+    "onApplicationStart" : false,
     "onRequest": true,
     "overrideIfExists": false
   },
@@ -13,7 +13,7 @@
   "path" : "/customsearch/v1",
   "credentials" : {
     "usage" : {
-      "required": true,
+      "required": false,
       "exchangeRequired" : false,
       "save": false
     },

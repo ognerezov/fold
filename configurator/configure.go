@@ -12,6 +12,7 @@ import (
 	"fold/util"
 	goji "goji.io"
 	"io/fs"
+	"os"
 )
 
 func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
@@ -22,6 +23,9 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	store := *mem.TheStore
 	clean := path.CreateRootCleaner(dataPath)
 	apiDescription := openapi.InitApi(dataPath, port, "1")
+	openapiRoute := openapi.Filename
+	openapiFileName := dataPath + openapiRoute
+	_ = os.Remove(openapiFileName)
 	var err = path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -75,11 +79,10 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 		}
 	}
 	security.SetAuthHandlers(mux)
-	openapiRoute := "/openapi.json"
-	openapiFileName := dataPath + openapiRoute
+
 	err = apiDescription.Save(openapiFileName)
 	if err == nil {
-		SetRawHandlers("/openapi", openapiFileName, mux, nil)
+		SetRawHandlers(openapi.Route, openapiFileName, mux, nil)
 	} else {
 		console.RedPrintln(err.Error())
 	}

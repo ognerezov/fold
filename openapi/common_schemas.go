@@ -8,6 +8,8 @@ const (
 	Patch  = "patch"
 
 	ApplicationJson = "application/json"
+	Filename        = "/openapi.json"
+	Route           = "/openapi"
 )
 
 var (
