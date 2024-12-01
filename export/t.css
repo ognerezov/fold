@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body{
+    box-sizing: content-box;
+    background-color: #FCFBF7;
+}
+
+
+.grid-3 {
+    @apply grid grid-cols-1 md:grid-cols-3  gap-4 h-full;
+}
+
+.wave-column {
+    @apply bg-wave pl-20 flex-col items-start justify-center flex
+}
+
+.centered-row {
+    @apply flex items-center justify-center;
+}
+
+.centered-column {
+    @apply flex flex-col items-center justify-center;
+}
+
+.start-column {
+    @apply flex flex-col items-start justify-center;
+}
+
+.btn {
+    @apply font-bold py-1 px-5 rounded;
+}
+
+.btn-deep {
+    @apply bg-deep text-paper;
+}
+
+.btn-deep:hover {
+    @apply bg-wave text-white;
+}
+
+.btn-wave {
+    @apply bg-wave text-white;
+}
+
+.btn-wave:hover {
+    @apply bg-deep text-paper;
+}
+
+.btn-wave:disabled, .btn-deep:disabled {
+    @apply bg-paper text-gray-300;
+}
+
+.paper {
+    @apply bg-paper text-deep
+}
+
+.fill {
+    @apply h-screen w-screen
+}
+
+.w-list {
+    @apply text-white list-disc
+}

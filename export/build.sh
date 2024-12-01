@@ -1,0 +1,1 @@
+tailwindcss -i ./t.css -o ../data/3333/src/styles.css --minify
