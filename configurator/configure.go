@@ -48,6 +48,9 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 				store.SetNoSql(route, noSql)
 				SetJsonHandlers(route, mux, apiDescription)
 			}
+		case ".fold":
+			console.GreenPrintln("Registering fold action handler " + filename)
+			SetControlHandlers(route, filename, mux, apiDescription)
 		default:
 			SetRawHandlers(route, filename, mux, apiDescription)
 		}
