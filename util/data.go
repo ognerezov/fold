@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/json"
 	"maps"
 	"strconv"
 )
@@ -38,4 +39,12 @@ func MergeMaps(dest map[string]any, src map[string]any) {
 	}
 
 	maps.Copy(dest, src)
+}
+
+func Restructure[T any](data any, out *T) error {
+	h, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(h, out)
 }

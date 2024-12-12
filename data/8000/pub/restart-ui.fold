@@ -1,0 +1,7 @@
+{
+    "id": "restart",
+    "method": "GET",
+    "parameters": {
+        "port" : 3333
+    }
+}

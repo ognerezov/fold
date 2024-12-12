@@ -23,5 +23,5 @@ func main() {
 	console.GreenPrintln("___________________________")
 	console.GreenPrintln("Starting server")
 	console.GreenPrintln("___________________________")
-	configurator.App = configurator.CreateApplication("", dataPath)
+	configurator.CreateApplication("", dataPath)
 }

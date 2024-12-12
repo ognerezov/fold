@@ -2,6 +2,7 @@ package configurator
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"fold/console"
 	"fold/controls"
@@ -15,8 +16,11 @@ import (
 )
 
 const (
-	echo = "echo"
+	echo    = "echo"
+	restart = "restart"
 )
+
+type InstructionMap map[string]*controls.Control
 
 var (
 	TheInstructions = &InstructionMap{
@@ -27,7 +31,7 @@ var (
 type ControllerData struct {
 	Id         string         `json:"id"`
 	Parameters map[string]any `json:"parameters"`
-	Method     string         `json:"method"`
+	Method     string         `json:"method" default:"GET"`
 }
 
 func (c *ControllerData) Controller() (*Controller, bool) {
@@ -35,19 +39,15 @@ func (c *ControllerData) Controller() (*Controller, bool) {
 	if !ok {
 		return nil, false
 	}
-
-	method := c.Method
-	if method == "" {
-		method = "GET"
-	}
-
+	fmt.Println(c.Id)
+	fmt.Println(*ctr)
 	params := c.Parameters
 
 	if params == nil {
 		params = make(map[string]any)
 	}
 
-	return &Controller{Id: c.Id, Parameters: params, Method: method, Control: ctr}, true
+	return &Controller{Id: c.Id, Parameters: params, Method: c.Method, Control: ctr}, true
 }
 
 type Controller struct {
@@ -56,8 +56,6 @@ type Controller struct {
 	Method     string
 	Control    *controls.Control
 }
-
-type InstructionMap map[string]*controls.Control
 
 func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *openapi.ApiDescription) {
 	var config ControllerData
@@ -68,18 +66,21 @@ func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *opena
 		return
 	}
 	console.BluePrintln("Registering  " + config.Method + " " + route)
-	controller, ok := config.Controller()
-	if !ok {
-		console.RedPrintln("Error registering route " + route + " . Instructions not found")
-		return
-	}
-	fmt.Println(pat.NewWithMethods(route, controller.Method))
-	mux.HandleFunc(pat.NewWithMethods(route, controller.Method), func(w http.ResponseWriter, r *http.Request) {
-		console.GreenPrintln(fmt.Sprintf("Incoming request to %s: %s", controller.Method, route))
+
+	mux.HandleFunc(pat.NewWithMethods(route, config.Method), func(w http.ResponseWriter, r *http.Request) {
+		console.GreenPrintln(fmt.Sprintf("Incoming request to %s: %s", config.Method, route))
+		controller, ok := config.Controller()
+		if !ok {
+			console.RedPrintln("Error registering route " + route + " . Instructions not found")
+			router.ServerError(errors.New("controller not found"), w)
+			return
+		}
 		q, _ := util.MapQuery(r)
 		data := make(map[string]any)
 		maps.Copy(data, controller.Parameters)
-		if route != "GET" && r.Body != nil {
+
+		if controller.Method != "GET" && r.Body != nil {
+			fmt.Println("Reading body")
 			decoder := json.NewDecoder(r.Body)
 			var record map[string]any
 			err = decoder.Decode(&record)
@@ -96,6 +97,7 @@ func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *opena
 		res, e := ctr.Do(data)
 		if e != nil {
 			router.ServerError(e, w)
+			return
 		}
 		router.WriteResponse(res, w)
 	})

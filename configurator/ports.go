@@ -79,22 +79,24 @@ func ConfigurePorts(dataPath string) PortsConfig {
 	return res
 }
 
-func (p *PortConfig) Serve(address string) (*Service, error) {
+func (p *PortConfig) Serve(address string, services map[int]*Service) error {
 	mux, err := ConfigureServer(p.path, p.port)
 	if err != nil {
 		console.RedPrintln("Can't start server")
 		console.RedPrintln(err.Error())
-		return nil, err
+		return err
 	}
 	addr := fmt.Sprintf("%s:%v", address, p.port)
 	server := http.Server{Addr: addr, Handler: mux}
+	services[p.port] = &Service{
+		server:  &server,
+		address: address,
+		config:  p,
+	}
 	err = server.ListenAndServe()
 	if err != nil {
-		return nil, err
+		delete(services, p.port)
+		return err
 	}
-
-	return &Service{
-		server: &server,
-		config: p,
-	}, nil
+	return nil
 }
