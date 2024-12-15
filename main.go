@@ -1,20 +1,20 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"fold/configurator"
 	"fold/console"
 	"fold/threads"
-	"os"
 )
 
 func main() {
-	var argsWithProg = os.Args
-	var argsWithoutProg = os.Args[1:]
+	var dataPath string
+	flag.StringVar(&dataPath, "dir", "./", "Working directory")
+	flag.StringVar(&dataPath, "d", "./", "Working directory (shorthand)")
 
-	fmt.Println(argsWithProg)
+	flag.BoolVar(&configurator.AppArguments.Cache, "cache", true, "Cache files requests")
 
-	var dataPath = argsWithoutProg[0]
+	flag.Parse()
 	console.GreenPrintln("___________________________")
 	console.GreenPrintln("Starting Async service")
 	console.GreenPrintln("___________________________")

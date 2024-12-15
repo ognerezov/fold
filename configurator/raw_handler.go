@@ -42,7 +42,7 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.A
 	if ext == HTML || !hasExt {
 		feRoute = route
 	}
-	if hasExt && FrontendFiles[ext] {
+	if hasExt && FrontendFiles[ext] && AppArguments.Cache {
 		console.BluePrintln("Registering GET " + feRoute)
 		bytes, err := util.ReadFile(filePath)
 		if err != nil {
