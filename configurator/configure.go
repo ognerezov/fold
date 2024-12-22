@@ -26,7 +26,11 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	openapiRoute := openapi.Filename
 	openapiFileName := dataPath + openapiRoute
 	_ = os.Remove(openapiFileName)
-	var err = path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
+	err := AppProviders.Export(dataPath)
+	if err != nil {
+		console.RedPrintln("export error: " + err.Error())
+	}
+	err = path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}

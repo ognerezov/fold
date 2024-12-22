@@ -57,6 +57,7 @@ type Controller struct {
 	Control    *controls.Control
 }
 
+// TODO set openapi
 func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *openapi.ApiDescription) {
 	var config ControllerData
 

@@ -23,6 +23,10 @@ type Application struct {
 
 func CreateApplication(address string, dataPath string) {
 	path.Root = dataPath
+	err := InitProviders(dataPath)
+	if err != nil {
+		console.RedPrintln("InitProviders error: " + err.Error())
+	}
 	resources := ConfigureResources(dataPath)
 	for _, resource := range resources {
 		fmt.Println(resource)
