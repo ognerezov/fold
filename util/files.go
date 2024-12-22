@@ -55,3 +55,13 @@ func FromJson[T any](filename string, out *T) error {
 	decoder := json.NewDecoder(f)
 	return decoder.Decode(out)
 }
+
+func Save(file string, bytes []byte) error {
+	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		return err
+	}
+	defer CloseFie(f)
+	_, err = f.Write(bytes)
+	return err
+}

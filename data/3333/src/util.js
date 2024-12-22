@@ -1,6 +1,8 @@
-export async function get(url, query) {
+export async function get(url, query, headers) {
     try {
-        const response = await fetch(url + toQueryString(query));
+        const response = await fetch(url + toQueryString(query), {
+            headers : headers || {}
+        });
         if (!response.ok) {
             return {
                 status: response.status

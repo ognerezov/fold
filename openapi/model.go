@@ -51,7 +51,7 @@ func (a *ApiDescription) DescribeRawGet(route string, summary string, m string) 
 }
 
 func (a *ApiDescription) Save(path string) error {
-	return db.Save(path, *a)
+	return db.SaveJson(path, *a)
 }
 
 type Info struct {

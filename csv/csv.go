@@ -2,7 +2,7 @@ package csv
 
 import (
 	"encoding/csv"
-	"fold/console"
+	"fold/util"
 	"log"
 	"os"
 )
@@ -12,12 +12,7 @@ func ReadCsvFile(filePath string) [][]string {
 	if err != nil {
 		log.Fatal("Unable to read input file "+filePath, err)
 	}
-	defer func(f *os.File) {
-		err = f.Close()
-		if err != nil {
-			console.RedPrintln(err.Error())
-		}
-	}(f)
+	defer util.CloseFie(f)
 
 	csvReader := csv.NewReader(f)
 	records, err := csvReader.ReadAll()
@@ -33,12 +28,7 @@ func WriteCsvFile(filePath string, records [][]string) error {
 	if err != nil {
 		log.Fatal("Unable to read output file "+filePath, err)
 	}
-	defer func(f *os.File) {
-		err = f.Close()
-		if err != nil {
-			console.RedPrintln(err.Error())
-		}
-	}(f)
+	defer util.CloseFie(f)
 	w := csv.NewWriter(f)
 	return w.WriteAll(records)
 }

@@ -14,7 +14,7 @@ type CsvWriter string
 
 func (w CsvWriter) Call(args [][]string) (Message[string], ErrorMessage) {
 	e := csv.WriteCsvFile(string(w), args)
-	process := "Save csv to file " + string(w)
+	process := "SaveJson csv to file " + string(w)
 	if e != nil {
 		return EmptyMessage(process), CommonError(process, e)
 	}

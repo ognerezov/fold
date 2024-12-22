@@ -1,6 +1,11 @@
 package api
 
-import "fold/db"
+import (
+	"encoding/json"
+	"fold/console"
+	"fold/db"
+	"fold/util"
+)
 
 type GoogleSecret struct {
 	ClientId                string   `json:"client_id"`
@@ -96,5 +101,16 @@ func (gj *GoogleJson) Attach(other *GoogleJson) *GoogleJson {
 }
 
 func (gj *GoogleJson) Export(path string) error {
-	return db.Save(path, gj.WithoutSecret())
+	data := gj.WithoutSecret()
+	bytes, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		console.RedPrintln(err.Error())
+	} else {
+		str := "export default\n" + string(bytes)
+		err = util.Save(path+".js", []byte(str))
+		if err != nil {
+			console.RedPrintln(err.Error())
+		}
+	}
+	return db.SaveJson(path+".json", gj.WithoutSecret())
 }

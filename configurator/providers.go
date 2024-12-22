@@ -20,11 +20,10 @@ type Providers struct {
 	Google *api.GoogleJson
 }
 
-// TODO create folder
 func (p *Providers) Export(path string) error {
 	err := os.MkdirAll(path+ProvidersOutputPath, os.ModePerm)
 	if p.Google != nil {
-		err = p.Google.Export(path + ProvidersOutputPath + "google.json")
+		err = p.Google.Export(path + ProvidersOutputPath + "google")
 		if err != nil {
 			console.RedPrintln(err.Error())
 		}
