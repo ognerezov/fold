@@ -56,8 +56,7 @@ func InitProviders(dataPath string) error {
 				console.RedPrintln(err.Error())
 			} else {
 				AppProviders.Google = provider
-				fmt.Println(provider.Web)
-				fmt.Println(provider.Installed)
+				(*TheInstructions)[googleAuth] = provider.RestartControl()
 			}
 
 			continue

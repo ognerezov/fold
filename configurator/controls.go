@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	echo    = "echo"
-	restart = "restart"
+	echo       = "echo"
+	restart    = "restart"
+	googleAuth = "google_auth"
 )
 
 type InstructionMap map[string]*controls.Control
@@ -39,8 +40,6 @@ func (c *ControllerData) Controller() (*Controller, bool) {
 	if !ok {
 		return nil, false
 	}
-	fmt.Println(c.Id)
-	fmt.Println(*ctr)
 	params := c.Parameters
 
 	if params == nil {
@@ -81,7 +80,6 @@ func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *opena
 		maps.Copy(data, controller.Parameters)
 
 		if controller.Method != "GET" && r.Body != nil {
-			fmt.Println("Reading body")
 			decoder := json.NewDecoder(r.Body)
 			var record map[string]any
 			err = decoder.Decode(&record)

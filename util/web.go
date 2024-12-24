@@ -1,8 +1,15 @@
 package util
 
 import (
+	"fold/console"
+	"goji.io/pat"
+	"io"
 	"net/http"
 	"net/url"
+)
+
+var (
+	httpClient = &http.Client{}
 )
 
 func MapQuery(r *http.Request) (map[string][]string, error) {
@@ -39,4 +46,29 @@ func EncodeQuery(m *map[string]string) string {
 		values.Add(k, v)
 	}
 	return values.Encode()
+}
+
+func SendRequest(req *http.Request) (*http.Response, error) {
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		console.RedPrintln(err.Error())
+		return nil, err
+	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			console.RedPrintln(err.Error())
+		}
+	}(resp.Body)
+
+	return resp, nil
+}
+
+func PathParamValue(req *http.Request, name string, out *string) {
+	defer func() {
+		if recover() != nil {
+			*out = ""
+		}
+	}()
+	*out = pat.Param(req, name)
 }

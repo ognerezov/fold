@@ -17,7 +17,7 @@ type Principle struct {
 
 var Guest = Principle{
 	Id:       "guest",
-	Roles:    []string{"pub"},
+	Roles:    []string{"guest"},
 	password: guestPassword,
 }
 
@@ -28,7 +28,14 @@ func WithPrinciple(r *http.Request, p *Principle) *http.Request {
 
 func FromRequest(r *http.Request) *Principle {
 	ctx := r.Context()
-	return ctx.Value("principle").(*Principle)
+	if ctx == nil {
+		return nil
+	}
+	val := ctx.Value("principle")
+	if val == nil {
+		return nil
+	}
+	return val.(*Principle)
 }
 
 func Authenticate(r *http.Request) (*Principle, error) {

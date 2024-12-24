@@ -56,8 +56,7 @@ type InvocationModel struct {
 }
 
 var (
-	WWWRegex   = regexp.MustCompile("^[a-zA-Z0-9[a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z0-9[a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$|^[a-zA-Z0-9[a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$")
-	httpClient = &http.Client{}
+	WWWRegex = regexp.MustCompile("^[a-zA-Z0-9[a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z0-9[a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$|^[a-zA-Z0-9[a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$")
 )
 
 func BuildConfig(dataPath string, host string) *RestConfig {
@@ -162,17 +161,7 @@ func (r *RestResourceConfig) Request() (*http.Request, error) {
 
 func (r *RestResourceConfig) SaveJson() error {
 	req, err := r.Request()
-	resp, err := httpClient.Do(req)
-	fmt.Println(resp)
-	if err != nil {
-		return err
-	}
-	defer func(Body io.ReadCloser) {
-		err = Body.Close()
-		if err != nil {
-			console.RedPrintln(err.Error())
-		}
-	}(resp.Body)
+	resp, err := util.SendRequest(req)
 
 	filePath := r.Filename()
 	out, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
@@ -241,7 +230,6 @@ func (c *RestConfig) ResetCredentials() error {
 	if c.Credentials.SecretInputRequired() {
 		cred := map[string]string{}
 		console.YellowPrintln("Input secrets required for " + c.Host)
-		fmt.Println()
 		for k, v := range c.Credentials.Secrets {
 			if v != "" {
 				console.YellowPrintln("Secret exists " + k)

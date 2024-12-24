@@ -2,11 +2,10 @@ package security
 
 import (
 	"fmt"
+	"fold/console"
 	"fold/util"
-	"goji.io/pat"
 	"net/http"
 	"regexp"
-	"strings"
 )
 
 type Rule struct {
@@ -22,7 +21,7 @@ func (r Rule) PathMatches(s string) bool {
 	if r.Audience == "*" {
 		path = "/.*"
 	} else {
-		path = fmt.Sprintf("/%s.*", s)
+		path = fmt.Sprintf("/%s.*", r.Audience)
 	}
 	re := regexp.MustCompile(path)
 	return re.MatchString(s)
@@ -30,8 +29,6 @@ func (r Rule) PathMatches(s string) bool {
 
 func (r Rule) Authorize(p *Principle, _ *http.Request) (bool, error) {
 	for _, role := range p.Roles {
-		fmt.Printf("check %s against %s", role, r.Authority)
-		fmt.Println("")
 		if role == r.Authority {
 			return true, nil
 		}
@@ -40,12 +37,15 @@ func (r Rule) Authorize(p *Principle, _ *http.Request) (bool, error) {
 }
 
 func (r Rule) Matches(req *http.Request) bool {
+	console.MagentaPrintln("Authenticating " + req.URL.Path)
 	pathMatches := r.PathMatches(req.URL.Path)
 	if !pathMatches {
 		return false
 	}
 	if r.Filter != "" {
-		param := pat.Param(req, r.Filter)
+		var param string
+		util.PathParamValue(req, r.Filter, &param)
+		fmt.Println(param)
 		q, err := util.MapQuery(req)
 		var queryParam []string
 		if err != nil {
@@ -55,15 +55,38 @@ func (r Rule) Matches(req *http.Request) bool {
 			return false
 		}
 	}
-	if r.Action != "" {
-		if !strings.EqualFold(r.Action, req.Method) {
-			return false
-		}
-	}
-	return true
+
+	return r.ActionMatches(req.Method)
 }
 
 func (r Rule) Authenticate(req *http.Request) (*Principle, error) {
+	if r.Authority == "guest" {
+		return &Guest, nil
+	}
 	principle, err := Authenticate(req)
 	return principle, err
+}
+
+func (r Rule) ActionMatches(method string) bool {
+	if r.Action == "" || r.Action == "*" {
+		return true
+	}
+
+	if r.Action == method {
+		return true
+	}
+
+	if r.Action == "read" {
+		return method == http.MethodHead ||
+			method == http.MethodOptions ||
+			method == http.MethodConnect ||
+			method == http.MethodTrace ||
+			method == http.MethodGet
+	}
+
+	if r.Action == "write" || r.Action == "update" {
+		return method == http.MethodPut || method == http.MethodPatch || method == http.MethodPost || method == http.MethodDelete
+	}
+
+	return false
 }

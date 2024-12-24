@@ -98,5 +98,5 @@ func RulesSecurityConfig(rules []Rule) *Config {
 		guard = rule
 		guards[i+1] = &guard
 	}
-	return &Config{guards: guards, lastGuard: &PubGuard}
+	return &Config{guards: guards, lastGuard: &RootGuard}
 }

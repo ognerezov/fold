@@ -51,6 +51,7 @@ func SetAuthHandlers(mux *goji.Mux) {
 		principle := FromRequest(r)
 		if principle == nil {
 			router.ReturnError(fmt.Errorf("principle not found"), 401, w)
+			return
 		}
 		router.WriteResponse(*principle, w)
 	})

@@ -1,14 +1,5 @@
-import {get, toQueryString} from "./util.js";
+import {toQueryString} from "./util.js";
 import google from "../providers/google.js";
-
-export function authQueryResponse(document){
-    let params = new URL(document.location.toString()).searchParams;
-    console.log(params)
-    return {
-        error : params.get("error"),
-        code: params.get("code")
-    }
-}
 
 export function googleAuthLink(){
     const query = {
@@ -34,6 +25,5 @@ function getRedirectUri(allowedUris){
     }
     // take matching uri with min symbols
     uris.sort((u1, u2) => u1.length - u2.length)
-    console.log(uris)
     return uris[0]
 }
