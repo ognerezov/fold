@@ -579,6 +579,9 @@ body{
   justify-content: center;
   --tw-bg-opacity: 1;
   background-color: rgb(97 160 169 / var(--tw-bg-opacity, 1));
+}
+
+.pl_20 {
   padding-left: 5rem;
 }
 
@@ -602,7 +605,15 @@ body{
   justify-content: center;
 }
 
+.top-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
 .btn {
+  cursor: pointer;
   border-radius: 0.25rem;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
@@ -618,6 +629,13 @@ body{
   color: rgb(252 251 247 / var(--tw-text-opacity, 1));
 }
 
+.deep {
+  --tw-bg-opacity: 1;
+  background-color: rgb(12 45 80 / var(--tw-bg-opacity, 1));
+  --tw-text-opacity: 1;
+  color: rgb(252 251 247 / var(--tw-text-opacity, 1));
+}
+
 .btn-deep:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(97 160 169 / var(--tw-bg-opacity, 1));
@@ -626,6 +644,8 @@ body{
 }
 
 .btn-wave {
+  --tw-bg-opacity: 1;
+  background-color: rgb(97 160 169 / var(--tw-bg-opacity, 1));
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
 }
@@ -673,6 +693,66 @@ body{
   margin-left: auto;
   margin-right: auto;
   width: 80%;
+}
+
+.wave-frame {
+  border-radius: 0.5rem;
+  border-width: 4px;
+  --tw-border-opacity: 1;
+  border-color: rgb(97 160 169 / var(--tw-border-opacity, 1));
+}
+
+.end-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.hidden{
+  display: none;
+}
+
+.m-frame {
+  margin: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .m-frame {
+    margin: 2rem;
+  }
+}
+
+.terminal-text {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  --tw-text-opacity: 1;
+  color: rgb(97 160 169 / var(--tw-text-opacity, 1));
+}
+
+.terminal-error {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  --tw-text-opacity: 1;
+  color: rgb(205 92 88 / var(--tw-text-opacity, 1));
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.p_2 {
+  padding: 0.5rem;
+}
+
+.p_05 {
+  padding: 0.125rem;
+}
+
+.m_05 {
+  margin: 0.125rem;
 }
 
 .gsi-material-button {

@@ -9,14 +9,14 @@ body{
 
 
 .grid-3 {
-    @apply grid grid-cols-1 md:grid-cols-3  gap-4 h-full;
+    @apply grid grid-cols-1 md:grid-cols-3 gap-4 h-full;
 }
 
 .wave-column {
     @apply bg-wave flex-col items-start justify-center flex
 }
 
-.pl-20 {
+.pl_20 {
     @apply pl-20
 }
 
@@ -32,11 +32,19 @@ body{
     @apply flex flex-col items-start justify-center;
 }
 
+.top-column {
+    @apply flex flex-col items-start justify-start;
+}
+
 .btn {
-    @apply font-bold py-1 px-5 rounded;
+    @apply font-bold py-1 px-5 rounded cursor-pointer;
 }
 
 .btn-deep {
+    @apply bg-deep text-paper;
+}
+
+.deep {
     @apply bg-deep text-paper;
 }
 
@@ -45,7 +53,7 @@ body{
 }
 
 .btn-wave {
-    @apply text-white;
+    @apply bg-wave text-white;
 }
 
 .btn-wave:hover {
@@ -75,6 +83,47 @@ body{
 .width-80 {
     @apply w-4/5 mx-auto
 }
+
+.wave-frame{
+    @apply rounded-lg border-wave border-4
+}
+
+.end-row{
+    @apply flex items-center justify-end w-full px-1
+}
+
+.hidden{
+    display: none;
+}
+
+.m-frame{
+   @apply m-1 md:m-8;
+}
+
+.terminal-text{
+    @apply text-wave text-sm
+}
+
+.terminal-error{
+    @apply text-volcano text-sm
+}
+
+.pointer{
+    @apply cursor-pointer
+}
+
+.p_2{
+    @apply p-2
+}
+
+.p_05{
+     @apply p-0.5
+ }
+
+.m_05{
+     @apply m-0.5
+ }
+
 
 .gsi-material-button {
     -moz-user-select: none;

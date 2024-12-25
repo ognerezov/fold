@@ -75,10 +75,11 @@ func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *opena
 			router.ServerError(errors.New("controller not found"), w)
 			return
 		}
+		fmt.Println(controller)
 		q, _ := util.MapQuery(r)
 		data := make(map[string]any)
 		maps.Copy(data, controller.Parameters)
-
+		fmt.Println("processed query")
 		if controller.Method != "GET" && r.Body != nil {
 			decoder := json.NewDecoder(r.Body)
 			var record map[string]any

@@ -1,7 +1,9 @@
-export async function get(url, query, headers) {
+export async function send(url, query, method = "GET", headers, body = undefined) {
     try {
         const response = await fetch(url + toQueryString(query), {
-            headers : headers || {}
+            method : method,
+            headers : headers || {},
+            body : body
         });
         if (!response.ok) {
             return {
@@ -16,12 +18,23 @@ export async function get(url, query, headers) {
         }
 
     } catch (error) {
+        console.log(error)
         return {
             error : error.message,
             status: 500
         }
     }
 }
+
+export async function echo(data){
+    return await send("/echo", "", "POST", {
+        "Content-Type": "application/json"
+    }, JSON.stringify(data))
+}
+
+export const JSON_HEADERS =  Object.freeze({
+    "Content-Type": "application/json"
+})
 
 export function toQueryString(query) {
     if (!query || !Object.keys(query).length) {

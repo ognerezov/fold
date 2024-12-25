@@ -48,18 +48,19 @@ func EncodeQuery(m *map[string]string) string {
 	return values.Encode()
 }
 
+func HideBody(Body io.ReadCloser) {
+	err := Body.Close()
+	if err != nil {
+		console.RedPrintln(err.Error())
+	}
+}
+
 func SendRequest(req *http.Request) (*http.Response, error) {
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		console.RedPrintln(err.Error())
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		err = Body.Close()
-		if err != nil {
-			console.RedPrintln(err.Error())
-		}
-	}(resp.Body)
 
 	return resp, nil
 }

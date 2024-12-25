@@ -11,7 +11,7 @@
 
     <div class="fill paper">
         <div class="grid-3">
-            <div class="wave-column pl-20">
+            <div class="wave-column pl_20">
                 <ul class="w-list">
                     <li>
                         Nocode
@@ -36,8 +36,8 @@
                     </li>
                 </ul>
             </div>
-            <div class="centered-column h-full gap-0 font-bold text-xl">
-                <svg id="logo" width="185" height="196" viewBox="0 0 185 196" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div id="center" class="centered-column h-full gap-0 font-bold text-xl">
+                <svg id="logo" class="pointer" width="185" height="196" viewBox="0 0 185 196" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                             d="M91.1875 34C96.6458 34 101.854 34.5833 106.812 35.75C111.729 36.875 116.062 38.7083 119.812 41.25C123.521 43.75 126.479 47 128.688 51C130.896 54.9583 132 59.75 132 65.375V91.875H50.4375V65.375C50.4375 59.8333 51.5625 55.0833 53.8125 51.125C56.0208 47.125 58.9792 43.875 62.6875 41.375C66.3958 38.8333 70.7083 36.9792 75.625 35.8125C80.5417 34.6042 85.7292 34 91.1875 34ZM91.1875 46.9375C81.7708 46.9375 74.5833 48.5417 69.625 51.75C64.625 54.9583 62.125 59.5 62.125 65.375V78.9375H120.375V65.375C120.375 59.5 117.833 54.9583 112.75 51.75C107.667 48.5417 100.479 46.9375 91.1875 46.9375Z"
                             fill="#0C2D50"/>
@@ -52,10 +52,20 @@
                 </svg>
                 FOLD SERVER
             </div>
+            <div id="terminal" class="deep wave-frame top-column h-full gap-0 hidden m-frame">
+                <div class="end-row">
+                    <div id="terminalCloseBtn" class="p_05 m_05 btn btn-deep">
+                        x
+                    </div>
+                </div>
+                <div id="terminal-text" class="p_2 terminal-text">
 
-            <div class="bg-wave centered-column p-12 gap-4" >
+                </div>
+            </div>
+
+            <div class="bg-wave centered-column gap-4" >
                 <a href="/login">
-                    <button class="btn wave">
+                    <button class="btn btn-wave">
                         Login
                     </button>
                 </a>
@@ -64,10 +74,52 @@
     </div>
     </body>
     <script type="module">
-        import { test } from './src/main.js';
+        import { processCode } from './src/code.js';
+        let terminal;
+        let center;
+        let terminalText
+
+        function onDataReceived(data){
+            console.log(data)
+
+            if(data?.error){
+                showTerminal(true)
+                onErrorReceived(data.error)
+                return
+            }
+            terminalText.innerText = JSON.stringify(data)
+            terminalText.classList.remove("terminal-error")
+            terminalText.classList.add("terminal-text")
+        }
+
+        function showTerminal(flag){
+            if(flag){
+                terminal.classList.remove("hidden");
+                center.classList.add("hidden");
+
+            }else {
+                terminal.classList.add("hidden");
+                center.classList.remove("hidden");
+            }
+        }
+
+        function onCloseTerminal(){
+            showTerminal(false)
+        }
+
+        function onErrorReceived(e){
+            terminalText.classList.add("terminal-error")
+            terminalText.classList.remove("terminal-text")
+            terminalText.innerText = String(e)
+        }
 
         window.onload = function () {
-            document.getElementById('logo').onclick = test;
+            document.getElementById('logo').onclick = ()=>showTerminal(true);
+            terminal = document.getElementById("terminal");
+            center = document.getElementById("center");
+            terminalText = document.getElementById("terminal-text");
+            document.getElementById("terminalCloseBtn").onclick=onCloseTerminal;
+            processCode(document).then(onDataReceived).catch(onErrorReceived)
         }
     </script>
 </html>

@@ -40,7 +40,7 @@ type GoogleJson struct {
 }
 
 type CodeTokenRequest struct {
-	Code        string `json:"code"`
+	Code        string `json:"code" validate:"required"`
 	RedirectUri string `json:"redirect_uri"`
 }
 
@@ -50,6 +50,7 @@ type CodeTokenResponse struct {
 	TokenType    string `json:"token_type"`
 	Scope        string `json:"scope"`
 	RefreshToken string `json:"refresh_token"`
+	IdToken      string `json:"id_token"`
 }
 
 func (gs *GoogleSecret) WithoutSecret() *GoogleSecret {
@@ -197,14 +198,23 @@ func (gj *GoogleJson) Do(data map[string]any) (any, error) {
 	if err != nil {
 		return GetErrorResponse(err), err
 	}
+	fmt.Println(tokenReq.Code)
 	resp, err := util.SendRequest(req)
 	if err != nil {
 		return GetErrorResponse(err), err
 	}
-	fmt.Println(resp.Body)
+	defer util.HideBody(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		decoder := json.NewDecoder(resp.Body)
+		var errResp map[string]any
+		err = decoder.Decode(&errResp)
+		err = errors.New(resp.Status)
+		return errResp, err
+	}
 	decoder := json.NewDecoder(resp.Body)
 	var tokenResp CodeTokenResponse
 	err = decoder.Decode(&tokenResp)
+	fmt.Println(tokenResp)
 	if err != nil {
 		return GetErrorResponse(err), err
 	}
@@ -212,7 +222,7 @@ func (gj *GoogleJson) Do(data map[string]any) (any, error) {
 }
 
 func (gj *GoogleJson) TokenRequest(code string, redirectUri string) (*http.Request, error) {
-	uri := gj.TokenUri
+	uri := gj.TokenUrl()
 	if uri == "" {
 		return nil, errors.New("token uri is empty")
 	}

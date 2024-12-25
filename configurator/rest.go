@@ -162,6 +162,10 @@ func (r *RestResourceConfig) Request() (*http.Request, error) {
 func (r *RestResourceConfig) SaveJson() error {
 	req, err := r.Request()
 	resp, err := util.SendRequest(req)
+	if err != nil {
+		return err
+	}
+	defer util.HideBody(resp.Body)
 
 	filePath := r.Filename()
 	out, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)

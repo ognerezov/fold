@@ -6,10 +6,11 @@ export function googleAuthLink(){
         client_id: google?.web?.client_id,
         response_type: "code",
         state: "state_parameter_passthrough_value",
-        scope:"https://www.googleapis.com/auth/userinfo.profile",
+        scope:"https://www.googleapis.com/auth/userinfo.email",
         redirect_uri: getRedirectUri(google?.web?.redirect_uris),
         prompt: "consent",
-        include_granted_scopes: true
+        include_granted_scopes: true,
+        access_type: "offline"
     }
     const url = google?.web?.auth_uri;
     return url + toQueryString(query)

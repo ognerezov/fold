@@ -34,10 +34,16 @@
   </div>
 </body>
 <script type="module">
-  import { authQueryResponse } from './src/code.js';
+  import { processCode } from './src/code.js';
 
   window.onload = function () {
-    console.log(authQueryResponse(document))
+    processCode(document).then(console.log).catch(console.log)
+    console.log("!")
+  }
+
+  window.onload = function () {
+    processCode(document).then(console.log).catch(console.log)
+    console.log("!")
   }
 </script>
 </html>
