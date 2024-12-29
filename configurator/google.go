@@ -3,16 +3,16 @@ package configurator
 import (
 	"errors"
 	"fmt"
-	"fold/api"
 	"fold/console"
+	"fold/oauth"
 	"fold/path"
 	"fold/util"
 	"io/fs"
 )
 
-func InitGoogleProvider(dataPath string) (*api.GoogleJson, error) {
+func InitGoogleProvider(dataPath string) (*oauth.GoogleJson, error) {
 	clean := path.CreateRootCleaner(dataPath)
-	googleJson := &api.GoogleJson{}
+	googleJson := &oauth.GoogleJson{}
 	gotAny := false
 	err := path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
@@ -23,7 +23,7 @@ func InitGoogleProvider(dataPath string) (*api.GoogleJson, error) {
 		switch extension {
 		case ".json":
 			console.YellowPrintln(fmt.Sprintf("Reading Google json file from %s", filename))
-			var json *api.GoogleJson
+			var json *oauth.GoogleJson
 			err = util.FromJson(filename, &json)
 			if err != nil {
 				console.RedPrintln(err.Error())

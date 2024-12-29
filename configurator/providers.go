@@ -2,8 +2,8 @@ package configurator
 
 import (
 	"fmt"
-	"fold/api"
 	"fold/console"
+	"fold/oauth"
 	"os"
 )
 
@@ -12,12 +12,12 @@ const (
 )
 
 var (
-	AppProviders                                    = &Providers{}
-	GoogleProvider ProviderExporter[api.GoogleJson] = &api.GoogleJson{}
+	AppProviders                                      = &Providers{}
+	GoogleProvider ProviderExporter[oauth.GoogleJson] = &oauth.GoogleJson{}
 )
 
 type Providers struct {
-	Google *api.GoogleJson
+	Google *oauth.GoogleJson
 }
 
 func (p *Providers) Export(path string) error {
@@ -50,7 +50,7 @@ func InitProviders(dataPath string) error {
 		name := file.Name()
 		if name == "google" {
 			console.YellowPrintln(fmt.Sprintf("Loading provider %s", name))
-			var provider *api.GoogleJson
+			var provider *oauth.GoogleJson
 			provider, err = InitGoogleProvider(fmt.Sprintf("%s/providers/%s", dataPath, name))
 			if err != nil {
 				console.RedPrintln(err.Error())

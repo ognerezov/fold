@@ -17,4 +17,5 @@ func (l LoginRequest) Validate() error {
 
 type LoginResponse struct {
 	Token string `json:"token"`
+	Iss   string `json:"iss"`
 }

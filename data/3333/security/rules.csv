@@ -1,0 +1,9 @@
+id,security_authorities_id,security_audience_id,filter,action
+1,guest,favicon.ico,,read
+2,guest,src,,read
+3,guest,/,,read
+4,guest,providers,,read
+5,guest,pub,,read
+7,guest,auth,,
+6,user,user,id,
+7,admin,security,,read

@@ -1,7 +1,6 @@
 package configurator
 
 import (
-	"fmt"
 	"fold/console"
 	"fold/csv"
 	"fold/mem"
@@ -30,6 +29,8 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	if err != nil {
 		console.RedPrintln("export error: " + err.Error())
 	}
+	// TODO we should somehow register path parameter path latter
+	// Probably by making array of tasks and then sorting them
 	err = path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -77,7 +78,6 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 			console.RedPrintln(e.Error())
 		}
 		console.YellowPrintln("Applying security rules")
-		console.YellowPrintln(fmt.Sprintf("%v", rules))
 		if len(rules) > 0 {
 			config := security.RulesSecurityConfig(rules)
 			mux.Use(config.AuthorizeRequest)
@@ -85,7 +85,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 			mux.Use(security.Public.AuthorizeRequest)
 		}
 	}
-	security.SetAuthHandlers(mux)
+	security.SetAuthHandlers(mux, App.Name())
 
 	err = apiDescription.Save(openapiFileName)
 	if err == nil {

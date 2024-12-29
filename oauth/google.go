@@ -1,9 +1,10 @@
-package api
+package oauth
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"fold/api"
 	"fold/console"
 	"fold/controls"
 	"fold/db"
@@ -187,21 +188,21 @@ func (gj *GoogleJson) Id() string {
 func (gj *GoogleJson) Do(data map[string]any) (any, error) {
 	codeErrMsg := "code is missing in the request"
 	if data == nil {
-		return ErrorResponse{Error: codeErrMsg}, errors.New("request is empty")
+		return api.ErrorResponse{Error: codeErrMsg}, errors.New("request is empty")
 	}
 	var tokenReq CodeTokenRequest
 	err := util.Restructure(data, &tokenReq)
 	if err != nil {
-		return ErrorResponse{Error: fmt.Sprintf("error decoding request: %v", err.Error())}, err
+		return api.ErrorResponse{Error: fmt.Sprintf("error decoding request: %v", err.Error())}, err
 	}
 	req, err := gj.TokenRequest(tokenReq.Code, tokenReq.RedirectUri)
 	if err != nil {
-		return GetErrorResponse(err), err
+		return api.GetErrorResponse(err), err
 	}
 	fmt.Println(tokenReq.Code)
 	resp, err := util.SendRequest(req)
 	if err != nil {
-		return GetErrorResponse(err), err
+		return api.GetErrorResponse(err), err
 	}
 	defer util.HideBody(resp.Body)
 	if resp.StatusCode != http.StatusOK {
@@ -215,10 +216,12 @@ func (gj *GoogleJson) Do(data map[string]any) (any, error) {
 	var tokenResp CodeTokenResponse
 	err = decoder.Decode(&tokenResp)
 	fmt.Println(tokenResp)
+	iss := "fold"
 	if err != nil {
-		return GetErrorResponse(err), err
+		return api.GetErrorResponse(err), err
 	}
-	return tokenResp, nil
+	token, err := tokenResp.ExchangeForToken("google", "https://www.googleapis.com/oauth2/v3/userinfo", iss)
+	return api.LoginResponse{Token: token, Iss: iss}, nil
 }
 
 func (gj *GoogleJson) TokenRequest(code string, redirectUri string) (*http.Request, error) {

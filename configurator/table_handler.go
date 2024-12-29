@@ -15,6 +15,7 @@ import (
 func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) {
 	console.BluePrintln("Registering GET " + route)
 	mux.HandleFunc(pat.Get(route), func(w http.ResponseWriter, r *http.Request) {
+		console.BluePrintln("Incoming GET request to " + route)
 		router.ProcessSearch(route, w, r)
 	})
 	paramLiteral := ":id"
@@ -25,7 +26,9 @@ func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) 
 	paramRoute := fmt.Sprintf("%s%s", paramBaseRoute, paramLiteral)
 	table, _ := mem.TheStore.GetTable(route)
 	schema := table.Schema()
+	console.BluePrintln("Registering GET " + paramRoute)
 	mux.HandleFunc(pat.Get(paramRoute), func(w http.ResponseWriter, r *http.Request) {
+		console.BluePrintln("Incoming GET request to " + paramRoute)
 		id := pat.Param(r, "id")
 		router.ProcessGet(route, id, w)
 	})

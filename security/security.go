@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func SetAuthHandlers(mux *goji.Mux) {
+func SetAuthHandlers(mux *goji.Mux, iss string) {
 	console.BluePrintln("Registering security root POST /login (User defined root would be overridden)")
 	mux.HandleFunc(pat.Post("/login"), func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
@@ -34,7 +34,7 @@ func SetAuthHandlers(mux *goji.Mux) {
 			router.ReturnError(err, 401, w)
 			return
 		}
-		token, err := principle.BearerToken()
+		token, err := principle.BearerToken(iss)
 
 		if err != nil {
 			router.ServerError(err, w)

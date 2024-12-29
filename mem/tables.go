@@ -71,6 +71,7 @@ func (t *Table) MapRow(row []Data) map[string]any {
 
 func (t *Table) MapJoinRow(row []Data, store *Store, tablePathMap JoinPathMap, level int) map[string]any {
 	res := make(map[string]any)
+	fmt.Println(*t)
 	for index, value := range row {
 		res[t.cols[index].name] = value.Val()
 	}
@@ -83,7 +84,7 @@ func (t *Table) MapJoinRow(row []Data, store *Store, tablePathMap JoinPathMap, l
 	for _, column := range t.foreignIndexes {
 		console.YellowPrintln(fmt.Sprintf("Checking foreign index: %s->%s ", column.foreignTable, column.foreignColumn))
 		previousLevel, ok := pathMap[column.foreignTable]
-
+		fmt.Println(column)
 		/*
 			We are storing path through tables to avoid circular joins
 			If level == previousLevel we are querying multiple rows on current join

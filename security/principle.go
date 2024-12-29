@@ -6,7 +6,9 @@ import (
 	"fold/console"
 	"fold/mem"
 	"fold/util"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
+	"time"
 )
 
 type Principle struct {
@@ -49,12 +51,29 @@ func Authenticate(r *http.Request) (*Principle, error) {
 	return principle, err
 }
 
-func (principle *Principle) BearerToken() (string, error) {
-	j, er := createToken(principle)
+func (principle *Principle) BearerToken(iss string) (string, error) {
+	j, er := principle.TokenFor(iss)
 	if er != nil {
 		return "", er
 	}
 	return fmt.Sprintf("Bearer %s", j), nil
+}
+
+func (principle *Principle) TokenFor(iss string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"sub": principle.Id,
+			"aud": principle.Roles,
+			"iss": iss,
+			"exp": time.Now().Add(time.Hour * 24).Unix(),
+		})
+
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
 
 func FromToken(tokenString string) (*Principle, error) {

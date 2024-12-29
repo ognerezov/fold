@@ -20,6 +20,9 @@ func (r Rule) PathMatches(s string) bool {
 	var path string
 	if r.Audience == "*" {
 		path = "/.*"
+	} else if r.Audience == "/" {
+		// just root page or address without path
+		path = "^/?$"
 	} else {
 		path = fmt.Sprintf("/%s.*", r.Audience)
 	}

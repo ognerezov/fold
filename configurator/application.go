@@ -19,6 +19,11 @@ type Application struct {
 	services map[int]*Service
 	address  string
 	ports    PortsConfig
+	config   AppConfig
+}
+
+type AppConfig struct {
+	name string
 }
 
 func CreateApplication(address string, dataPath string) {
@@ -41,10 +46,10 @@ func CreateApplication(address string, dataPath string) {
 		go initPort(address, ports[i], services)
 	}
 	// last port goes to console
-	console.GreenPrintln("___________________________")
-	console.GreenPrintln("Server configured.")
-	console.GreenPrintln("___________________________")
-	App = &Application{services: services, address: address, ports: ports}
+	console.GreenPrintln("__________________________________")
+	console.GreenPrintln("Server configured with default name")
+	console.GreenPrintln("__________________________________")
+	App = &Application{services: services, address: address, ports: ports, config: AppConfig{name: "fold"}}
 	(*TheInstructions)[restart] = App.RestartControl()
 	console.MagentaPrintln(fmt.Sprintf("%v", *App))
 	initPort(address, ports[l-1], services)
@@ -105,4 +110,8 @@ func (app *Application) Do(data map[string]any) (any, error) {
 		return api.GetErrorResponse(err), err
 	}
 	return api.Ok(), nil
+}
+
+func (app *Application) Name() string {
+	return app.config.name
 }
