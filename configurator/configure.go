@@ -29,8 +29,8 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	if err != nil {
 		console.RedPrintln("export error: " + err.Error())
 	}
-	// TODO we should somehow register path parameter path latter
-	// Probably by making array of tasks and then sorting them
+
+	next := NewPhase()
 	err = path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -43,7 +43,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 			table := mem.TableFromRecords(records)
 			table.File = filename
 			store.SetTable(route, table)
-			SetTableHandlers(route, mux, apiDescription)
+			next.Append(SetTableHandlers(route, mux, apiDescription))
 		case ".json":
 			console.GreenPrintln("Registering json handlers for " + filename)
 			noSql, e := mem.LoadJson(filename)
@@ -62,6 +62,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 
 		return nil
 	})
+	next.Act()
 	store.ReIndex()
 	if err != nil {
 		return nil, err

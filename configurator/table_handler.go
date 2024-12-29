@@ -12,7 +12,42 @@ import (
 	"net/http"
 )
 
-func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) {
+type CsvSetup struct {
+	mux        *goji.Mux
+	baseRoute  string
+	paramRoute string
+}
+
+func (cs CsvSetup) Act() {
+	console.CyanPrintln("Registering GET " + cs.paramRoute)
+	cs.mux.HandleFunc(pat.Get(cs.paramRoute), func(w http.ResponseWriter, r *http.Request) {
+		console.BluePrintln("Incoming GET request to " + cs.paramRoute)
+		id := pat.Param(r, "id")
+		router.ProcessGet(cs.baseRoute, id, w)
+	})
+
+	console.CyanPrintln("Registering PATCH " + cs.paramRoute)
+	cs.mux.HandleFunc(pat.Patch(cs.paramRoute), func(w http.ResponseWriter, r *http.Request) {
+		id := pat.Param(r, "id")
+		decoder := json.NewDecoder(r.Body)
+		var record map[string]string
+		err := decoder.Decode(&record)
+		if err != nil {
+			router.ServerError(err, w)
+			return
+		}
+		router.ProcessPatch(cs.baseRoute, id, record, w)
+	})
+
+	console.CyanPrintln("Registering DELETE " + cs.paramRoute)
+	cs.mux.HandleFunc(pat.Delete(cs.paramRoute), func(w http.ResponseWriter, r *http.Request) {
+		id := pat.Param(r, "id")
+		router.ProcessDelete(cs.baseRoute, id, w)
+	})
+}
+
+func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) Action {
+
 	console.BluePrintln("Registering GET " + route)
 	mux.HandleFunc(pat.Get(route), func(w http.ResponseWriter, r *http.Request) {
 		console.BluePrintln("Incoming GET request to " + route)
@@ -26,24 +61,8 @@ func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) 
 	paramRoute := fmt.Sprintf("%s%s", paramBaseRoute, paramLiteral)
 	table, _ := mem.TheStore.GetTable(route)
 	schema := table.Schema()
-	console.BluePrintln("Registering GET " + paramRoute)
-	mux.HandleFunc(pat.Get(paramRoute), func(w http.ResponseWriter, r *http.Request) {
-		console.BluePrintln("Incoming GET request to " + paramRoute)
-		id := pat.Param(r, "id")
-		router.ProcessGet(route, id, w)
-	})
-	mux.HandleFunc(pat.Patch(paramRoute), func(w http.ResponseWriter, r *http.Request) {
-		id := pat.Param(r, "id")
-		decoder := json.NewDecoder(r.Body)
-		var record map[string]string
-		err := decoder.Decode(&record)
-		if err != nil {
-			router.ServerError(err, w)
-			return
-		}
-		router.ProcessPatch(route, id, record, w)
-	})
 
+	console.BluePrintln("Registering POST " + route)
 	mux.HandleFunc(pat.Post(route), func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		var record map[string]string
@@ -53,11 +72,6 @@ func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) 
 			return
 		}
 		router.ProcessPost(route, record, w)
-	})
-
-	mux.HandleFunc(pat.Delete(paramRoute), func(w http.ResponseWriter, r *http.Request) {
-		id := pat.Param(r, "id")
-		router.ProcessDelete(route, id, w)
 	})
 
 	api.Path(route).GetJson(
@@ -77,4 +91,5 @@ func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) 
 		schema,
 		schema).DeleteById()
 
+	return CsvSetup{mux: mux, baseRoute: route, paramRoute: paramRoute}
 }
