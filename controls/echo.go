@@ -19,11 +19,7 @@ func (id EchoControl) Do(data map[string]any, w http.ResponseWriter, _ *http.Req
 	router.WriteResponse(data, w)
 }
 
-func (id EchoControl) ConfigureControl(_ any) error {
-	return nil
-}
-
-func GetEcho(id string) *Control {
+func GetEcho(id string, _ any) *Control {
 	var ctr Control
 	ctr = EchoControl(id)
 	return &ctr

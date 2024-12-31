@@ -52,7 +52,7 @@ func CreateApplication(address string, dataPath string) {
 	console.GreenPrintln("Server configured with default name")
 	console.GreenPrintln("__________________________________")
 	App = &Application{services: services, address: address, ports: ports, config: AppConfig{name: "fold"}}
-	(*TheInstructions)[restart] = App.RestartControl()
+	(*TheInstructions)[restart] = App.RestartControl
 	console.MagentaPrintln(fmt.Sprintf("%v", *App))
 	initPort(address, ports[l-1], services)
 }
@@ -65,7 +65,7 @@ func initPort(address string, port PortConfig, services map[int]*Service) {
 	}
 }
 
-func (app *Application) RestartControl() *controls.Control {
+func (app *Application) RestartControl(string, any) *controls.Control {
 	var restartControl controls.Control
 	restartControl = app
 	return &restartControl
@@ -118,8 +118,4 @@ func (app *Application) Do(data map[string]any, w http.ResponseWriter, _ *http.R
 
 func (app *Application) Name() string {
 	return app.config.name
-}
-
-func (app *Application) ConfigureControl(_ any) error {
-	return nil
 }

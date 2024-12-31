@@ -231,10 +231,6 @@ func (gj *GoogleJson) Do(data map[string]any, w http.ResponseWriter, _ *http.Req
 	router.WriteResponse(api.LoginResponse{Token: token, Iss: iss}, w)
 }
 
-func (gj *GoogleJson) ConfigureControl(_ any) error {
-	return nil
-}
-
 func (gj *GoogleJson) TokenRequest(code string, redirectUri string) (*http.Request, error) {
 	uri := gj.TokenUrl()
 	if uri == "" {
@@ -255,7 +251,7 @@ func (gj *GoogleJson) TokenRequest(code string, redirectUri string) (*http.Reque
 	return res, err
 }
 
-func (gj *GoogleJson) RestartControl() *controls.Control {
+func (gj *GoogleJson) AuthControl(_ string, _ any) *controls.Control {
 	var restartControl controls.Control
 	restartControl = gj
 	return &restartControl

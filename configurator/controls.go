@@ -2,12 +2,10 @@ package configurator
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"fold/console"
 	"fold/controls"
 	"fold/openapi"
-	"fold/router"
 	"fold/util"
 	goji "goji.io"
 	"goji.io/pat"
@@ -21,11 +19,11 @@ const (
 	googleAuth = "google_auth"
 )
 
-type InstructionMap map[string]*controls.Control
+type InstructionMap map[string]controls.ControlFactory
 
 var (
 	TheInstructions = &InstructionMap{
-		echo: controls.GetEcho(echo),
+		echo: controls.GetEcho,
 	}
 )
 
@@ -47,7 +45,7 @@ func (c *ControllerData) Controller() (*Controller, bool) {
 		params = make(map[string]any)
 	}
 
-	return &Controller{Id: c.Id, Parameters: params, Method: c.Method, Control: ctr, Config: c.Config}, true
+	return &Controller{Id: c.Id, Parameters: params, Method: c.Method, Control: ctr(c.Id, c.Config), Config: c.Config}, true
 }
 
 type Controller struct {
@@ -68,16 +66,16 @@ func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *opena
 		return
 	}
 	console.BluePrintln("Registering  " + config.Method + " " + route)
+	controller, ok := config.Controller()
+	if !ok {
+		console.RedPrintln("Error registering route " + route + " . Instructions not found")
+		return
+	}
+	fmt.Println(controller)
 
 	mux.HandleFunc(pat.NewWithMethods(route, config.Method), func(w http.ResponseWriter, r *http.Request) {
 		console.GreenPrintln(fmt.Sprintf("Incoming request to %s: %s", config.Method, route))
-		controller, ok := config.Controller()
-		if !ok {
-			console.RedPrintln("Error registering route " + route + " . Instructions not found")
-			router.ServerError(errors.New("controller not found"), w)
-			return
-		}
-		fmt.Println(controller)
+
 		q, _ := util.MapQuery(r)
 		data := make(map[string]any)
 		maps.Copy(data, controller.Parameters)
@@ -96,12 +94,12 @@ func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *opena
 			data[k] = v
 		}
 		ctr := *controller.Control
-		err = ctr.ConfigureControl(controller.Config)
-		if err != nil {
-			console.RedPrintln("fail to init controller " + err.Error())
-			router.ServerError(err, w)
-			return
-		}
+		//err = ctr.ConfiguredControl(controller.Config)
+		//if err != nil {
+		//	console.RedPrintln("fail to init controller " + err.Error())
+		//	router.ServerError(err, w)
+		//	return
+		//}
 		ctr.Do(data, w, r)
 	})
 }

@@ -4,5 +4,6 @@ import "net/http"
 
 type Control interface {
 	Do(map[string]any, http.ResponseWriter, *http.Request)
-	ConfigureControl(any) error
 }
+
+type ControlFactory func(string, any) *Control
