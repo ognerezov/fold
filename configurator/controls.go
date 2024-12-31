@@ -33,6 +33,7 @@ type ControllerData struct {
 	Id         string         `json:"id"`
 	Parameters map[string]any `json:"parameters"`
 	Method     string         `json:"method" default:"GET"`
+	Config     any            `json:"config"`
 }
 
 func (c *ControllerData) Controller() (*Controller, bool) {
@@ -46,7 +47,7 @@ func (c *ControllerData) Controller() (*Controller, bool) {
 		params = make(map[string]any)
 	}
 
-	return &Controller{Id: c.Id, Parameters: params, Method: c.Method, Control: ctr}, true
+	return &Controller{Id: c.Id, Parameters: params, Method: c.Method, Control: ctr, Config: c.Config}, true
 }
 
 type Controller struct {
@@ -54,6 +55,7 @@ type Controller struct {
 	Parameters map[string]any
 	Method     string
 	Control    *controls.Control
+	Config     any
 }
 
 // TODO set openapi
@@ -94,11 +96,12 @@ func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *opena
 			data[k] = v
 		}
 		ctr := *controller.Control
-		res, e := ctr.Do(data)
-		if e != nil {
-			router.ServerError(e, w)
+		err = ctr.ConfigureControl(controller.Config)
+		if err != nil {
+			console.RedPrintln("fail to init controller " + err.Error())
+			router.ServerError(err, w)
 			return
 		}
-		router.WriteResponse(res, w)
+		ctr.Do(data, w, r)
 	})
 }

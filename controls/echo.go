@@ -1,15 +1,26 @@
 package controls
 
-import "errors"
+import (
+	"errors"
+	"fold/console"
+	"fold/router"
+	"net/http"
+)
 
 type EchoControl string
 
-func (id EchoControl) Do(data map[string]any) (any, error) {
+func (id EchoControl) Do(data map[string]any, w http.ResponseWriter, _ *http.Request) {
 	if data == nil {
-		return nil, errors.New("request is empty")
+		console.RedPrintln("request is empty")
+		router.BadRequest(errors.New("request is empty"), w)
+		return
 	}
 
-	return data, nil
+	router.WriteResponse(data, w)
+}
+
+func (id EchoControl) ConfigureControl(_ any) error {
+	return nil
 }
 
 func GetEcho(id string) *Control {

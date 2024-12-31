@@ -8,7 +8,9 @@ import (
 	"fold/console"
 	"fold/controls"
 	"fold/path"
+	"fold/router"
 	"fold/util"
+	"net/http"
 )
 
 var (
@@ -90,28 +92,34 @@ func (app *Application) SetService(port int, service *Service) {
 	app.services[port] = service
 }
 
-func (app *Application) Do(data map[string]any) (any, error) {
+func (app *Application) Do(data map[string]any, w http.ResponseWriter, _ *http.Request) {
 	var err error
 	var parameters api.RestartData
 	err = util.Restructure(data, &parameters)
 	if err != nil {
-		return api.GetErrorResponse(err), err
+		router.ServerError(err, w)
+		return
 	}
 	port := parameters.Port
 	console.YellowPrintln(fmt.Sprintf("Restarting port %v", port))
-	fmt.Println(app)
 	service, ok := app.services[port]
 	err = errors.New("port not found")
 	if !ok {
-		return api.GetErrorResponse(err), err
+		router.ServerError(err, w)
+		return
 	}
 	err = service.Restart(app.services)
 	if err != nil {
-		return api.GetErrorResponse(err), err
+		router.ServerError(err, w)
+		return
 	}
-	return api.Ok(), nil
+	router.WriteResponse(api.Ok(), w)
 }
 
 func (app *Application) Name() string {
 	return app.config.name
+}
+
+func (app *Application) ConfigureControl(_ any) error {
+	return nil
 }

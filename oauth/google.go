@@ -8,6 +8,7 @@ import (
 	"fold/console"
 	"fold/controls"
 	"fold/db"
+	"fold/router"
 	"fold/util"
 	"net/http"
 	"net/url"
@@ -185,24 +186,28 @@ func (gj *GoogleJson) Id() string {
 	return client.ClientId
 }
 
-func (gj *GoogleJson) Do(data map[string]any) (any, error) {
+func (gj *GoogleJson) Do(data map[string]any, w http.ResponseWriter, _ *http.Request) {
 	codeErrMsg := "code is missing in the request"
 	if data == nil {
-		return api.ErrorResponse{Error: codeErrMsg}, errors.New("request is empty")
+		router.BadRequest(errors.New(codeErrMsg), w)
+		return
 	}
 	var tokenReq CodeTokenRequest
 	err := util.Restructure(data, &tokenReq)
 	if err != nil {
-		return api.ErrorResponse{Error: fmt.Sprintf("error decoding request: %v", err.Error())}, err
+		router.BadRequest(errors.New(fmt.Sprintf("error decoding request: %v", err.Error())), w)
+		return
 	}
 	req, err := gj.TokenRequest(tokenReq.Code, tokenReq.RedirectUri)
 	if err != nil {
-		return api.GetErrorResponse(err), err
+		router.BadRequest(err, w)
+		return
 	}
 	fmt.Println(tokenReq.Code)
 	resp, err := util.SendRequest(req)
 	if err != nil {
-		return api.GetErrorResponse(err), err
+		router.ServerError(err, w)
+		return
 	}
 	defer util.HideBody(resp.Body)
 	if resp.StatusCode != http.StatusOK {
@@ -210,7 +215,8 @@ func (gj *GoogleJson) Do(data map[string]any) (any, error) {
 		var errResp map[string]any
 		err = decoder.Decode(&errResp)
 		err = errors.New(resp.Status)
-		return errResp, err
+		router.ServerError(err, w)
+		return
 	}
 	decoder := json.NewDecoder(resp.Body)
 	var tokenResp CodeTokenResponse
@@ -218,10 +224,15 @@ func (gj *GoogleJson) Do(data map[string]any) (any, error) {
 	fmt.Println(tokenResp)
 	iss := "fold"
 	if err != nil {
-		return api.GetErrorResponse(err), err
+		router.ServerError(err, w)
+		return
 	}
 	token, err := tokenResp.ExchangeForToken("google", "https://www.googleapis.com/oauth2/v3/userinfo", iss)
-	return api.LoginResponse{Token: token, Iss: iss}, nil
+	router.WriteResponse(api.LoginResponse{Token: token, Iss: iss}, w)
+}
+
+func (gj *GoogleJson) ConfigureControl(_ any) error {
+	return nil
 }
 
 func (gj *GoogleJson) TokenRequest(code string, redirectUri string) (*http.Request, error) {

@@ -1,0 +1,8 @@
+{
+    "id": "echo",
+    "method": "POST",
+    "config":{
+        "port" : 3333,
+        "path" : "echo"
+    }
+}
