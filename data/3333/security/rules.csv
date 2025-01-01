@@ -9,3 +9,4 @@ id,security_authorities_id,security_audience_id,filter,action
 8,admin,security,,read
 9,guest,echo,,
 10,guest,restart,,
+11,guest,alias,,

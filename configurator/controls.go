@@ -17,13 +17,15 @@ const (
 	echo       = "echo"
 	restart    = "restart"
 	googleAuth = "google_auth"
+	adaptor    = "adaptor"
 )
 
 type InstructionMap map[string]controls.ControlFactory
 
 var (
 	TheInstructions = &InstructionMap{
-		echo: controls.GetEcho,
+		echo:    controls.GetEcho,
+		adaptor: ConfigureAdaptor,
 	}
 )
 
@@ -31,6 +33,7 @@ type ControllerData struct {
 	Id         string         `json:"id"`
 	Parameters map[string]any `json:"parameters"`
 	Method     string         `json:"method" default:"GET"`
+	PathParams []string       `json:"path_params"`
 	Config     any            `json:"config"`
 }
 
@@ -45,15 +48,23 @@ func (c *ControllerData) Controller() (*Controller, bool) {
 		params = make(map[string]any)
 	}
 
-	return &Controller{Id: c.Id, Parameters: params, Method: c.Method, Control: ctr(c.Id, c.Config), Config: c.Config}, true
+	paramLiterals := util.ParamLiterals(c.PathParams, "/:")
+
+	return &Controller{Id: c.Id,
+		Parameters:    params,
+		Method:        c.Method,
+		Control:       ctr(c.Id, c.Config),
+		Config:        c.Config,
+		ParamLiterals: paramLiterals}, true
 }
 
 type Controller struct {
-	Id         string
-	Parameters map[string]any
-	Method     string
-	Control    *controls.Control
-	Config     any
+	Id            string
+	Parameters    map[string]any
+	Method        string
+	Control       *controls.Control
+	Config        any
+	ParamLiterals string
 }
 
 // TODO set openapi
@@ -65,21 +76,21 @@ func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *opena
 		console.RedPrintln("Error registering route " + route + " : " + err.Error())
 		return
 	}
-	console.BluePrintln("Registering  " + config.Method + " " + route)
+
 	controller, ok := config.Controller()
 	if !ok {
 		console.RedPrintln("Error registering route " + route + " . Instructions not found")
 		return
 	}
-	fmt.Println(controller)
+	paramRoute := route + controller.ParamLiterals
+	console.BluePrintln("Registering  " + config.Method + " " + paramRoute)
 
-	mux.HandleFunc(pat.NewWithMethods(route, config.Method), func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(pat.NewWithMethods(paramRoute, config.Method), func(w http.ResponseWriter, r *http.Request) {
 		console.GreenPrintln(fmt.Sprintf("Incoming request to %s: %s", config.Method, route))
 
 		q, _ := util.MapQuery(r)
 		data := make(map[string]any)
 		maps.Copy(data, controller.Parameters)
-		fmt.Println("processed query")
 		if controller.Method != "GET" && r.Body != nil {
 			decoder := json.NewDecoder(r.Body)
 			var record map[string]any
@@ -94,12 +105,6 @@ func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *opena
 			data[k] = v
 		}
 		ctr := *controller.Control
-		//err = ctr.ConfiguredControl(controller.Config)
-		//if err != nil {
-		//	console.RedPrintln("fail to init controller " + err.Error())
-		//	router.ServerError(err, w)
-		//	return
-		//}
 		ctr.Do(data, w, r)
 	})
 }

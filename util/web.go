@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 var (
@@ -72,4 +73,12 @@ func PathParamValue(req *http.Request, name string, out *string) {
 		}
 	}()
 	*out = pat.Param(req, name)
+}
+
+func ParamLiterals(params []string, delimiter string) string {
+	if params != nil && len(params) > 0 {
+		return delimiter + strings.Join(params, delimiter)
+	}
+
+	return ""
 }

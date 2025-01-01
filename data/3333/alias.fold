@@ -1,8 +1,18 @@
 {
-    "id": "echo",
+    "id": "adaptor",
     "method": "POST",
+    "path_params": ["id"],
     "config":{
-        "port" : 3333,
-        "path" : "echo"
+        "port" : 8000,
+        "path" : "/pub/echo",
+        "query_from_query" : {
+            "scope" : "account"
+        },
+        "query_from_params" : {
+            "id" : "name"
+        },
+        "params_from_query" : [
+            "date"
+        ]
     }
 }

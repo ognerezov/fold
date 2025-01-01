@@ -80,6 +80,12 @@ func (c Config) Matches(r *http.Request) bool {
 func (c Config) AuthorizeRequest(f http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
+			currentPrinciple := FromRequest(r)
+			if currentPrinciple != nil {
+				console.YellowPrintln("There is a principle in the context skipping authorization")
+				f.ServeHTTP(w, r)
+				return
+			}
 			principle, code, err := c.Authenticate(r)
 			if err != nil {
 				console.RedPrint(err.Error())
