@@ -4,61 +4,29 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"fold/console"
-	"fold/mem"
-	"fold/security"
 	"fold/util"
 	"net/http"
 	"net/url"
 	"time"
 )
 
-type UserInfo struct {
-	Sub           string `json:"sub"`
-	Name          string `json:"name"`
-	GivenName     string `json:"given_name"`
-	FamilyName    string `json:"family_name"`
-	Picture       string `json:"picture"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
-	Hd            string `json:"hd"`
-}
-
-func (u UserInfo) Principle() (*security.Principle, error) {
-	if u.Email == "" {
-		return nil, errors.New("user email is empty")
-	}
-	return &security.Principle{
-		Id:    u.Email,
-		Roles: []string{"user"},
-	}, nil
-}
-
-func (tr *CodeTokenResponse) ExchangeForToken(provider string, uri string, iss string) (string, error) {
+func (tr *CodeTokenResponse) ExchangeForToken(uri string, iss string) (*UserInfo, error) {
 	userInfo, err := tr.GetUserInfo(uri)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	principle, err := userInfo.Principle()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	token, err := principle.TokenFor(iss)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	table, ok := mem.TheStore.GetTable("/user/oauth")
-	if ok {
-		_, err = table.Insert(tr.GetRow(token, userInfo.Email, provider))
-		if err != nil {
-			console.RedPrintln("error saving oauth to table")
-		}
-	} else {
-		console.RedPrintln("oauth table not found, skip oath storage")
-	}
+	userInfo.Token = token
 
-	return token, nil
+	return userInfo, nil
 }
 
 func (tr *CodeTokenResponse) GetRow(token string, email string, provider string) map[string]string {
@@ -86,6 +54,14 @@ func (tr *CodeTokenResponse) GetUserInfo(uri string) (*UserInfo, error) {
 	}
 	resp, err := util.SendRequest(request)
 	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		decoder := json.NewDecoder(resp.Body)
+		var errResp map[string]any
+		err = decoder.Decode(&errResp)
+		err = errors.New(resp.Status)
+		fmt.Println(err)
 		return nil, err
 	}
 	defer util.HideBody(resp.Body)

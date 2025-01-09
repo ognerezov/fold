@@ -1,5 +1,7 @@
 package db
 
+import "fold/console"
+
 type PendingTables map[string][][]string
 type PendingUpdates map[string]any
 
@@ -13,6 +15,7 @@ func OnTableUpdate(name string, table [][]string) {
 }
 
 func ClearTableUpdate(name string) {
+	console.YellowPrintln("Clearing table updates for " + name)
 	delete(pendingDB, name)
 }
 

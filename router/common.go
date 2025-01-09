@@ -32,6 +32,10 @@ func BadRequest(err error, w http.ResponseWriter) {
 	ReturnError(err, 400, w)
 }
 
+func Unauthorized(err error, w http.ResponseWriter) {
+	ReturnError(err, 401, w)
+}
+
 func ReturnError(err error, code int, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")

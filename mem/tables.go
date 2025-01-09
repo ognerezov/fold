@@ -53,6 +53,11 @@ func (t *Table) InitPathTable() JoinPathMap {
 	return &result
 }
 
+func (t *Table) Has(id string) bool {
+	row := t.indexes[t.primaryIndex][id]
+	return row != nil
+}
+
 func (t *Table) GetRowByIndex(col string, id string) []Data {
 	return t.indexes[col][id]
 }
@@ -217,6 +222,23 @@ func (t *Table) QueryRows(query Query) []*[]Data {
 	return rows
 }
 
+func (t *Table) RawQueryRows(rawQuery map[string][]string) []*[]Data {
+	return t.QueryRows(PrepareQuery(rawQuery, t))
+}
+
+func (t *Table) RawQueryIds(rawQuery map[string][]string) []string {
+	rows := t.RawQueryRows(rawQuery)
+
+	result := make([]string, len(rows))
+
+	for index, row := range rows {
+		// Primary column is null here. Where it is set?
+		result[index] = (*row)[t.primaryColumn.number].Str()
+	}
+
+	return result
+}
+
 func (t *Table) SearchRows(colName string, value string) [][]Data {
 	rows := make([][]Data, 0)
 
@@ -375,10 +397,19 @@ func InitTable(indexes Indexes, cols []*ColumnDefinition, nColumns int, nRows in
 	for i := range a {
 		a[i] = make([]Data, nColumns)
 	}
+	var primaryColumn *ColumnDefinition
+	for _, col := range cols {
+		if col.name == primaryIndex {
+			primaryColumn = col
+			break
+		}
+	}
 	return &Table{
 		indexes:        indexes,
 		rows:           a,
 		cols:           cols,
 		primaryIndex:   primaryIndex,
-		foreignIndexes: make([]*ColumnDefinition, 0)}
+		foreignIndexes: make([]*ColumnDefinition, 0),
+		primaryColumn:  primaryColumn,
+	}
 }

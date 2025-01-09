@@ -8,6 +8,7 @@ import (
 	"fold/console"
 	"fold/controls"
 	"fold/db"
+	"fold/mem"
 	"fold/router"
 	"fold/util"
 	"net/http"
@@ -39,6 +40,7 @@ type GoogleJson struct {
 	ClientSecret            string        `json:"client_secret"`
 	RedirectUris            []string      `json:"redirect_uris"`
 	JavascriptOrigins       []string      `json:"javascript_origins"`
+	RegistrationAllowed     bool
 }
 
 type CodeTokenRequest struct {
@@ -221,14 +223,36 @@ func (gj *GoogleJson) Do(data map[string]any, w http.ResponseWriter, _ *http.Req
 	decoder := json.NewDecoder(resp.Body)
 	var tokenResp CodeTokenResponse
 	err = decoder.Decode(&tokenResp)
-	fmt.Println(tokenResp)
+
 	iss := "fold"
 	if err != nil {
 		router.ServerError(err, w)
 		return
 	}
-	token, err := tokenResp.ExchangeForToken("google", "https://www.googleapis.com/oauth2/v3/userinfo", iss)
-	router.WriteResponse(api.LoginResponse{Token: token, Iss: iss}, w)
+	provider := "google"
+	userInfo, err := tokenResp.ExchangeForToken("https://www.googleapis.com/oauth2/v3/userinfo", iss)
+	if err != nil {
+		router.Unauthorized(err, w)
+		return
+	}
+	RemovePreviousRecords(userInfo.Email, provider)
+	StoreOauth(tokenResp.GetRow(userInfo.Token, userInfo.Email, provider))
+	if gj.RegistrationAllowed {
+		table, ok := mem.TheStore.GetTable(util.UserPath)
+		if !ok {
+			console.YellowPrintln("User table not found")
+		} else {
+			if !table.Has(userInfo.Email) {
+				console.YellowPrintln("Registering user " + userInfo.Email)
+				_, err = table.Insert(userInfo.Map())
+				if err != nil {
+					console.RedPrintln(err.Error())
+				}
+			}
+		}
+
+	}
+	router.WriteResponse(api.LoginResponse{Token: userInfo.Token, Iss: iss}, w)
 }
 
 func (gj *GoogleJson) TokenRequest(code string, redirectUri string) (*http.Request, error) {
@@ -252,7 +276,7 @@ func (gj *GoogleJson) TokenRequest(code string, redirectUri string) (*http.Reque
 }
 
 func (gj *GoogleJson) AuthControl(_ string, _ any) *controls.Control {
-	var restartControl controls.Control
-	restartControl = gj
-	return &restartControl
+	var googleAuthControl controls.Control
+	googleAuthControl = gj
+	return &googleAuthControl
 }

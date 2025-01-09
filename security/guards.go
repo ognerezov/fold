@@ -1,6 +1,7 @@
 package security
 
 import (
+	"errors"
 	"net/http"
 	"regexp"
 )
@@ -63,7 +64,7 @@ func (m MasterGuard) Authorize(p *Principle, _ *http.Request) (bool, error) {
 		}
 	}
 
-	return false, nil
+	return false, errors.New("access denied")
 }
 
 func (m MasterGuard) Matches(*http.Request) bool {

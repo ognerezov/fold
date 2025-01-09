@@ -72,6 +72,8 @@ func flushDb() {
 		case <-Ticker.C:
 			tables := db.Db()
 			for file, table := range *tables {
+				fmt.Println("write")
+				fmt.Println(table)
 				WriteCsvAsync(file, table)
 			}
 			updates := db.Pending()

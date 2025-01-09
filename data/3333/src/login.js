@@ -6,7 +6,7 @@ export function googleAuthLink(){
         client_id: google?.web?.client_id,
         response_type: "code",
         state: "state_parameter_passthrough_value",
-        scope:"https://www.googleapis.com/auth/userinfo.email",
+        scope:"https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets",
         redirect_uri: getRedirectUri(google?.web?.redirect_uris),
         prompt: "consent",
         include_granted_scopes: true,

@@ -13,6 +13,7 @@ func main() {
 	flag.StringVar(&dataPath, "d", "./", "Working directory (shorthand)")
 
 	flag.BoolVar(&configurator.AppArguments.Cache, "cache", true, "Cache files requests")
+	flag.BoolVar(&configurator.AppArguments.RegistrationAllowed, "reg", true, "User registration allowed")
 
 	flag.Parse()
 	console.GreenPrintln("___________________________")

@@ -1,6 +1,7 @@
 package security
 
 import (
+	"errors"
 	"fmt"
 	"fold/console"
 	"fold/util"
@@ -36,7 +37,7 @@ func (r Rule) Authorize(p *Principle, _ *http.Request) (bool, error) {
 			return true, nil
 		}
 	}
-	return false, nil
+	return false, errors.New("not authorized for this action")
 }
 
 func (r Rule) Matches(req *http.Request) bool {
@@ -48,7 +49,6 @@ func (r Rule) Matches(req *http.Request) bool {
 	if r.Filter != "" {
 		var param string
 		util.PathParamValue(req, r.Filter, &param)
-		fmt.Println(param)
 		q, err := util.MapQuery(req)
 		var queryParam []string
 		if err != nil {

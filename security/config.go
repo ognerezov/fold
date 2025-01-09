@@ -51,15 +51,15 @@ func (c Config) Authenticate(r *http.Request) (*Principle, int, error) {
 	}
 	code = 401
 	principle, err := guard.Authenticate(r)
+	console.RedPrintln("Request is not authenticated")
 	if principle == nil || err != nil {
 		return nil, code, err
 	}
-
 	ok, err := guard.Authorize(principle, r)
+	console.RedPrintln("Request is not authorized")
 	if !ok || err != nil {
-		return nil, code, err
+		return nil, 403, err
 	}
-
 	return principle, 200, nil
 }
 

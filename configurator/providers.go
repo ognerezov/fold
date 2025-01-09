@@ -55,6 +55,7 @@ func InitProviders(dataPath string) error {
 			if err != nil {
 				console.RedPrintln(err.Error())
 			} else {
+				provider.RegistrationAllowed = AppArguments.RegistrationAllowed
 				AppProviders.Google = provider
 				(*TheInstructions)[googleAuth] = provider.AuthControl
 			}

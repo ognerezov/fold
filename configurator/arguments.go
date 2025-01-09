@@ -5,5 +5,6 @@ var (
 )
 
 type Arguments struct {
-	Cache bool
+	Cache               bool
+	RegistrationAllowed bool
 }
