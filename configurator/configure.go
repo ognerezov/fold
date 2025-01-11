@@ -56,7 +56,12 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 		case ".fold":
 			console.GreenPrintln("Registering fold action handler " + filename)
 			SetControlHandlers(route, filename, mux, apiDescription)
+		case ".drive":
+			console.GreenPrintln("Registering google drive folder handler " + filename)
+			routePath, id := path.SubStructure(p, info, clean)
+			SetDriveHandlers(routePath, id, mux, apiDescription)
 		default:
+			console.RedPrintln("Registering raw file handler for " + filename)
 			SetRawHandlers(route, filename, mux, apiDescription)
 		}
 

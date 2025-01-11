@@ -11,6 +11,7 @@ import (
 	"fold/mem"
 	"fold/router"
 	"fold/util"
+	"google.golang.org/api/drive/v3"
 	"net/http"
 	"net/url"
 	"strings"
@@ -41,6 +42,14 @@ type GoogleJson struct {
 	RedirectUris            []string      `json:"redirect_uris"`
 	JavascriptOrigins       []string      `json:"javascript_origins"`
 	RegistrationAllowed     bool
+	Drive                   *drive.Service
+
+	Type              string `json:"type"`
+	PrivateKeyId      string `json:"private_key_id"`
+	PrivateKey        string `json:"private_key"`
+	ClientEmail       string `json:"client_email"`
+	ClientX509CertUrl string `json:"client_x509_cert_url"`
+	UniverseDomain    string `json:"universe_domain"`
 }
 
 type CodeTokenRequest struct {

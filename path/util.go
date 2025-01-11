@@ -23,3 +23,10 @@ func Structure(dataPath string, path string, info fs.FileInfo, clean DirMapper) 
 	filename := fmt.Sprintf("%s/%s", dataPath, clean(path))
 	return route, filename, filepath.Ext(path)
 }
+
+func SubStructure(path string, info fs.FileInfo, clean DirMapper) (string, string) {
+	var name = strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
+	var route = "/" + clean(filepath.Dir(path))
+
+	return route, name
+}
