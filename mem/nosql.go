@@ -7,6 +7,7 @@ import (
 	"fold/db"
 	"fold/openapi"
 	"fold/util"
+	"google.golang.org/api/drive/v3"
 	"io"
 	"maps"
 	"os"
@@ -16,6 +17,7 @@ import (
 
 type NoSql struct {
 	File       string
+	DriveFile  *drive.File
 	document   map[string]any
 	collection []*NoSql
 	data       *Data
@@ -119,20 +121,23 @@ func LoadJson(file string) (*NoSql, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func(f *os.File) {
-		err = f.Close()
-		if err != nil {
-			console.RedPrintln("Error closing json " + file)
-		}
-	}(f)
+	defer util.CloseFie(f)
 	raw, _ := io.ReadAll(f)
+	res, err := FromBytes(raw)
+	if err != nil {
+		return nil, err
+	}
+	res.File = file
+	return res, nil
+}
+
+func FromBytes(raw []byte) (*NoSql, error) {
 	var data any
-	err = json.Unmarshal(raw, &data)
+	err := json.Unmarshal(raw, &data)
 	if err != nil {
 		return nil, err
 	}
 	res := FromAny(data)
-	res.File = file
 	return res, nil
 }
 
@@ -232,7 +237,13 @@ func (n *NoSql) CollectionVal() []any {
 
 func (n *NoSql) OnUpdate() any {
 	val := n.Val()
-	db.OnFileUpdate(n.File, val)
+	// Here we should update external source: file, drive file, s3 etc
+	if n.File != "" {
+		db.OnFileUpdate(n.File, val)
+	}
+	if n.DriveFile != nil {
+		db.OnDriveUpdate(n.DriveFile, val)
+	}
 	return val
 }
 

@@ -19,7 +19,7 @@ func main() {
 	console.GreenPrintln("___________________________")
 	console.GreenPrintln("Starting Async service")
 	console.GreenPrintln("___________________________")
-	threads.Start()
+	threads.Start(configurator.AppProviders)
 
 	console.GreenPrintln("___________________________")
 	console.GreenPrintln("Starting server")

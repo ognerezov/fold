@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"fold/console"
 	"fold/db"
+	"fold/interfaces"
 	"time"
 )
 
@@ -23,6 +24,7 @@ var (
 	Errors                      = make(chan ErrorMessage)
 	Results                     = make(chan Message[string])
 	Quit                        = make(chan struct{})
+	providers     *interfaces.Providers
 )
 
 func wrap[A any](caller AsyncCall[A, string]) func(A) {
@@ -81,6 +83,10 @@ func flushDb() {
 			for file, n := range *updates {
 				WriteNosqlAsync(file, n)
 			}
+			driveUpdates := db.DrivePending()
+			for _, update := range *driveUpdates {
+				WriteDriveAsync(update)
+			}
 
 		case <-Quit:
 			Ticker.Stop()
@@ -89,7 +95,8 @@ func flushDb() {
 	}
 }
 
-func Start() {
+func Start(p *interfaces.Providers) {
+	providers = p
 	go readChannels()
 	go flushDb()
 }

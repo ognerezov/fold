@@ -3,34 +3,14 @@ package configurator
 import (
 	"fmt"
 	"fold/console"
+	"fold/interfaces"
 	"fold/oauth"
-	"os"
-)
-
-const (
-	ProvidersOutputPath = "/providers/"
 )
 
 var (
-	AppProviders                                      = &Providers{}
+	AppProviders                                      = &interfaces.Providers{}
 	GoogleProvider ProviderExporter[oauth.GoogleJson] = &oauth.GoogleJson{}
 )
-
-type Providers struct {
-	Google *oauth.GoogleJson
-}
-
-func (p *Providers) Export(path string) error {
-	err := os.MkdirAll(path+ProvidersOutputPath, os.ModePerm)
-	if p.Google != nil {
-		err = p.Google.Export(path + ProvidersOutputPath + "google")
-		if err != nil {
-			console.RedPrintln(err.Error())
-		}
-		return err
-	}
-	return nil
-}
 
 type ProviderExporter[T any] interface {
 	WithoutSecret() T
