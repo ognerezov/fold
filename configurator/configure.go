@@ -3,6 +3,7 @@ package configurator
 import (
 	"fold/console"
 	"fold/csv"
+	"fold/interfaces"
 	"fold/mem"
 	"fold/openapi"
 	"fold/path"
@@ -30,7 +31,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 		console.RedPrintln("export error: " + err.Error())
 	}
 
-	next := NewPhase()
+	next := interfaces.NewPhase()
 	err = path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil

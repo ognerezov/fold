@@ -1,19 +1,39 @@
 package mem
 
 import (
+	"errors"
 	"fmt"
 	"fold/console"
 	"fold/util"
 )
 
 type Store struct {
-	noSql  map[string]*NoSql
-	tables map[string]*Table
-	cache  map[string][]byte
+	noSql         map[string]*NoSql
+	tables        map[string]*Table
+	cache         map[string][]byte
+	cacheFetchers map[string]BytesFetcher
 }
 
-func (s Store) Cache(key string, b []byte) {
+type BytesFetcher interface {
+	Fetch() ([]byte, error)
+}
+
+func (s Store) Cache(key string, b []byte, refresh BytesFetcher) {
 	s.cache[key] = b
+	s.cacheFetchers[key] = refresh
+}
+
+func (s Store) RefreshCache(key string) error {
+	fetcher, ok := s.cacheFetchers[key]
+	if !ok {
+		return errors.New("key not found")
+	}
+	bytes, err := fetcher.Fetch()
+	if err != nil {
+		return err
+	}
+	s.cache[key] = bytes
+	return nil
 }
 
 func (s Store) GetCached(key string) ([]byte, bool) {
@@ -100,5 +120,10 @@ func (s Store) ReIndex() {
 }
 
 var (
-	TheStore *Store = &Store{noSql: make(map[string]*NoSql), tables: make(map[string]*Table), cache: make(map[string][]byte)}
+	TheStore *Store = &Store{
+		noSql:         make(map[string]*NoSql),
+		tables:        make(map[string]*Table),
+		cache:         make(map[string][]byte),
+		cacheFetchers: make(map[string]BytesFetcher),
+	}
 )

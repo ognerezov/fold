@@ -1,4 +1,4 @@
-package configurator
+package interfaces
 
 type Action interface {
 	Act()

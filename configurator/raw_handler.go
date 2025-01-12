@@ -36,6 +36,12 @@ func GetContentType(filePath string) (string, string, bool) {
 	return m, ext, true
 }
 
+type FilePath string
+
+func (f FilePath) Fetch() ([]byte, error) {
+	return util.ReadFile(string(f))
+}
+
 func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.ApiDescription) {
 	m, ext, hasExt := GetContentType(filePath)
 	feRoute := route + ext
@@ -48,7 +54,7 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.A
 		if err != nil {
 			return
 		}
-		mem.TheStore.Cache(feRoute, bytes)
+		mem.TheStore.Cache(feRoute, bytes, FilePath(filePath))
 		mux.HandleFunc(pat.Get(feRoute), func(w http.ResponseWriter, r *http.Request) {
 			console.BluePrintln("Searching cache for " + feRoute)
 			var ok bool

@@ -1,18 +1,44 @@
 package configurator
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"fold/console"
+	"fold/mem"
 	"fold/openapi"
 	"fold/router"
 	"fold/util"
 	goji "goji.io"
 	"goji.io/pat"
-	"io"
 	"net/http"
+	"strconv"
 )
+
+type DriveFileId string
+
+func FetchDriveFile(fileId string) ([]byte, error) {
+	driveService := AppProviders.Google.Drive
+	if driveService == nil {
+		return nil, errors.New("drive service not found in configurator")
+	}
+
+	resp, err := driveService.Files.Get(fileId).Download()
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("response status code is " + strconv.Itoa(resp.StatusCode))
+	}
+	bytes, err := util.HandleBody(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
+}
+
+func (fid DriveFileId) Fetch() ([]byte, error) {
+	return FetchDriveFile(string(fid))
+}
 
 func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.ApiDescription) {
 	fmt.Println(id)
@@ -39,32 +65,32 @@ func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.Ap
 	for _, i := range r.Files {
 		fileId := i.Id
 		fileName := i.Name
+		m, _, _ := GetContentType(fileName)
 		fileRoute := basePath + "/" + fileName
+		bytes, err := FetchDriveFile(fileId)
+		if err != nil {
+			console.RedPrintln(err.Error())
+			continue
+		}
 		console.CyanPrintln("Registering GET " + fileRoute)
+		// Drive data is always cached
+		mem.TheStore.Cache(fileRoute, bytes, DriveFileId(fileId))
 		mux.HandleFunc(pat.Get(fileRoute), func(w http.ResponseWriter, r *http.Request) {
 			console.BluePrintln("Incoming request GET " + fileRoute)
-			resp, e := driveService.Files.Get(fileId).Download()
-			if e != nil {
-				console.RedPrintln(e.Error())
-
-				router.ServerError(err, w)
+			var ok bool
+			bytes, ok = mem.TheStore.GetCached(fileRoute)
+			if !ok {
+				router.NotFound(w)
 				return
 			}
-			if resp.StatusCode != http.StatusOK {
-				decoder := json.NewDecoder(resp.Body)
-				var errResp map[string]any
-				err = decoder.Decode(&errResp)
-				err = errors.New(resp.Status)
-				router.ReturnError(err, resp.StatusCode, w)
+			w.Header().Set("Content-Type", m)
+
+			_, err = w.Write(bytes)
+			if err == nil {
 				return
 			}
-			body := resp.Body
-			defer util.HideBody(body)
-			_, err = io.Copy(w, resp.Body)
-
-			if err != nil {
-				router.ServerError(err, w)
-			}
+			console.RedPrintln(err.Error())
+			router.ServerError(err, w)
 		})
 	}
 }

@@ -56,6 +56,12 @@ func HideBody(Body io.ReadCloser) {
 	}
 }
 
+func HandleBody(Body io.ReadCloser) ([]byte, error) {
+	defer HideBody(Body)
+	bytes, err := io.ReadAll(Body)
+	return bytes, err
+}
+
 func SendRequest(req *http.Request) (*http.Response, error) {
 	resp, err := httpClient.Do(req)
 	if err != nil {

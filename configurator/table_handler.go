@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"fold/console"
+	"fold/interfaces"
 	"fold/mem"
 	"fold/openapi"
 	"fold/router"
@@ -46,7 +47,7 @@ func (cs CsvSetup) Act() {
 	})
 }
 
-func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) Action {
+func SetTableHandlers(route string, mux *goji.Mux, api *openapi.ApiDescription) interfaces.Action {
 
 	console.BluePrintln("Registering GET " + route)
 	mux.HandleFunc(pat.Get(route), func(w http.ResponseWriter, r *http.Request) {
