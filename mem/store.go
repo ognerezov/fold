@@ -18,6 +18,14 @@ type BytesFetcher interface {
 	Fetch() ([]byte, error)
 }
 
+type CsvFetcher interface {
+	Fetch() (*Table, error)
+}
+
+type NoSqlFetcher interface {
+	Fetch() (*NoSql, error)
+}
+
 func (s Store) Cache(key string, b []byte, refresh BytesFetcher) {
 	s.cache[key] = b
 	s.cacheFetchers[key] = refresh
