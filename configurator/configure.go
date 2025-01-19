@@ -1,8 +1,8 @@
 package configurator
 
 import (
+	"fmt"
 	"fold/console"
-	"fold/csv"
 	"fold/interfaces"
 	"fold/mem"
 	"fold/openapi"
@@ -37,21 +37,24 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 			return nil
 		}
 		route, filename, extension := path.Structure(dataPath, p, info, clean)
+		fileHandler := FilePath(filename)
 		switch extension {
 		case ".csv":
 			console.GreenPrintln("Registering table handlers for " + filename)
-			records := csv.ReadCsvFile(filename)
-			table := mem.TableFromRecords(records)
-			table.File = filename
-			store.SetTable(route, table)
-			next.Append(SetTableHandlers(route, mux, apiDescription))
+			table, err := fileHandler.FetchCsv()
+			if err != nil {
+				console.RedPrintln(fmt.Sprintf("Error loading csc %s %v", filename, err))
+			} else {
+				store.SetTable(route, table, fileHandler)
+				next.Append(SetTableHandlers(route, mux, apiDescription))
+			}
 		case ".json":
 			console.GreenPrintln("Registering json handlers for " + filename)
-			noSql, e := mem.LoadJson(filename)
+			noSql, e := fileHandler.FetchNoSql()
 			if e != nil {
 				console.RedPrintln(e.Error())
 			} else {
-				store.SetNoSql(route, noSql)
+				store.SetNoSql(route, noSql, fileHandler)
 				SetJsonHandlers(route, mux, apiDescription)
 			}
 		case ".fold":
@@ -60,7 +63,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 		case ".drive":
 			console.GreenPrintln("Registering google drive folder handler " + filename)
 			routePath, id := path.SubStructure(p, info, clean)
-			SetDriveHandlers(routePath, id, mux, apiDescription)
+			SetDriveHandlers(routePath, id, mux, apiDescription, next)
 		default:
 			console.RedPrintln("Registering raw file handler for " + filename)
 			SetRawHandlers(route, filename, mux, apiDescription)

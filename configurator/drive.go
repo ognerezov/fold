@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"fold/console"
+	"fold/csv"
+	"fold/interfaces"
 	"fold/mem"
 	"fold/openapi"
 	"fold/router"
@@ -11,12 +13,17 @@ import (
 	goji "goji.io"
 	"goji.io/pat"
 	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/sheets/v4"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-type DriveFileId string
+const (
+	SpreadSheetMime = "application/vnd.google-apps.spreadsheet"
+)
+
+type DriveFileHandler drive.File
 
 func FetchDriveFile(fileId string) ([]byte, error) {
 	driveService := AppProviders.Google.Drive
@@ -38,11 +45,85 @@ func FetchDriveFile(fileId string) ([]byte, error) {
 	return bytes, nil
 }
 
-func (fid DriveFileId) Fetch() ([]byte, error) {
-	return FetchDriveFile(string(fid))
+func GetSpreadSheet(fileId string) (*sheets.Spreadsheet, error) {
+	sheetsService := AppProviders.Google.Sheets
+	if sheetsService == nil {
+		return nil, errors.New("sheet service not found in configurator")
+	}
+
+	spreadSheet, err := sheetsService.Spreadsheets.Get(fileId).Do()
+	if err != nil {
+		return nil, err
+	}
+	return spreadSheet, nil
 }
 
-func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.ApiDescription) {
+func FetchSpreadSheet(fileId string) ([][]string, *sheets.Spreadsheet, error) {
+	driveService := AppProviders.Google.Drive
+	if driveService == nil {
+		return nil, nil, errors.New("drive service not found in configurator")
+	}
+
+	resp, err := driveService.Files.Export(fileId, "text/csv").Download()
+
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, nil, errors.New("response status code is " + strconv.Itoa(resp.StatusCode))
+	}
+	bytes, err := util.HandleBody(resp.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+	records, err := csv.BytesToCsv(bytes)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	spreadSheet, err := GetSpreadSheet(fileId)
+	if err != nil {
+		return nil, nil, err
+	}
+	return records, spreadSheet, nil
+}
+
+func (fid DriveFileHandler) Fetch() ([]byte, error) {
+	return FetchDriveFile(fid.Id)
+}
+
+func (fid DriveFileHandler) FetchNoSql() (*mem.NoSql, error) {
+	bytes, err := fid.Fetch()
+	if err != nil {
+		return nil, err
+	}
+	noSql, err := mem.FromBytes(bytes)
+	noSql.DriveFile = fid.P()
+	if err != nil {
+		return nil, err
+	}
+
+	return noSql, nil
+}
+
+func (fid DriveFileHandler) FetchCsv() (*mem.Table, error) {
+	records, spreadSheet, err := FetchSpreadSheet(fid.Id)
+	if err != nil {
+		return nil, err
+	}
+	table := mem.TableFromRecords(records)
+	table.Spreadsheet = spreadSheet
+	table.DriveFile = fid.P()
+	return table, nil
+}
+
+func (fid DriveFileHandler) P() *drive.File {
+	var res drive.File
+	res = drive.File(fid)
+	return &res
+}
+
+func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.ApiDescription, next *interfaces.Phase) {
 	fmt.Println(id)
 	fmt.Println(basePath)
 	driveService := AppProviders.Google.Drive
@@ -56,7 +137,7 @@ func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.Ap
 		SupportsAllDrives(true).
 		IncludeItemsFromAllDrives(true).
 		PageSize(10).
-		Fields("nextPageToken, files(id, name)").
+		Fields("nextPageToken, files(id, name, parents, kind, mimeType)").
 		Do()
 
 	if err != nil {
@@ -67,41 +148,63 @@ func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.Ap
 	for _, file := range r.Files {
 		fileId := file.Id
 		fileName := file.Name
-		m, ext, _ := GetContentType(fileName)
+		fileHandler := DriveFileHandler(*file)
+		m, ext, hasExt := GetContentType(fileName)
 		fileRoute := basePath + "/" + fileName
+		if file.MimeType == SpreadSheetMime {
+			console.YellowPrintln("File is a Spreadsheet")
+			table, err := fileHandler.FetchCsv()
+
+			if err != nil {
+				console.RedPrintln(err.Error())
+			} else {
+				store := mem.TheStore
+				route := fileRoute
+				if hasExt {
+					route = strings.TrimSuffix(fileRoute, ext)
+				}
+
+				store.SetTable(route, table, fileHandler)
+				next.Append(SetTableHandlers(route, mux, api))
+				fmt.Println(table)
+			}
+			continue
+		}
+
 		bytes, err := FetchDriveFile(fileId)
 		if err != nil {
 			console.RedPrintln(err.Error())
 			continue
 		}
 		if ext == ".json" {
-			SetJsonDriveHandlers(file, fileRoute, m, bytes, mux, api)
+			SetJsonDriveHandlers(fileRoute, fileHandler, mux, api)
 			continue
 		}
-		SetRawDriveHandlers(fileRoute, fileId, m, bytes, mux, api)
+		if file.MimeType == "application/vnd.google-apps.folder" {
+			// TODO
+			console.YellowPrintln("File is a nested folder")
+			continue
+		}
+		SetRawDriveHandlers(fileRoute, fileHandler, m, bytes, mux, api)
 	}
 }
 
-func SetJsonDriveHandlers(file *drive.File, fileRoute string, mime string, bytes []byte, mux *goji.Mux, api *openapi.ApiDescription) {
-	noSql, err := mem.FromBytes(bytes)
+func SetJsonDriveHandlers(fileRoute string, fileIdFetcher DriveFileHandler, mux *goji.Mux, api *openapi.ApiDescription) {
+	noSql, err := fileIdFetcher.FetchNoSql()
 	if err != nil {
 		console.RedPrintln(err.Error())
 		return
 	}
 	route := strings.TrimSuffix(fileRoute, ".json")
-	if file.MimeType == "" {
-		file.MimeType = mime
-	}
-	noSql.DriveFile = file
 	store := mem.TheStore
-	store.SetNoSql(route, noSql)
+	store.SetNoSql(route, noSql, fileIdFetcher)
 	SetJsonHandlers(route, mux, api)
 }
 
-func SetRawDriveHandlers(fileRoute string, fileId string, mime string, bytes []byte, mux *goji.Mux, api *openapi.ApiDescription) {
+func SetRawDriveHandlers(fileRoute string, fileIdFetcher DriveFileHandler, mime string, bytes []byte, mux *goji.Mux, api *openapi.ApiDescription) {
 	console.CyanPrintln("Registering GET " + fileRoute)
 	// Drive data is always cached
-	mem.TheStore.Cache(fileRoute, bytes, DriveFileId(fileId))
+	mem.TheStore.Cache(fileRoute, bytes, fileIdFetcher)
 	mux.HandleFunc(pat.Get(fileRoute), func(w http.ResponseWriter, r *http.Request) {
 		console.BluePrintln("Incoming request GET " + fileRoute)
 		var ok bool

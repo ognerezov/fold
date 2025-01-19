@@ -88,6 +88,11 @@ func flushDb() {
 				WriteDriveAsync(update)
 			}
 
+			pendingSheetUpdates := db.SheetsPending()
+			for _, update := range *pendingSheetUpdates {
+				UpdateSheetAsync(&update)
+			}
+
 		case <-Quit:
 			Ticker.Stop()
 			return

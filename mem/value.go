@@ -2,6 +2,7 @@ package mem
 
 import (
 	"fold/openapi"
+	"google.golang.org/api/sheets/v4"
 	"strconv"
 	"time"
 )
@@ -104,6 +105,32 @@ func FromString(s string) *Data {
 	}
 
 	return &data
+}
+
+func (d Data) Number() *float64 {
+	if d.is == Float {
+		return &d.f
+	}
+	if d.is == Int {
+		f := float64(d.i)
+		return &f
+	}
+	return nil
+}
+
+func (d Data) CellData() *sheets.CellData {
+
+	v := sheets.ExtendedValue{}
+	if d.is == Bool {
+		v.BoolValue = &d.b
+	} else if d.is == Int || d.is == Float {
+		v.NumberValue = d.Number()
+	} else {
+		v.StringValue = &d.s
+	}
+	return &sheets.CellData{
+		UserEnteredValue: &v,
+	}
 }
 
 func (d Data) Str() string {

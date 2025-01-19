@@ -10,6 +10,7 @@ import (
 	"fold/util"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
+	"google.golang.org/api/sheets/v4"
 	"io/fs"
 )
 
@@ -45,6 +46,12 @@ func InitGoogleProvider(dataPath string) (*oauth.GoogleJson, error) {
 				} else {
 					apiClientCreated = true
 					console.MagentaPrintln("Google API Client created")
+				}
+				s, err := sheets.NewService(ctx, option.WithCredentialsFile(filename))
+				if err != nil {
+					console.RedPrintln(err.Error())
+				} else {
+					googleJson.Sheets = s
 				}
 			} else {
 				googleJson.Attach(json)

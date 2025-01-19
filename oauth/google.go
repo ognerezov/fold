@@ -12,6 +12,7 @@ import (
 	"fold/router"
 	"fold/util"
 	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/sheets/v4"
 	"net/http"
 	"net/url"
 	"strings"
@@ -43,6 +44,7 @@ type GoogleJson struct {
 	JavascriptOrigins       []string      `json:"javascript_origins"`
 	RegistrationAllowed     bool
 	Drive                   *drive.Service
+	Sheets                  *sheets.Service
 
 	Type              string `json:"type"`
 	PrivateKeyId      string `json:"private_key_id"`

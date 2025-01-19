@@ -12,18 +12,8 @@ type Store struct {
 	tables        map[string]*Table
 	cache         map[string][]byte
 	cacheFetchers map[string]BytesFetcher
-}
-
-type BytesFetcher interface {
-	Fetch() ([]byte, error)
-}
-
-type CsvFetcher interface {
-	Fetch() (*Table, error)
-}
-
-type NoSqlFetcher interface {
-	Fetch() (*NoSql, error)
+	noSqlFetchers map[string]NoSqlFetcher
+	csvFetchers   map[string]CsvFetcher
 }
 
 func (s Store) Cache(key string, b []byte, refresh BytesFetcher) {
@@ -31,6 +21,7 @@ func (s Store) Cache(key string, b []byte, refresh BytesFetcher) {
 	s.cacheFetchers[key] = refresh
 }
 
+// TODO Refresh action
 func (s Store) RefreshCache(key string) error {
 	fetcher, ok := s.cacheFetchers[key]
 	if !ok {
@@ -49,8 +40,9 @@ func (s Store) GetCached(key string) ([]byte, bool) {
 	return res, ok
 }
 
-func (s Store) SetNoSql(key string, value *NoSql) {
+func (s Store) SetNoSql(key string, value *NoSql, fetcher NoSqlFetcher) {
 	s.noSql[key] = value
+	s.noSqlFetchers[key] = fetcher
 }
 
 func (s Store) NoSql(key string) (*NoSql, bool) {
@@ -58,9 +50,36 @@ func (s Store) NoSql(key string) (*NoSql, bool) {
 	return n, ok
 }
 
-func (s Store) SetTable(key string, value *Table) {
+func (s Store) RefreshNoSql(key string) error {
+	fetcher, ok := s.noSqlFetchers[key]
+	if !ok {
+		return errors.New("key not found")
+	}
+	res, err := fetcher.FetchNoSql()
+	if err != nil {
+		return err
+	}
+	s.noSql[key] = res
+	return nil
+}
+
+func (s Store) SetTable(key string, value *Table, fetcher CsvFetcher) {
 	value.name = key
 	s.tables[key] = value
+	s.csvFetchers[key] = fetcher
+}
+
+func (s Store) RefreshTable(key string) error {
+	fetcher, ok := s.csvFetchers[key]
+	if !ok {
+		return errors.New("key not found")
+	}
+	res, err := fetcher.FetchCsv()
+	if err != nil {
+		return err
+	}
+	s.tables[key] = res
+	return nil
 }
 
 func (s Store) GetTable(key string) (*Table, bool) {
@@ -133,5 +152,7 @@ var (
 		tables:        make(map[string]*Table),
 		cache:         make(map[string][]byte),
 		cacheFetchers: make(map[string]BytesFetcher),
+		noSqlFetchers: make(map[string]NoSqlFetcher),
+		csvFetchers:   make(map[string]CsvFetcher),
 	}
 )

@@ -10,6 +10,8 @@ import (
 	"fold/openapi"
 	"fold/util"
 	"github.com/google/uuid"
+	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/sheets/v4"
 	"strconv"
 )
 
@@ -28,6 +30,8 @@ type Table struct {
 	foreignIndexes []*ColumnDefinition
 	primaryColumn  *ColumnDefinition
 	File           string
+	DriveFile      *drive.File
+	Spreadsheet    *sheets.Spreadsheet
 }
 
 type JoinPathMap *map[string]int
@@ -349,7 +353,13 @@ func TableToStructs[A any](t *Table, query Query, array *[]A) error {
 }
 
 func (t *Table) OnUpdate() {
-	db.OnTableUpdate(t.File, t.ToCsv())
+	if t.File != "" {
+		db.OnTableUpdate(t.File, t.ToCsv())
+	}
+	if t.DriveFile != nil {
+		db.OnSpreadSheetUpdate(t.DriveFile, t.ReplaceSheetRequest())
+	}
+
 }
 
 func (t *Table) BatchUpdate(batch Batch) {
@@ -390,6 +400,73 @@ func (t *Table) Schema() openapi.Schema {
 	}
 
 	return result
+}
+
+func (t *Table) Len() int64 {
+	return int64(len(t.rows))
+}
+
+func (t *Table) ColCount() int64 {
+	return int64(len(t.cols))
+}
+
+func (t *Table) SheetRows() []*sheets.RowData {
+	res := make([]*sheets.RowData, len(t.rows))
+	for i, row := range t.rows {
+		r := sheets.RowData{
+			Values: make([]*sheets.CellData, len(t.cols)),
+		}
+		for j, val := range row {
+			r.Values[j] = val.CellData()
+		}
+		res[i] = &r
+	}
+	return res
+}
+
+func (t *Table) ReplaceSheetRequest() []*sheets.Request {
+	if t.Spreadsheet == nil {
+		console.RedPrintln("Spreadsheet is nil for table " + t.name)
+		return []*sheets.Request{}
+	}
+	var sheetId int64
+	idFound := false
+	for _, sheet := range t.Spreadsheet.Sheets {
+		if sheet.Properties == nil {
+			continue
+		}
+		sheetId = sheet.Properties.SheetId
+		idFound = true
+		break
+	}
+	if !idFound {
+		console.RedPrintln("Spreadsheet does not have a sheet with sheetId " + t.name)
+		return []*sheets.Request{}
+	}
+
+	return []*sheets.Request{
+		{
+			DeleteDimension: &sheets.DeleteDimensionRequest{
+				Range: &sheets.DimensionRange{
+					SheetId:    sheetId,
+					Dimension:  "ROWS",
+					StartIndex: 1,
+					EndIndex:   t.Len(),
+				},
+			},
+		},
+		{
+			UpdateCells: &sheets.UpdateCellsRequest{
+				Range: &sheets.GridRange{
+					SheetId:          sheetId,
+					StartRowIndex:    1,
+					StartColumnIndex: 0,
+				},
+				Rows:   t.SheetRows(),
+				Fields: "*",
+			},
+		},
+	}
 }
 
 func InitTable(indexes Indexes, cols []*ColumnDefinition, nColumns int, nRows int, primaryIndex string) *Table {

@@ -36,12 +36,6 @@ func GetContentType(filePath string) (string, string, bool) {
 	return m, ext, true
 }
 
-type FilePath string
-
-func (f FilePath) Fetch() ([]byte, error) {
-	return util.ReadFile(string(f))
-}
-
 func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.ApiDescription) {
 	m, ext, hasExt := GetContentType(filePath)
 	feRoute := route + ext
