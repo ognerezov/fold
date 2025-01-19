@@ -136,7 +136,7 @@ func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.Ap
 	r, err := driveService.Files.List().Q(q).
 		SupportsAllDrives(true).
 		IncludeItemsFromAllDrives(true).
-		PageSize(10).
+		PageSize(100).
 		Fields("nextPageToken, files(id, name, parents, kind, mimeType)").
 		Do()
 
@@ -144,13 +144,21 @@ func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.Ap
 		fmt.Println(err)
 		panic(err)
 	}
-	fmt.Println(r)
+
 	for _, file := range r.Files {
 		fileId := file.Id
 		fileName := file.Name
 		fileHandler := DriveFileHandler(*file)
 		m, ext, hasExt := GetContentType(fileName)
-		fileRoute := basePath + "/" + fileName
+		fileRoute := basePath
+		if strings.TrimSuffix(fileName, ".json") != "index" {
+			if strings.HasSuffix(basePath, "/") {
+				fileRoute = fmt.Sprintf("%s%s", basePath, fileName)
+			} else {
+				fileRoute = fmt.Sprintf("%s/%s", basePath, fileName)
+			}
+		}
+		fileRoute = util.TableToPath(fileRoute)
 		if file.MimeType == SpreadSheetMime {
 			console.YellowPrintln("File is a Spreadsheet")
 			table, err := fileHandler.FetchCsv()
@@ -166,23 +174,22 @@ func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.Ap
 
 				store.SetTable(route, table, fileHandler)
 				next.Append(SetTableHandlers(route, mux, api))
-				fmt.Println(table)
 			}
 			continue
 		}
 
-		bytes, err := FetchDriveFile(fileId)
-		if err != nil {
-			console.RedPrintln(err.Error())
-			continue
-		}
 		if ext == ".json" {
 			SetJsonDriveHandlers(fileRoute, fileHandler, mux, api)
 			continue
 		}
 		if file.MimeType == "application/vnd.google-apps.folder" {
-			// TODO
 			console.YellowPrintln("File is a nested folder")
+			SetDriveHandlers(fileRoute, file.Id, mux, api, next)
+			continue
+		}
+		bytes, err := FetchDriveFile(fileId)
+		if err != nil {
+			console.RedPrintln(err.Error())
 			continue
 		}
 		SetRawDriveHandlers(fileRoute, fileHandler, m, bytes, mux, api)
