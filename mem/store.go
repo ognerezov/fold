@@ -82,6 +82,22 @@ func (s Store) RefreshTable(key string) error {
 	return nil
 }
 
+func (s Store) Refresh(key string) error {
+	_, ok := s.cacheFetchers[key]
+	if ok {
+		return s.RefreshCache(key)
+	}
+	_, ok = s.noSqlFetchers[key]
+	if ok {
+		return s.RefreshNoSql(key)
+	}
+	_, ok = s.csvFetchers[key]
+	if ok {
+		return s.RefreshTable(key)
+	}
+	return errors.New("no handler found")
+}
+
 func (s Store) GetTable(key string) (*Table, bool) {
 	console.CyanPrintln("Get table: " + key)
 	t, ok := s.tables[key]

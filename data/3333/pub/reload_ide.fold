@@ -1,0 +1,7 @@
+{
+    "id": "reload",
+    "method": "GET",
+    "config":{
+        "path" : "/pub/ide"
+    }
+}

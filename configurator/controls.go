@@ -18,6 +18,7 @@ const (
 	restart    = "restart"
 	googleAuth = "google_auth"
 	adaptor    = "adaptor"
+	reload     = "reload"
 )
 
 type InstructionMap map[string]controls.ControlFactory
@@ -26,6 +27,7 @@ var (
 	TheInstructions = &InstructionMap{
 		echo:    controls.GetEcho,
 		adaptor: ConfigureAdaptor,
+		reload:  controls.ConfigureReLoader,
 	}
 )
 
