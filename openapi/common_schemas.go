@@ -12,6 +12,19 @@ const (
 	Route           = "/openapi"
 )
 
+func JsonResponse(s Schema) map[string]Response {
+	return map[string]Response{
+		"200": {
+			Description: "Raw data",
+			Content: map[string]Content{
+				ApplicationJson: {
+					Schema: s,
+				},
+			},
+		},
+	}
+}
+
 var (
 	AnArray = Schema{
 		Type: "array",
@@ -40,6 +53,18 @@ var (
 	AnObject = Schema{
 		Type: "object",
 	}
+	Binary = Schema{
+		Type:   "string",
+		Format: "binary",
+	}
+	StatusResponse = JsonResponse(Schema{
+		Type: "object",
+		Properties: map[string]Schema{
+			"status": {
+				Type: "string",
+			},
+		},
+	})
 )
 
 func (s *Schema) ToQueryParams() []Parameter {

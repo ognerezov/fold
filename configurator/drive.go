@@ -212,6 +212,19 @@ func SetRawDriveHandlers(fileRoute string, fileIdFetcher DriveFileHandler, mime 
 	console.CyanPrintln("Registering GET " + fileRoute)
 	// Drive data is always cached
 	mem.TheStore.Cache(fileRoute, bytes, fileIdFetcher)
+	api.Path(fileRoute).Get(openapi.Method{
+		Summary: "GET " + fileRoute + " raw file fetcher",
+		Responses: map[string]openapi.Response{
+			"200": {
+				Description: "Raw data",
+				Content: map[string]openapi.Content{
+					mime: {
+						Schema: openapi.Binary,
+					},
+				},
+			},
+		},
+	})
 	mux.HandleFunc(pat.Get(fileRoute), func(w http.ResponseWriter, r *http.Request) {
 		console.BluePrintln("Incoming request GET " + fileRoute)
 		var ok bool

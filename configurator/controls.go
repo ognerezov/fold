@@ -11,6 +11,7 @@ import (
 	"goji.io/pat"
 	"maps"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -69,7 +70,6 @@ type Controller struct {
 	ParamLiterals string
 }
 
-// TODO set openapi
 func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *openapi.ApiDescription) {
 	var config ControllerData
 
@@ -86,7 +86,12 @@ func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *opena
 	}
 	paramRoute := route + controller.ParamLiterals
 	console.BluePrintln("Registering  " + config.Method + " " + paramRoute)
-
+	parameters, responses := (*controller.Control).Describe()
+	api.Path(paramRoute).Method(strings.ToLower(config.Method), openapi.Method{
+		Summary:    "Fold action " + config.Id,
+		Responses:  responses,
+		Parameters: parameters,
+	})
 	mux.HandleFunc(pat.NewWithMethods(paramRoute, config.Method), func(w http.ResponseWriter, r *http.Request) {
 		console.GreenPrintln(fmt.Sprintf("Incoming request to %s: %s", config.Method, route))
 

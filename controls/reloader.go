@@ -4,6 +4,7 @@ import (
 	"fold/api"
 	"fold/console"
 	"fold/mem"
+	"fold/openapi"
 	"fold/router"
 	"fold/util"
 	"net/http"
@@ -23,6 +24,10 @@ func (r ReLoader) Do(_ map[string]any, w http.ResponseWriter, _ *http.Request) {
 	}
 
 	router.WriteResponse(api.Ok(), w)
+}
+
+func (r ReLoader) Describe() ([]openapi.Parameter, map[string]openapi.Response) {
+	return nil, openapi.StatusResponse
 }
 
 func ConfigureReLoader(_ string, config any) *Control {

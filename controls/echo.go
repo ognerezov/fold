@@ -3,6 +3,7 @@ package controls
 import (
 	"errors"
 	"fold/console"
+	"fold/openapi"
 	"fold/router"
 	"net/http"
 )
@@ -17,6 +18,19 @@ func (id EchoControl) Do(data map[string]any, w http.ResponseWriter, _ *http.Req
 	}
 
 	router.WriteResponse(data, w)
+}
+
+func (id EchoControl) Describe() ([]openapi.Parameter, map[string]openapi.Response) {
+	return make([]openapi.Parameter, 0), map[string]openapi.Response{
+		"200": {
+			Description: "Raw data",
+			Content: map[string]openapi.Content{
+				openapi.ApplicationJson: {
+					Schema: openapi.Binary,
+				},
+			},
+		},
+	}
 }
 
 func GetEcho(id string, _ any) *Control {

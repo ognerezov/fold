@@ -7,6 +7,7 @@ import (
 	"fold/api"
 	"fold/console"
 	"fold/controls"
+	"fold/openapi"
 	"fold/path"
 	"fold/router"
 	"fold/util"
@@ -114,6 +115,17 @@ func (app *Application) Do(data map[string]any, w http.ResponseWriter, _ *http.R
 		return
 	}
 	router.WriteResponse(api.Ok(), w)
+}
+
+func (app *Application) Describe() ([]openapi.Parameter, map[string]openapi.Response) {
+	return []openapi.Parameter{
+		{
+			Name: "port",
+			Schema: openapi.Schema{
+				Type: "integer",
+			},
+		},
+	}, openapi.StatusResponse
 }
 
 func (app *Application) Name() string {

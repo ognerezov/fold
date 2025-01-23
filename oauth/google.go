@@ -9,6 +9,7 @@ import (
 	"fold/controls"
 	"fold/db"
 	"fold/mem"
+	"fold/openapi"
 	"fold/router"
 	"fold/util"
 	"google.golang.org/api/drive/v3"
@@ -264,6 +265,34 @@ func (gj *GoogleJson) Do(data map[string]any, w http.ResponseWriter, _ *http.Req
 
 	}
 	router.WriteResponse(api.LoginResponse{Token: userInfo.Token, Iss: iss}, w)
+}
+
+func (gj *GoogleJson) Describe() ([]openapi.Parameter, map[string]openapi.Response) {
+	return []openapi.Parameter{
+			{
+				Name: "redirect_uri",
+				Schema: openapi.Schema{
+					Type: "string",
+				},
+			},
+			{
+				Name: "code",
+				Schema: openapi.Schema{
+					Type: "string",
+				},
+				Required: true,
+			},
+		}, openapi.JsonResponse(openapi.Schema{
+			Type: "object",
+			Properties: map[string]openapi.Schema{
+				"token": {
+					Type: "string",
+				},
+				"iss": {
+					Type: "string",
+				},
+			},
+		})
 }
 
 func (gj *GoogleJson) TokenRequest(code string, redirectUri string) (*http.Request, error) {

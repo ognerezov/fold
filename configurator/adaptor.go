@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"fold/controls"
+	"fold/openapi"
 	"fold/router"
 	"fold/util"
 	"net/http"
@@ -51,6 +52,10 @@ func (adaptor Adaptor) Do(data map[string]any, w http.ResponseWriter, r *http.Re
 	request, err := http.NewRequest(method, path+rawQuery, reader)
 
 	service.server.Handler.ServeHTTP(w, request)
+}
+
+func (adaptor Adaptor) Describe() ([]openapi.Parameter, map[string]openapi.Response) {
+	return []openapi.Parameter{}, openapi.JsonResponse(openapi.AnObject)
 }
 
 func (adaptor Adaptor) MapQuery(r *http.Request) string {

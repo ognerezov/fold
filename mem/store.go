@@ -21,7 +21,6 @@ func (s Store) Cache(key string, b []byte, refresh BytesFetcher) {
 	s.cacheFetchers[key] = refresh
 }
 
-// TODO Refresh action
 func (s Store) RefreshCache(key string) error {
 	fetcher, ok := s.cacheFetchers[key]
 	if !ok {
