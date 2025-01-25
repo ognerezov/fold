@@ -138,15 +138,9 @@ func (gj *GoogleJson) Attach(other *GoogleJson) *GoogleJson {
 
 func (gj *GoogleJson) Export(path string) error {
 	data := gj.WithoutSecret()
-	bytes, err := json.MarshalIndent(data, "", "  ")
+	err := util.SaveJavascript(path+".js", data)
 	if err != nil {
 		console.RedPrintln(err.Error())
-	} else {
-		str := "export default\n" + string(bytes)
-		err = util.Save(path+".js", []byte(str))
-		if err != nil {
-			console.RedPrintln(err.Error())
-		}
 	}
 	return db.SaveJson(path+".json", gj.WithoutSecret())
 }

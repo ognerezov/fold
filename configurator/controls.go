@@ -15,11 +15,12 @@ import (
 )
 
 const (
-	echo       = "echo"
-	restart    = "restart"
-	googleAuth = "google_auth"
-	adaptor    = "adaptor"
-	reload     = "reload"
+	echo         = "echo"
+	restart      = "restart"
+	googleAuth   = "google_auth"
+	adaptor      = "adaptor"
+	reload       = "reload"
+	controlRoute = "/src/fold.js"
 )
 
 type InstructionMap map[string]controls.ControlFactory
@@ -33,11 +34,13 @@ var (
 )
 
 type ControllerData struct {
-	Id         string         `json:"id"`
-	Parameters map[string]any `json:"parameters"`
-	Method     string         `json:"method" default:"GET"`
-	PathParams []string       `json:"path_params"`
-	Config     any            `json:"config"`
+	Id          string         `json:"id"`
+	Parameters  map[string]any `json:"parameters"`
+	Method      string         `json:"method" default:"GET"`
+	PathParams  []string       `json:"path_params"`
+	Config      any            `json:"config"`
+	Description string         `json:"description"`
+	Expose      bool           `json:"expose"`
 }
 
 func (c *ControllerData) Controller() (*Controller, bool) {
@@ -61,6 +64,13 @@ func (c *ControllerData) Controller() (*Controller, bool) {
 		ParamLiterals: paramLiterals}, true
 }
 
+func (c *ControllerData) Label() string {
+	if c.Description != "" {
+		return c.Description
+	}
+	return c.Id
+}
+
 type Controller struct {
 	Id            string
 	Parameters    map[string]any
@@ -70,7 +80,7 @@ type Controller struct {
 	ParamLiterals string
 }
 
-func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *openapi.ApiDescription) {
+func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *openapi.ApiDescription, controlEndpoints Endpoints) {
 	var config ControllerData
 
 	err := util.FromJson(filePath, &config)
@@ -87,8 +97,16 @@ func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *opena
 	paramRoute := route + controller.ParamLiterals
 	console.BluePrintln("Registering  " + config.Method + " " + paramRoute)
 	parameters, responses := (*controller.Control).Describe()
+	if config.Expose {
+		controlEndpoints[config.Id] = &Endpoint{
+			Label:      config.Label(),
+			Path:       paramRoute,
+			Method:     config.Method,
+			Parameters: parameters,
+		}
+	}
 	api.Path(paramRoute).Method(strings.ToLower(config.Method), openapi.Method{
-		Summary:    "Fold action " + config.Id,
+		Summary:    config.Label(),
 		Responses:  responses,
 		Parameters: parameters,
 	})

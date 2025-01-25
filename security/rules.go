@@ -93,3 +93,11 @@ func (r Rule) ActionMatches(method string) bool {
 
 	return false
 }
+
+func (r Rule) IsPublic() bool {
+	return r.Authority == "guest"
+}
+
+func (r Rule) AppliesTo(path string, method string) bool {
+	return r.ActionMatches(method) && r.PathMatches(path)
+}

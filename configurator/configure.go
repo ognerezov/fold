@@ -32,6 +32,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	}
 
 	next := interfaces.NewPhase()
+	controlEndpoints := make(Endpoints)
 	err = path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -59,7 +60,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 			}
 		case ".fold":
 			console.GreenPrintln("Registering fold action handler " + filename)
-			SetControlHandlers(route, filename, mux, apiDescription)
+			SetControlHandlers(route, filename, mux, apiDescription, controlEndpoints)
 		case ".drive":
 			console.GreenPrintln("Registering google drive folder handler " + filename)
 			routePath, id := path.SubStructure(p, info, clean)
@@ -76,6 +77,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	userTable, _ := store.GetTable(util.UserPath)
 	if userTable != nil {
 		security.EncodePasswords(userTable)
@@ -91,9 +93,33 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 		if len(rules) > 0 {
 			config := security.RulesSecurityConfig(rules)
 			mux.Use(config.AuthorizeRequest)
+			pubRules := make([]security.Rule, 0)
+			for _, rule := range rules {
+				if rule.IsPublic() {
+					pubRules = append(pubRules, rule)
+				}
+			}
+			for _, endpoint := range controlEndpoints {
+				for _, rule := range pubRules {
+					if rule.AppliesTo(endpoint.Path, endpoint.Method) {
+						endpoint.Public = true
+					}
+				}
+			}
 		} else {
 			mux.Use(security.Public.AuthorizeRequest)
+			for _, endpoint := range controlEndpoints {
+				endpoint.Public = true
+			}
 		}
+	}
+	// even empty file is required
+	controlFilename := dataPath + controlRoute
+	err = util.SaveJavascript(controlFilename, controlEndpoints)
+	if err != nil {
+		console.RedPrintln(err.Error())
+	} else {
+		SetRawHandlers(controlRoute, controlFilename, mux, apiDescription)
 	}
 	security.SetAuthHandlers(mux, App.Name())
 

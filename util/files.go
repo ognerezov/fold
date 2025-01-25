@@ -65,3 +65,16 @@ func Save(file string, bytes []byte) error {
 	_, err = f.Write(bytes)
 	return err
 }
+
+func SaveJavascript(path string, data any) error {
+	bytes, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+	str := "export default\n" + string(bytes)
+	err = Save(path, []byte(str))
+	if err != nil {
+		return err
+	}
+	return nil
+}

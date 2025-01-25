@@ -16,6 +16,7 @@ export async function processCode(document){
     if (!request.code){
         return Promise.resolve(request)
     }
+    // TODO this should go from settings
     request.redirect_uri = "http://localhost:3333"
     const res = await send("/auth", null, "POST", JSON_HEADERS, JSON.stringify(request))
 

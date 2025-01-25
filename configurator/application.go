@@ -23,6 +23,7 @@ type Application struct {
 	address  string
 	ports    PortsConfig
 	config   AppConfig
+	fe       Endpoints
 }
 
 type AppConfig struct {
