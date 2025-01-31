@@ -11,3 +11,4 @@ id,security_authorities_id,security_audience_id,filter,action
 10,guest,restart,,
 11,guest,alias,,
 12,user,me,,read
+13,guest,control,,read
