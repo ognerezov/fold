@@ -100,8 +100,8 @@ func FromToken(tokenString string) (*Principle, error) {
 	}, nil
 }
 
-func FromTable(id string, password string) (*Principle, error) {
-	userData := mem.TheStore.PlainGet(util.UserPath, id)
+func FromTable(id string, password string, prefix string) (*Principle, error) {
+	userData := mem.TheStore.PlainGet(prefix+util.UserPath, id)
 	if userData == nil {
 		return nil, fmt.Errorf("user not found")
 	}
@@ -110,7 +110,7 @@ func FromTable(id string, password string) (*Principle, error) {
 		return nil, e
 	}
 
-	rolesTable, _ := mem.TheStore.GetTable("/user/roles")
+	rolesTable, _ := mem.TheStore.GetTable(prefix + "/user/roles")
 	roleRows := rolesTable.SearchRows("user_id", id)
 	roles := make([]string, len(roleRows))
 	for i, row := range roleRows {

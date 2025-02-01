@@ -15,6 +15,8 @@ import (
 	"os"
 )
 
+type ServerConfigurator func(string, int) (*goji.Mux, error)
+
 func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	console.YellowPrintln("Configure server for dir " + dataPath)
 	mux := goji.NewMux()
@@ -37,38 +39,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 		if info.IsDir() {
 			return nil
 		}
-		route, filename, extension := path.Structure(dataPath, p, info, clean)
-		fileHandler := FilePath(filename)
-		switch extension {
-		case ".csv":
-			console.GreenPrintln("Registering table handlers for " + filename)
-			table, err := fileHandler.FetchCsv()
-			if err != nil {
-				console.RedPrintln(fmt.Sprintf("Error loading csc %s %v", filename, err))
-			} else {
-				store.SetTable(route, table, fileHandler)
-				next.Append(SetTableHandlers(route, mux, apiDescription))
-			}
-		case ".json":
-			console.GreenPrintln("Registering json handlers for " + filename)
-			noSql, e := fileHandler.FetchNoSql()
-			if e != nil {
-				console.RedPrintln(e.Error())
-			} else {
-				store.SetNoSql(route, noSql, fileHandler)
-				SetJsonHandlers(route, mux, apiDescription)
-			}
-		case ".fold":
-			console.GreenPrintln("Registering fold action handler " + filename)
-			SetControlHandlers(route, filename, mux, apiDescription, controlEndpoints)
-		case ".drive":
-			console.GreenPrintln("Registering google drive folder handler " + filename)
-			routePath, id := path.SubStructure(p, info, clean)
-			SetDriveHandlers(routePath, id, mux, apiDescription, next)
-		default:
-			console.RedPrintln("Registering raw file handler for " + filename)
-			SetRawHandlers(route, filename, mux, apiDescription)
-		}
+		ConfigureFile(p, info, dataPath, clean, next, mux, apiDescription, controlEndpoints)
 
 		return nil
 	})
@@ -82,7 +53,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	if userTable != nil {
 		security.EncodePasswords(userTable)
 	}
-	securityRulesTable, _ := store.GetTable("/security/rules")
+	securityRulesTable, _ := store.GetTable(AppArguments.ApiPath + "/security/rules")
 	if securityRulesTable != nil {
 		var rules []security.Rule
 		e := mem.TableToStructs(securityRulesTable, mem.AllQuery(), &rules)
@@ -119,15 +90,52 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	if err != nil {
 		console.RedPrintln(err.Error())
 	} else {
-		SetRawHandlers(controlRoute, controlFilename, mux, apiDescription)
+		SetRawHandlers(AppArguments.ApiPath+controlRoute, controlFilename, mux, apiDescription)
 	}
-	security.SetAuthHandlers(mux, App.Name())
+	security.SetAuthHandlers(AppArguments.ApiPath, mux, App.Name())
 
 	err = apiDescription.Save(openapiFileName)
 	if err == nil {
-		SetRawHandlers(openapi.Route, openapiFileName, mux, nil)
+		SetRawHandlers(AppArguments.ApiPath+openapi.Route, openapiFileName, mux, nil)
 	} else {
 		console.RedPrintln(err.Error())
 	}
 	return mux, nil
+}
+
+func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMapper, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
+	store := *mem.TheStore
+	route, filename, extension := path.Structure(dataPath, p, info, clean)
+	route = AppArguments.ApiPath + route
+	fileHandler := FilePath(filename)
+	switch extension {
+	case ".csv":
+		console.GreenPrintln("Registering table handlers for " + filename)
+		table, err := fileHandler.FetchCsv()
+		if err != nil {
+			console.RedPrintln(fmt.Sprintf("Error loading csc %s %v", filename, err))
+		} else {
+			store.SetTable(route, table, fileHandler)
+			next.Append(SetTableHandlers(route, mux, apiDescription))
+		}
+	case ".json":
+		console.GreenPrintln("Registering json handlers for " + filename)
+		noSql, e := fileHandler.FetchNoSql()
+		if e != nil {
+			console.RedPrintln(e.Error())
+		} else {
+			store.SetNoSql(route, noSql, fileHandler)
+			SetJsonHandlers(route, mux, apiDescription)
+		}
+	case ".fold":
+		console.GreenPrintln("Registering fold action handler " + filename)
+		SetControlHandlers(route, filename, mux, apiDescription, controlEndpoints)
+	case ".drive":
+		console.GreenPrintln("Registering google drive folder handler " + filename)
+		routePath, id := path.SubStructure(p, info, clean)
+		SetDriveHandlers(AppArguments.ApiPath+routePath, id, mux, apiDescription, next)
+	default:
+		console.RedPrintln("Registering raw file handler for " + filename)
+		SetRawHandlers(route, filename, mux, apiDescription)
+	}
 }

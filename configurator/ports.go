@@ -9,22 +9,20 @@ import (
 	"sort"
 )
 
-const (
-	DefaultPort = 8000
-)
-
 type PortConfig struct {
-	port int
-	path string
+	port      int
+	path      string
+	configure ServerConfigurator
 }
 
 type PortsConfig []PortConfig
 
-func SingleServer(dataPath string) PortsConfig {
+func SingleServer(dataPath string, configure ServerConfigurator) PortsConfig {
 	return PortsConfig{
 		PortConfig{
-			port: DefaultPort,
-			path: dataPath,
+			port:      AppArguments.Port,
+			path:      dataPath,
+			configure: configure,
 		}}
 }
 
@@ -45,11 +43,11 @@ func ReadDir(dataPath string) ([]os.DirEntry, error) {
 	return files, err
 }
 
-func ConfigurePorts(dataPath string) PortsConfig {
+func ConfigurePorts(dataPath string, configure ServerConfigurator) PortsConfig {
 	files, err := ReadDir(dataPath)
 
 	if err != nil {
-		return SingleServer(dataPath)
+		return SingleServer(dataPath, configure)
 	}
 
 	res := make([]PortConfig, 0)
@@ -65,11 +63,15 @@ func ConfigurePorts(dataPath string) PortsConfig {
 			continue
 		}
 		console.YellowPrintln("Checking root path " + file.Name())
-		res = append(res, PortConfig{port: port, path: util.JoinedPath(dataPath, file)})
+		res = append(res, PortConfig{
+			port:      port,
+			path:      util.JoinedPath(dataPath, file),
+			configure: configure,
+		})
 	}
 
 	if len(res) == 0 {
-		return SingleServer(dataPath)
+		return SingleServer(dataPath, configure)
 	}
 
 	sort.Slice(res, func(i, j int) bool {
@@ -80,7 +82,7 @@ func ConfigurePorts(dataPath string) PortsConfig {
 }
 
 func (p *PortConfig) Serve(address string, services map[int]*Service) error {
-	mux, err := ConfigureServer(p.path, p.port)
+	mux, err := p.configure(p.path, p.port)
 	if err != nil {
 		console.RedPrintln("Can't start server")
 		console.RedPrintln(err.Error())

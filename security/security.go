@@ -11,9 +11,9 @@ import (
 	"net/http"
 )
 
-func SetAuthHandlers(mux *goji.Mux, iss string) {
+func SetAuthHandlers(apiPath string, mux *goji.Mux, iss string) {
 	console.BluePrintln("Registering security root POST /login (User defined root would be overridden)")
-	mux.HandleFunc(pat.Post("/login"), func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(pat.Post(apiPath+"/login"), func(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		var login api.LoginRequest
 		err := decoder.Decode(&login)
@@ -28,7 +28,7 @@ func SetAuthHandlers(mux *goji.Mux, iss string) {
 		}
 
 		console.GreenPrintln(fmt.Sprintf("Processing login request for: %s", login.Username))
-		principle, err := FromTable(login.Username, login.Password)
+		principle, err := FromTable(login.Username, login.Password, apiPath)
 
 		if err != nil {
 			router.ReturnError(err, 401, w)
@@ -47,7 +47,7 @@ func SetAuthHandlers(mux *goji.Mux, iss string) {
 	})
 
 	console.BluePrintln("Registering security root GET /me (User defined root would be overridden)")
-	mux.HandleFunc(pat.Get("/me"), func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(pat.Get(apiPath+"/me"), func(w http.ResponseWriter, r *http.Request) {
 		principle := FromRequest(r)
 		if principle == nil {
 			router.ReturnError(fmt.Errorf("principle not found"), 401, w)

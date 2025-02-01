@@ -12,6 +12,7 @@ import (
 	"fold/router"
 	"fold/util"
 	"net/http"
+	"path/filepath"
 )
 
 var (
@@ -42,7 +43,58 @@ func CreateApplication(address string, dataPath string) {
 		resource.Start()
 	}
 
-	ports := ConfigurePorts(dataPath)
+	ports := ConfigurePorts(dataPath, ConfigureServer)
+
+	services := make(map[int]*Service, len(ports))
+	l := len(ports)
+	for i := 0; i < l-1; i++ {
+		go initPort(address, ports[i], services)
+	}
+	// last port goes to console
+	console.GreenPrintln("__________________________________")
+	console.GreenPrintln("Server configured with default name")
+	console.GreenPrintln("__________________________________")
+	App = &Application{services: services, address: address, ports: ports, config: AppConfig{name: "fold"}}
+	(*TheInstructions)[restart] = App.RestartControl
+	console.MagentaPrintln(fmt.Sprintf("%v", *App))
+	initPort(address, ports[l-1], services)
+}
+
+func CreateFileApplication(address string, dataPath string) {
+	path.Root = dataPath
+	ext := filepath.Ext(dataPath)
+	if ext == ".drive" {
+		CreateDriveApplication(address, dataPath)
+		return
+	}
+
+	ports := SingleServer(dataPath, ConfigureSingleFileServer)
+
+	services := make(map[int]*Service, len(ports))
+
+	// last port goes to console
+	console.GreenPrintln("__________________________________")
+	console.GreenPrintln("Server configured with default name")
+	console.GreenPrintln("__________________________________")
+	App = &Application{services: services, address: address, ports: ports, config: AppConfig{name: "fold"}}
+	(*TheInstructions)[restart] = App.RestartControl
+	console.MagentaPrintln(fmt.Sprintf("%v", *App))
+	initPort(address, ports[0], services)
+}
+
+func CreateDriveApplication(address string, dataPath string) {
+	path.Root = dataPath
+	err := InitProviders(dataPath)
+	if err != nil {
+		console.RedPrintln("InitProviders error: " + err.Error())
+	}
+	resources := ConfigureResources(dataPath)
+	for _, resource := range resources {
+		fmt.Println(resource)
+		resource.Start()
+	}
+
+	ports := SingleServer(dataPath, ConfigureSingleFileServer)
 
 	services := make(map[int]*Service, len(ports))
 	l := len(ports)
