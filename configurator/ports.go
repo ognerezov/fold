@@ -2,6 +2,7 @@ package configurator
 
 import (
 	"fmt"
+	"fold/arguments"
 	"fold/console"
 	"fold/util"
 	"net/http"
@@ -20,7 +21,7 @@ type PortsConfig []PortConfig
 func SingleServer(dataPath string, configure ServerConfigurator) PortsConfig {
 	return PortsConfig{
 		PortConfig{
-			port:      AppArguments.Port,
+			port:      arguments.AppArguments.Port,
 			path:      dataPath,
 			configure: configure,
 		}}

@@ -2,6 +2,7 @@ package configurator
 
 import (
 	"fmt"
+	"fold/arguments"
 	"fold/console"
 	"fold/interfaces"
 	"fold/mem"
@@ -53,7 +54,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	if userTable != nil {
 		security.EncodePasswords(userTable)
 	}
-	securityRulesTable, _ := store.GetTable(AppArguments.ApiPath + "/security/rules")
+	securityRulesTable, _ := store.GetTable(arguments.AppArguments.ApiPath + "/security/rules")
 	if securityRulesTable != nil {
 		var rules []security.Rule
 		e := mem.TableToStructs(securityRulesTable, mem.AllQuery(), &rules)
@@ -90,13 +91,13 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	if err != nil {
 		console.RedPrintln(err.Error())
 	} else {
-		SetRawHandlers(AppArguments.ApiPath+controlRoute, controlFilename, mux, apiDescription)
+		SetRawHandlers(arguments.AppArguments.ApiPath+controlRoute, controlFilename, mux, apiDescription)
 	}
-	security.SetAuthHandlers(AppArguments.ApiPath, mux, App.Name())
+	security.SetAuthHandlers(arguments.AppArguments.ApiPath, mux, App.Name())
 
 	err = apiDescription.Save(openapiFileName)
 	if err == nil {
-		SetRawHandlers(AppArguments.ApiPath+openapi.Route, openapiFileName, mux, nil)
+		SetRawHandlers(arguments.AppArguments.ApiPath+openapi.Route, openapiFileName, mux, nil)
 	} else {
 		console.RedPrintln(err.Error())
 	}
@@ -106,7 +107,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMapper, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
 	store := *mem.TheStore
 	route, filename, extension := path.Structure(dataPath, p, info, clean)
-	route = AppArguments.ApiPath + route
+	route = arguments.AppArguments.ApiPath + route
 	fileHandler := FilePath(filename)
 	switch extension {
 	case ".csv":
@@ -133,7 +134,7 @@ func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMa
 	case ".drive":
 		console.GreenPrintln("Registering google drive folder handler " + filename)
 		routePath, id := path.SubStructure(p, info, clean)
-		SetDriveHandlers(AppArguments.ApiPath+routePath, id, mux, apiDescription, next)
+		SetDriveHandlers(arguments.AppArguments.ApiPath+routePath, id, mux, apiDescription, next)
 	default:
 		console.RedPrintln("Registering raw file handler for " + filename)
 		SetRawHandlers(route, filename, mux, apiDescription)

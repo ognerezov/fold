@@ -2,6 +2,7 @@ package configurator
 
 import (
 	"fmt"
+	"fold/arguments"
 	"fold/console"
 	"fold/mem"
 	"fold/openapi"
@@ -42,7 +43,7 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.A
 	if ext == HTML || !hasExt {
 		feRoute = route
 	}
-	if hasExt && FrontendFiles[ext] && AppArguments.Cache {
+	if hasExt && FrontendFiles[ext] && arguments.AppArguments.Cache {
 		console.BluePrintln("Registering GET " + feRoute)
 		bytes, err := util.ReadFile(filePath)
 		if err != nil {

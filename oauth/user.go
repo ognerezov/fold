@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"errors"
+	"fold/arguments"
 	"fold/security"
 )
 
@@ -25,9 +26,10 @@ func (u UserInfo) Principle() (*security.Principle, error) {
 	if u.Email == "" {
 		return nil, errors.New("user email is empty")
 	}
+	roles := security.GetUserRoles(u.Email, arguments.AppArguments.ApiPath)
 	return &security.Principle{
 		Id:    u.Email,
-		Roles: []string{"user"},
+		Roles: roles,
 	}, nil
 }
 

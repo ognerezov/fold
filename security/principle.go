@@ -110,17 +110,22 @@ func FromTable(id string, password string, prefix string) (*Principle, error) {
 		return nil, e
 	}
 
-	rolesTable, _ := mem.TheStore.GetTable(prefix + "/user/roles")
-	roleRows := rolesTable.SearchRows("user_id", id)
-	roles := make([]string, len(roleRows))
-	for i, row := range roleRows {
-		roles[i] = row[2].Str()
-	}
+	roles := GetUserRoles(id, prefix)
 
 	return &Principle{
 		Id:    id,
 		Roles: roles,
 	}, nil
+}
+
+func GetUserRoles(id string, prefix string) []string {
+	rolesTable, _ := mem.TheStore.GetTable(prefix + util.RolePath)
+	roleRows := rolesTable.SearchRows("user_id", id)
+	roles := make([]string, len(roleRows))
+	for i, row := range roleRows {
+		roles[i] = row[2].Str()
+	}
+	return roles
 }
 
 func verifyPassword(password string, data map[string]any) error {

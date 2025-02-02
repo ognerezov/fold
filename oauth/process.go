@@ -47,7 +47,7 @@ func (tr *CodeTokenResponse) GetRow(token string, email string, provider string)
 func (tr *CodeTokenResponse) GetUserInfo(uri string) (*UserInfo, error) {
 	data := url.Values{}
 	data.Set("access_token", tr.AccessToken)
-	fmt.Println(uri + "?" + data.Encode())
+
 	request, err := http.NewRequest("GET", uri+"?"+data.Encode(), nil)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (tr *CodeTokenResponse) GetUserInfo(uri string) (*UserInfo, error) {
 		var errResp map[string]any
 		err = decoder.Decode(&errResp)
 		err = errors.New(resp.Status)
-		fmt.Println(err)
+
 		return nil, err
 	}
 	defer util.HideBody(resp.Body)
@@ -71,6 +71,6 @@ func (tr *CodeTokenResponse) GetUserInfo(uri string) (*UserInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(userInfo)
+
 	return &userInfo, nil
 }

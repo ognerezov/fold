@@ -2,6 +2,7 @@ package configurator
 
 import (
 	"fmt"
+	"fold/arguments"
 	"fold/console"
 	"fold/interfaces"
 	"fold/mem"
@@ -45,12 +46,12 @@ func ConfigureSingleFileServer(dataPath string, port int) (*goji.Mux, error) {
 	for _, endpoint := range controlEndpoints {
 		endpoint.Public = true
 	}
-	fmt.Println(AppArguments)
-	security.SetAuthHandlers(AppArguments.ApiPath, mux, App.Name())
+	fmt.Println(arguments.AppArguments)
+	security.SetAuthHandlers(arguments.AppArguments.ApiPath, mux, App.Name())
 
 	err = apiDescription.Save(openapiFileName)
 	if err == nil {
-		SetRawHandlers(AppArguments.ApiPath+openapi.Route, openapiFileName, mux, nil)
+		SetRawHandlers(arguments.AppArguments.ApiPath+openapi.Route, openapiFileName, mux, nil)
 	} else {
 		console.RedPrintln(err.Error())
 	}

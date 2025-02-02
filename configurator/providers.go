@@ -2,6 +2,7 @@ package configurator
 
 import (
 	"fmt"
+	"fold/arguments"
 	"fold/console"
 	"fold/interfaces"
 	"fold/oauth"
@@ -35,7 +36,7 @@ func InitProviders(dataPath string) error {
 			if err != nil {
 				console.RedPrintln(err.Error())
 			} else {
-				provider.RegistrationAllowed = AppArguments.RegistrationAllowed
+				provider.RegistrationAllowed = arguments.AppArguments.RegistrationAllowed
 				AppProviders.Google = provider
 				(*TheInstructions)[googleAuth] = provider.AuthControl
 			}
