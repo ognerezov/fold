@@ -64,8 +64,7 @@ func CreateFileApplication(address string, dataPath string) {
 	path.Root = dataPath
 	ext := filepath.Ext(dataPath)
 	if ext == ".drive" {
-		CreateDriveApplication(address, dataPath)
-		return
+		panic("Serving drive file not supported. Json credentials have to be present in /providers/google folder ")
 	}
 
 	ports := SingleServer(dataPath, ConfigureSingleFileServer)
@@ -80,35 +79,6 @@ func CreateFileApplication(address string, dataPath string) {
 	(*TheInstructions)[restart] = App.RestartControl
 	console.MagentaPrintln(fmt.Sprintf("%v", *App))
 	initPort(address, ports[0], services)
-}
-
-func CreateDriveApplication(address string, dataPath string) {
-	path.Root = dataPath
-	err := InitProviders(dataPath)
-	if err != nil {
-		console.RedPrintln("InitProviders error: " + err.Error())
-	}
-	resources := ConfigureResources(dataPath)
-	for _, resource := range resources {
-		fmt.Println(resource)
-		resource.Start()
-	}
-
-	ports := SingleServer(dataPath, ConfigureSingleFileServer)
-
-	services := make(map[int]*Service, len(ports))
-	l := len(ports)
-	for i := 0; i < l-1; i++ {
-		go initPort(address, ports[i], services)
-	}
-	// last port goes to console
-	console.GreenPrintln("__________________________________")
-	console.GreenPrintln("Server configured with default name")
-	console.GreenPrintln("__________________________________")
-	App = &Application{services: services, address: address, ports: ports, config: AppConfig{name: "fold"}}
-	(*TheInstructions)[restart] = App.RestartControl
-	console.MagentaPrintln(fmt.Sprintf("%v", *App))
-	initPort(address, ports[l-1], services)
 }
 
 func initPort(address string, port PortConfig, services map[int]*Service) {
