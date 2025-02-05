@@ -42,3 +42,13 @@ export function toQueryString(query) {
     }
     return `?${new URLSearchParams(query).toString()}`;
 }
+
+export function withJsonContent(obj){
+    return {... JSON_HEADERS, ...obj}
+}
+
+export function authHeaders(token){
+    return withJsonContent({
+        "Authorization" : `Bearer ${token}`
+    })
+}
