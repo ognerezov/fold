@@ -20,6 +20,10 @@ body{
     @apply pl-20
 }
 
+.g-6{
+    @apply gap-6
+}
+
 .centered-row {
     @apply flex items-center justify-center;
 }
@@ -124,6 +128,10 @@ body{
      @apply m-0.5
  }
 
+.logo-size{
+    width: 185px;
+    height: 185px;
+}
 
 .gsi-material-button {
     -moz-user-select: none;
@@ -232,4 +240,17 @@ body{
 .gsi-material-button:not(:disabled):hover .gsi-material-button-state {
     background-color: white;
     opacity: 8%;
+}
+
+.loader {
+    border: 12px solid #FCFBF7;
+    border-top: 12px solid #0C2D50;
+    border-bottom: 12px solid #61A0A9;
+    border-radius: 50%;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

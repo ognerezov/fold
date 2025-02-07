@@ -52,3 +52,11 @@ export function authHeaders(token){
         "Authorization" : `Bearer ${token}`
     })
 }
+
+export function hide(element){
+    element.classList.add("hidden");
+}
+
+export function show(element){
+    element.classList.remove("hidden");
+}
