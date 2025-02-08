@@ -33,12 +33,7 @@ func ReadDir(dataPath string) ([]os.DirEntry, error) {
 		console.RedPrintln(err.Error())
 		return nil, err
 	}
-	defer func(f *os.File) {
-		err = f.Close()
-		if err != nil {
-			console.RedPrintln(err.Error())
-		}
-	}(f)
+	defer util.CloseFie(f)
 
 	files, err := f.ReadDir(0)
 	return files, err

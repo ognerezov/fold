@@ -1,14 +1,19 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"fold/arguments"
 	"fold/configurator"
 	"fold/console"
+	"fold/initiator"
 	"fold/threads"
 	"strings"
 )
+
+//go:embed data/*
+var data embed.FS
 
 func main() {
 	var dataPath string
@@ -35,6 +40,13 @@ func main() {
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&help, "h", false, "Show help (shorthand)")
 
+	var init bool
+	flag.BoolVar(&init, "init", false, "Init new project folder")
+	flag.BoolVar(&init, "i", false, "Init new project folder (shorthand)")
+
+	flag.StringVar(&arguments.InitArgs.Template, "template", initiator.DefaultTemplate, "Project template")
+	flag.StringVar(&arguments.InitArgs.Template, "t", initiator.DefaultTemplate, "Project template (shorthand)")
+
 	flag.Parse()
 	fmt.Println(arguments.AppArguments)
 	if help {
@@ -42,12 +54,18 @@ func main() {
 		return
 	}
 
-	if dataPath != "" && filePath != "" {
+	if dataPath != "" && filePath != "" && !init {
 		panic("Both directory and single data file paths specified. Only one of them allowed.")
 	}
 
 	if dataPath == "" {
 		dataPath = "./"
+	}
+	arguments.InitArgs.Output = dataPath
+
+	if init {
+		initiator.Init(&data, arguments.InitArgs.Template, dataPath)
+		return
 	}
 
 	if arguments.AppArguments.ApiPath != "" && !strings.HasPrefix(arguments.AppArguments.ApiPath, "/") {

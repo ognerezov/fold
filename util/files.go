@@ -2,9 +2,14 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 	"fold/console"
 	"io"
 	"os"
+)
+
+var (
+	AllowedHiddenFiles = []string{".DS_Store"}
 )
 
 func CloseFie(f *os.File) {
@@ -75,6 +80,28 @@ func SaveJavascript(path string, data any) error {
 	err = Save(path, []byte(str))
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func IsEmptyDir(name string) error {
+	f, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	defer CloseFie(f)
+
+	files, err := f.ReadDir(1)
+	if err != nil {
+		return err
+	}
+	if len(files) != 0 {
+		for _, fileName := range AllowedHiddenFiles {
+			if fileName == files[0].Name() {
+				return nil
+			}
+		}
+		return fmt.Errorf("%s is not empty", name)
 	}
 	return nil
 }

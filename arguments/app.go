@@ -2,6 +2,7 @@ package arguments
 
 var (
 	AppArguments = &Arguments{}
+	InitArgs     = &InitArguments{}
 )
 
 type Arguments struct {
