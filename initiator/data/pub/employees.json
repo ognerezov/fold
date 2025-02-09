@@ -1,0 +1,17 @@
+[
+    {
+        "id": 1,
+        "person": {
+            "age": 30,
+            "name": "John Doe"
+        },
+        "position": "CTO"
+    },
+    {
+        "id": 2,
+        "person": {
+            "name": "Jain Doe"
+        },
+        "position": "CEO"
+    }
+]

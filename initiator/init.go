@@ -35,7 +35,10 @@ func Init(template string, path string, port int) {
 	if !ok {
 		panic("template not found " + template)
 	}
-	err = os.MkdirAll(fmt.Sprintf("%s/%v", path, port), os.ModePerm)
+	prodPath := fmt.Sprintf("%s/%v", path, port)
+	err = os.MkdirAll(prodPath, os.ModePerm)
+	err = os.MkdirAll(fmt.Sprintf("%s/%s", prodPath, "www"), os.ModePerm)
+	err = os.MkdirAll(fmt.Sprintf("%s/%s", prodPath, "providers"), os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +52,7 @@ type Initiator func(string, int) error
 
 func DefaultInit(path string, port int) error {
 	portPath := fmt.Sprintf("%v/%v", path, port)
-	err := exportFolders(portPath, []string{"user", "security"})
+	err := exportFolders(portPath, []string{"user", "security", "pub"})
 	if err != nil {
 		return err
 	}

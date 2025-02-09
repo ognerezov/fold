@@ -8,13 +8,9 @@ import (
 )
 
 var (
-	pathLeadingSymbols = regexp.MustCompile(`^./|^/`)
+	pathLeadingSymbols = regexp.MustCompile(`^./`)
 	Root               string
 )
-
-func FullPath(path string) string {
-	return filepath.Join(Root, path)
-}
 
 type DirMapper func(path string) string
 
