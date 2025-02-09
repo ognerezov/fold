@@ -13,7 +13,7 @@ func ReadCsvFile(filePath string) ([][]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer util.CloseFie(f)
+	defer util.CloseFile(f)
 
 	csvReader := csv.NewReader(f)
 	records, err := csvReader.ReadAll()
@@ -29,7 +29,7 @@ func WriteCsvFile(filePath string, records [][]string) error {
 	if err != nil {
 		log.Fatal("Unable to read output file "+filePath, err)
 	}
-	defer util.CloseFie(f)
+	defer util.CloseFile(f)
 	w := csv.NewWriter(f)
 	return w.WriteAll(records)
 }

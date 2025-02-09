@@ -1,7 +1,6 @@
 package main
 
 import (
-	"embed"
 	"flag"
 	"fmt"
 	"fold/arguments"
@@ -11,9 +10,6 @@ import (
 	"fold/threads"
 	"strings"
 )
-
-//go:embed data/*
-var data embed.FS
 
 func main() {
 	var dataPath string
@@ -27,8 +23,8 @@ func main() {
 	flag.StringVar(&filePath, "file", "", "Serve single file")
 	flag.StringVar(&filePath, "f", "", "Working single (shorthand)")
 
-	flag.IntVar(&arguments.AppArguments.Port, "port", 8000, "Port to listen on")
-	flag.IntVar(&arguments.AppArguments.Port, "p", 8000, "Port to listen on (shorthand)")
+	flag.IntVar(&arguments.AppArguments.Port, "port", 8888, "Port to listen on")
+	flag.IntVar(&arguments.AppArguments.Port, "p", 8888, "Port to listen on (shorthand)")
 
 	flag.StringVar(&arguments.AppArguments.ApiPath, "api", "", "Server base path")
 	flag.StringVar(&arguments.AppArguments.ApiPath, "a", "", "Server base path (shorthand)")
@@ -62,9 +58,10 @@ func main() {
 		dataPath = "./"
 	}
 	arguments.InitArgs.Output = dataPath
+	arguments.InitArgs.Port = arguments.AppArguments.Port
 
 	if init {
-		initiator.Init(&data, arguments.InitArgs.Template, dataPath)
+		initiator.Init(arguments.InitArgs.Template, dataPath, arguments.InitArgs.Port)
 		return
 	}
 

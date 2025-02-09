@@ -172,7 +172,7 @@ func (r *RestResourceConfig) SaveJson() error {
 	if err != nil {
 		return err
 	}
-	defer util.CloseFie(out)
+	defer util.CloseFile(out)
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {

@@ -12,7 +12,7 @@ var (
 	AllowedHiddenFiles = []string{".DS_Store"}
 )
 
-func CloseFie(f *os.File) {
+func CloseFile(f *os.File) {
 	err := f.Close()
 	if err != nil {
 		console.RedPrintln(err.Error())
@@ -25,7 +25,7 @@ func ReadFile(filePath string) ([]byte, error) {
 		console.RedPrintln(err.Error())
 		return nil, err
 	}
-	defer CloseFie(f)
+	defer CloseFile(f)
 	bytes, err := io.ReadAll(f)
 	if err != nil {
 		console.RedPrintln(err.Error())
@@ -41,7 +41,7 @@ func DoesFileExist(filePath string) bool {
 			return false
 		}
 	}
-	defer CloseFie(f)
+	defer CloseFile(f)
 	return true
 }
 
@@ -66,7 +66,7 @@ func Save(file string, bytes []byte) error {
 	if err != nil {
 		return err
 	}
-	defer CloseFie(f)
+	defer CloseFile(f)
 	_, err = f.Write(bytes)
 	return err
 }
@@ -89,7 +89,7 @@ func IsEmptyDir(name string) error {
 	if err != nil {
 		return err
 	}
-	defer CloseFie(f)
+	defer CloseFile(f)
 
 	files, err := f.ReadDir(1)
 	if err != nil {

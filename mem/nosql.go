@@ -121,7 +121,7 @@ func LoadJson(file string) (*NoSql, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer util.CloseFie(f)
+	defer util.CloseFile(f)
 	raw, _ := io.ReadAll(f)
 	res, err := FromBytes(raw)
 	if err != nil {
