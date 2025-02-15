@@ -29,8 +29,8 @@ func main() {
 	flag.StringVar(&arguments.AppArguments.ApiPath, "api", "", "Server base path")
 	flag.StringVar(&arguments.AppArguments.ApiPath, "a", "", "Server base path (shorthand)")
 
-	flag.StringVar(&arguments.AppArguments.Name, "name", "", "Application name")
-	flag.StringVar(&arguments.AppArguments.Name, "n", "", "Application name (shorthand)")
+	flag.StringVar(&arguments.AppArguments.Name, "name", "fold", "Application name")
+	flag.StringVar(&arguments.AppArguments.Name, "n", "fold", "Application name (shorthand)")
 
 	var help bool
 	flag.BoolVar(&help, "help", false, "Show help")

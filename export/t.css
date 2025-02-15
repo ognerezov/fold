@@ -20,12 +20,27 @@ body{
     @apply pl-20
 }
 
+.py_8{
+    @apply py-8
+}
+.pt_2{
+    @apply pt-2
+}
+
 .g-6{
     @apply gap-6
 }
 
+.g-2{
+    @apply gap-2
+}
+
 .centered-row {
     @apply flex items-center justify-center;
+}
+
+.end-row {
+    @apply flex items-center justify-end;
 }
 
 .centered-column {
@@ -42,6 +57,10 @@ body{
 
 .btn {
     @apply font-bold py-1 px-5 rounded cursor-pointer;
+}
+
+.input {
+    @apply shadow appearance-none border rounded w-full py-2 px-3 text-deep leading-tight focus:outline-none;
 }
 
 .btn-deep {
@@ -75,6 +94,13 @@ body{
 .fill {
     @apply h-screen w-screen
 }
+.fill-x {
+    @apply w-full
+}
+
+.fill-y {
+    @apply h-full
+}
 
 .w-list {
     @apply text-white list-disc
@@ -102,6 +128,10 @@ body{
 
 .m-frame{
    @apply m-1 md:m-8;
+}
+
+.label-text{
+    @apply text-deep text-sm
 }
 
 .terminal-text{
@@ -153,7 +183,7 @@ body{
     letter-spacing: 0.25px;
     outline: none;
     overflow: hidden;
-    padding: 0 12px;
+    padding: 0 64px;
     position: relative;
     text-align: center;
     -webkit-transition: background-color .218s, border-color .218s, box-shadow .218s;

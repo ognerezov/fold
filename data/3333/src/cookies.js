@@ -12,6 +12,13 @@ export function createCookie(name, value, days) {
     document.cookie = name + "=" + value + expires + "; path=/";
 }
 
+export function saveTokenResponse(res){
+    const key = `${res?.json?.iss}Token`
+    if(res?.json?.token){
+        createCookie(key, res?.json?.token, 100);
+    }
+}
+
 export function getCookie(key) {
     if (document.cookie.length > 0) {
         let c_start = document.cookie.indexOf(key + "=");

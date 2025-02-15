@@ -102,7 +102,7 @@ func FromToken(tokenString string) (*Principle, error) {
 
 func FromTable(id string, password string, prefix string) (*Principle, error) {
 	userData := mem.TheStore.PlainGet(prefix+util.UserPath, id)
-	if userData == nil {
+	if userData == nil || len(userData) == 0 {
 		return nil, fmt.Errorf("user not found")
 	}
 	e := verifyPassword(password, userData)

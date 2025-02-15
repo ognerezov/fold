@@ -1,5 +1,7 @@
-import {toQueryString} from "./util.js";
+import {JSON_HEADERS, send, toQueryString} from "./util.js";
 import google from "../providers/google.js";
+import {saveTokenResponse} from "./cookies.js";
+import {endLoadingEvent, startLoadingEvent, ERROR_RECEIVED} from "./main.js";
 
 export function googleAuthLink(){
     const query = {
@@ -27,4 +29,18 @@ function getRedirectUri(allowedUris){
     // take matching uri with min symbols
     uris.sort((u1, u2) => u1.length - u2.length)
     return uris[0]
+}
+
+export async function login(data){
+    console.log(data)
+    window.dispatchEvent(startLoadingEvent)
+    const res = await send("/login", null, "POST", JSON_HEADERS, JSON.stringify(data))
+    window.dispatchEvent(endLoadingEvent)
+    if (res.status === 200) {
+        saveTokenResponse(res)
+    } else {
+        const message = res.status === 401 ? "Wrong login or password" : res.status === 400 ? "Bad request" : "Server error"
+        window.dispatchEvent(new CustomEvent(ERROR_RECEIVED, { detail : message }))
+    }
+    return res
 }

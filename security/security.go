@@ -43,6 +43,7 @@ func SetAuthHandlers(apiPath string, mux *goji.Mux, iss string) {
 
 		router.WriteResponse(api.LoginResponse{
 			Token: token,
+			Iss:   iss,
 		}, w)
 	})
 

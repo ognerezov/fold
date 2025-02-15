@@ -5,15 +5,34 @@
     <title>Fold server</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../src/styles.css">
+    <link rel="stylesheet" href="src/styles.css">
 </head>
     <body>
     <div class="fill wave">
         <div class="grid-3">
             <div class="paper centered-column">
+                <div id="terminal" class="deep width-80 wave-frame top-column h-full gap-0 hidden m-frame">
+                    <div class="end-row">
+                        <div id="terminalCloseBtn" class="p_05 m_05 btn btn-deep">
+                            x
+                        </div>
+                    </div>
+                    <div id="terminal-text" class="p_2 terminal-text">
+
+                    </div>
+                </div>
             </div>
-            <div class="centered-column wave" >
-                <form id="googleLogin" action="" method="post" class="width-80 centered-column">
+            <div class="centered-column wave g-6" >
+                <form id="passwordLogin" class="m-frame width-80 start-column g-2">
+                    <label for="username" class="label-text fill-x ">Username</label>
+                    <input id="username" class="input" name="username" type="text"  placeholder="Enter your username">
+                    <label for="password" class="label-text fill-x ">Password</label>
+                    <input id="password" class="input" name="password" type="password"  placeholder="Enter your password">
+                    <div class="end-row pt_2">
+                        <button type="submit" class="gsi-material-button fill-x">Login</button>
+                    </div>
+                </form>
+                <form id="googleLogin" action="" method="post" class="width-80 centered-column pt_2">
                     <button type="submit" class="gsi-material-button width-80" id="googleLoginBth">
                         <div class="gsi-material-button-state"></div>
                         <div class="gsi-material-button-content-wrapper">
@@ -31,6 +50,7 @@
                         </div>
                     </button>
                 </form>
+                <div id="loading" class="loader logo-size hidden"></div>
             </div>
             <div class="paper centered-column h-full gap-0 font-bold text-xl">
                 <a href="/">
@@ -55,10 +75,40 @@
     </div>
     </body>
     <script type="module">
-        import { googleAuthLink } from '../src/login.js';
+        import { googleAuthLink, login } from './src/login.js';
+        import { parseForm, hide, show } from "./src/util.js";
+        import { listenForErrors, listenLoading} from "./src/main.js";
+
+        function loginWithPassword(event){
+
+            const data = parseForm(event, { username: "string", password : "string"})
+            console.log(data)
+            login(data).then(console.log)
+            event.preventDefault();
+        }
 
         window.onload = function () {
             document.getElementById('googleLogin').action = googleAuthLink();
+            document.getElementById('passwordLogin').addEventListener('submit', loginWithPassword)
+            const loading = document.getElementById("loading")
+            const passwordForm = document.getElementById("passwordLogin")
+            const googleButton = document.getElementById("googleLogin")
+            listenLoading(window,
+                ()=>{
+                    hide(passwordForm)
+                    hide(googleButton)
+                    show(loading)
+                },()=>{
+                    show(passwordForm)
+                    show(googleButton)
+                    hide(loading)
+                } )
+
+            const terminal = document.getElementById("terminal");
+            const terminalText = document.getElementById("terminal-text");
+            const terminalButton = document.getElementById("terminalCloseBtn")
+
+            listenForErrors(window, [terminal], terminalText, terminalButton)
         }
     </script>
 </html>

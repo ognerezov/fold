@@ -60,3 +60,24 @@ export function hide(element){
 export function show(element){
     element.classList.remove("hidden");
 }
+
+export function parseForm(form, schema){
+    if (!schema){
+        return schema
+    }
+
+    const result = cloneObject(schema)
+
+    for(const el of form.target){
+        if (!el || !el.id || result[el.id] === undefined){
+            continue
+        }
+        result[el.id] = el.value
+    }
+
+    return result
+}
+
+export function cloneObject(obj){
+    return JSON.parse(JSON.stringify(obj))
+}

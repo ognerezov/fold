@@ -1,9 +1,8 @@
 import {JSON_HEADERS, send} from "./util.js";
-import {createCookie} from "./cookies.js"
+import {saveTokenResponse} from "./cookies.js"
 
 export function authQueryResponse(document){
     let params = new URL(document.location.toString()).searchParams;
-    console.log(params)
     return {
         error : params.get("error"),
         code: params.get("code")
@@ -19,10 +18,6 @@ export async function processCode(document){
     // TODO this should go from settings. Use Api prefix if got one
     request.redirect_uri = "http://localhost:3333"
     const res = await send("/auth", null, "POST", JSON_HEADERS, JSON.stringify(request))
-
-    const key = `${res?.json?.iss}Token`
-    if(res?.json?.token){
-        createCookie(key, res?.json?.token, 100);
-    }
+    saveTokenResponse(res)
     return res.json
 }
