@@ -41,6 +41,7 @@ func InitGoogleProvider(dataPath string) (*oauth.GoogleJson, error) {
 				var drv *drive.Service
 				drv, err = drive.NewService(ctx, option.WithCredentialsFile(filename))
 				googleJson.Drive = drv
+				googleJson.Iss = config.Name
 				if err != nil {
 					console.RedPrintln(err.Error())
 				} else {

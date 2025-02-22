@@ -16,9 +16,14 @@ export function actionButtons(element, pub = true){
     const keys = Object
                         .keys(settings)
                         .filter((key)=> Boolean(settings[key].public) === pub)
+    const res = []
     keys.forEach((key)=>{
-        element.appendChild(actionButton(key, settings[key], token))
+        const button = actionButton(key, settings[key], token)
+        element.appendChild(button)
+        res.push(button)
     })
+    
+    return res
 }
 
 export async function useControlEndpoint(id, token = null, params ){

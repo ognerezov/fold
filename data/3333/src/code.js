@@ -1,5 +1,7 @@
 import {JSON_HEADERS, send} from "./util.js";
 import {saveTokenResponse} from "./cookies.js"
+import {redirectToControl} from "./main.js";
+import {getRedirect} from "./login.js";
 
 export function authQueryResponse(document){
     let params = new URL(document.location.toString()).searchParams;
@@ -15,9 +17,13 @@ export async function processCode(document){
     if (!request.code){
         return Promise.resolve(request)
     }
-    // TODO this should go from settings. Use Api prefix if got one
-    request.redirect_uri = "http://localhost:3333"
+
+    request.redirect_uri = getRedirect()
     const res = await send("/auth", null, "POST", JSON_HEADERS, JSON.stringify(request))
-    saveTokenResponse(res)
+    console.log(res)
+    if (res.status === 200) {
+        saveTokenResponse(res)
+        redirectToControl()
+    }
     return res.json
 }

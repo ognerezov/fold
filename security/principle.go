@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+var (
+	BasicRoles = []string{"guest", "user"}
+)
+
 type Principle struct {
 	Roles    []string `json:"roles"`
 	Id       string   `json:"id"`
@@ -125,7 +129,7 @@ func GetUserRoles(id string, prefix string) []string {
 	for i, row := range roleRows {
 		roles[i] = row[2].Str()
 	}
-	return roles
+	return append(roles, BasicRoles...)
 }
 
 func verifyPassword(password string, data map[string]any) error {

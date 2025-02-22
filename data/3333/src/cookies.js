@@ -1,3 +1,6 @@
+import project from "./project.js"
+const iss = project.name
+
 window.unescape = window.unescape || window.decodeURI;
 export function createCookie(name, value, days) {
     let expires;
@@ -13,7 +16,7 @@ export function createCookie(name, value, days) {
 }
 
 export function saveTokenResponse(res){
-    const key = `${res?.json?.iss}Token`
+    const key = `${iss}Token`
     if(res?.json?.token){
         createCookie(key, res?.json?.token, 100);
     }
@@ -32,4 +35,8 @@ export function getCookie(key) {
         }
     }
     return "";
+}
+
+export function deleteCookie(name) {
+    document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 }

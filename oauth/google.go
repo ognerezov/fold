@@ -53,6 +53,7 @@ type GoogleJson struct {
 	ClientEmail       string `json:"client_email"`
 	ClientX509CertUrl string `json:"client_x509_cert_url"`
 	UniverseDomain    string `json:"universe_domain"`
+	Iss               string
 }
 
 type CodeTokenRequest struct {
@@ -230,13 +231,12 @@ func (gj *GoogleJson) Do(data map[string]any, w http.ResponseWriter, _ *http.Req
 	var tokenResp CodeTokenResponse
 	err = decoder.Decode(&tokenResp)
 
-	iss := "fold"
 	if err != nil {
 		router.ServerError(err, w)
 		return
 	}
 	provider := "google"
-	userInfo, err := tokenResp.ExchangeForToken("https://www.googleapis.com/oauth2/v3/userinfo", iss)
+	userInfo, err := tokenResp.ExchangeForToken("https://www.googleapis.com/oauth2/v3/userinfo", gj.Iss)
 	if err != nil {
 		router.Unauthorized(err, w)
 		return
@@ -258,7 +258,7 @@ func (gj *GoogleJson) Do(data map[string]any, w http.ResponseWriter, _ *http.Req
 		}
 
 	}
-	router.WriteResponse(api.LoginResponse{Token: userInfo.Token, Iss: iss}, w)
+	router.WriteResponse(api.LoginResponse{Token: userInfo.Token, Iss: gj.Iss}, w)
 }
 
 func (gj *GoogleJson) Describe() ([]openapi.Parameter, map[string]openapi.Response) {

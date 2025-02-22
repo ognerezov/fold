@@ -20,6 +20,10 @@ type ServerConfigurator func(string, int) (*goji.Mux, error)
 
 func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	console.YellowPrintln("Configure server for dir " + dataPath)
+	err := util.SaveJavascript(dataPath+projectRoute, config)
+	if err != nil {
+		panic(err)
+	}
 	mux := goji.NewMux()
 	mux.Use(router.LogRequest)
 
@@ -29,7 +33,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	openapiRoute := openapi.Filename
 	openapiFileName := dataPath + openapiRoute
 	_ = os.Remove(openapiFileName)
-	err := AppProviders.Export(dataPath)
+	err = AppProviders.Export(dataPath)
 	if err != nil {
 		console.RedPrintln("export error: " + err.Error())
 	}

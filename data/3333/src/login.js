@@ -2,20 +2,24 @@ import {JSON_HEADERS, send, toQueryString} from "./util.js";
 import google from "../providers/google.js";
 import {saveTokenResponse} from "./cookies.js";
 import {endLoadingEvent, startLoadingEvent, ERROR_RECEIVED} from "./main.js";
-
+// https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets
 export function googleAuthLink(){
     const query = {
         client_id: google?.web?.client_id,
         response_type: "code",
         state: "state_parameter_passthrough_value",
-        scope:"https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets",
-        redirect_uri: getRedirectUri(google?.web?.redirect_uris),
+        scope:"https://www.googleapis.com/auth/userinfo.email",
+        redirect_uri: getRedirect(),
         prompt: "consent",
         include_granted_scopes: true,
         access_type: "offline"
     }
     const url = google?.web?.auth_uri;
     return url + toQueryString(query)
+}
+
+export function getRedirect(){
+    return getRedirectUri(google?.web?.redirect_uris)
 }
 
 function getRedirectUri(allowedUris){

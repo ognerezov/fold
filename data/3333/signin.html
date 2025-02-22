@@ -51,6 +51,12 @@
                     </button>
                 </form>
                 <div id="loading" class="loader logo-size hidden"></div>
+                <div id="me">
+                    <span>Welcome, </span><span id="meText"></span>
+                </div>
+                <button id="logout" class="btn btn-wave">
+                    Logout
+                </button>
             </div>
             <div class="paper centered-column h-full gap-0 font-bold text-xl">
                 <a href="/">
@@ -77,13 +83,11 @@
     <script type="module">
         import { googleAuthLink, login } from './src/login.js';
         import { parseForm, hide, show } from "./src/util.js";
-        import { listenForErrors, listenLoading} from "./src/main.js";
+        import { listenForErrors, listenLoading, redirectToControl, listenForUser} from "./src/main.js";
 
         function loginWithPassword(event){
-
             const data = parseForm(event, { username: "string", password : "string"})
-            console.log(data)
-            login(data).then(console.log)
+            login(data).then(redirectToControl)
             event.preventDefault();
         }
 
@@ -93,6 +97,9 @@
             const loading = document.getElementById("loading")
             const passwordForm = document.getElementById("passwordLogin")
             const googleButton = document.getElementById("googleLogin")
+            const userInfo = document.getElementById("me")
+            const userInfoText = document.getElementById("meText")
+            const logoutBtn = document.getElementById("logout")
             listenLoading(window,
                 ()=>{
                     hide(passwordForm)
@@ -103,6 +110,8 @@
                     show(googleButton)
                     hide(loading)
                 } )
+
+            listenForUser(window, [googleButton, passwordForm], [userInfo, logoutBtn], userInfoText, logoutBtn)
 
             const terminal = document.getElementById("terminal");
             const terminalText = document.getElementById("terminal-text");

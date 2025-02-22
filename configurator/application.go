@@ -16,7 +16,12 @@ import (
 )
 
 var (
-	App *Application
+	App    *Application
+	config AppConfig
+)
+
+const (
+	projectRoute = "/src/project.js"
 )
 
 type Application struct {
@@ -28,11 +33,23 @@ type Application struct {
 }
 
 type AppConfig struct {
-	name string
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description"`
+	Version     string `json:"version"`
+}
+
+func loadConfig(dataPath string) AppConfig {
+	var config AppConfig
+	err := util.FromJson(dataPath+"/project.json", &config)
+	if err != nil {
+		panic(err)
+	}
+	return config
 }
 
 func CreateApplication(address string, dataPath string) {
 	path.Root = dataPath
+	config = loadConfig(dataPath)
 	err := InitProviders(dataPath)
 	if err != nil {
 		console.RedPrintln("InitProviders error: " + err.Error())
@@ -54,7 +71,7 @@ func CreateApplication(address string, dataPath string) {
 	console.GreenPrintln("__________________________________")
 	console.GreenPrintln("Server configured with default name")
 	console.GreenPrintln("__________________________________")
-	App = &Application{services: services, address: address, ports: ports, config: AppConfig{name: "fold"}}
+	App = &Application{services: services, address: address, ports: ports, config: config}
 	(*TheInstructions)[restart] = App.RestartControl
 	console.MagentaPrintln(fmt.Sprintf("%v", *App))
 	initPort(address, ports[l-1], services)
@@ -75,7 +92,7 @@ func CreateFileApplication(address string, dataPath string) {
 	console.GreenPrintln("__________________________________")
 	console.GreenPrintln("Server configured with default name")
 	console.GreenPrintln("__________________________________")
-	App = &Application{services: services, address: address, ports: ports, config: AppConfig{name: "fold"}}
+	App = &Application{services: services, address: address, ports: ports, config: AppConfig{Name: "fold"}}
 	(*TheInstructions)[restart] = App.RestartControl
 	console.MagentaPrintln(fmt.Sprintf("%v", *App))
 	initPort(address, ports[0], services)
@@ -152,5 +169,5 @@ func (app *Application) Describe() ([]openapi.Parameter, map[string]openapi.Resp
 }
 
 func (app *Application) Name() string {
-	return app.config.name
+	return app.config.Name
 }

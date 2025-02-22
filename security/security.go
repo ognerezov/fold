@@ -34,7 +34,7 @@ func SetAuthHandlers(apiPath string, mux *goji.Mux, iss string) {
 			router.ReturnError(err, 401, w)
 			return
 		}
-		token, err := principle.BearerToken(iss)
+		token, err := principle.TokenFor(iss)
 
 		if err != nil {
 			router.ServerError(err, w)

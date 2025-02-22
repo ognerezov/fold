@@ -130,6 +130,14 @@ body{
    @apply m-1 md:m-8;
 }
 
+.mb_4 {
+   @apply mb-4
+}
+
+.mt_4 {
+   @apply mt-4
+}
+
 .label-text{
     @apply text-deep text-sm
 }

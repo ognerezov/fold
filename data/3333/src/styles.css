@@ -780,6 +780,14 @@ body{
   }
 }
 
+.mb_4 {
+  margin-bottom: 1rem;
+}
+
+.mt_4 {
+  margin-top: 1rem;
+}
+
 .label-text {
   font-size: 0.875rem;
   line-height: 1.25rem;
