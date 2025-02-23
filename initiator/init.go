@@ -76,9 +76,17 @@ func exportFolders(path string, folders []string) error {
 	return nil
 }
 
-func cleanIndex(folder string) string {
-	val := strings.Replace(folder, Index, "", -1)
-	return strings.Replace(val, "//", "/", -1)
+func cleanIndex(folder string, isDir bool) string {
+
+	if isDir {
+		val := strings.Replace(folder, Index, "", -1)
+		return strings.Replace(val, "//", "/", -1)
+	}
+	allParts := strings.Split(folder, "/")
+	parts := allParts[:len(allParts)-1]
+	res := strings.Replace(strings.Join(parts, "/"), Index, "", -1)
+
+	return strings.Replace(fmt.Sprintf("%s/%s", res, allParts[len(allParts)-1]), "//", "/", -1)
 }
 
 func exportFolder(path string, folder string) error {
@@ -96,7 +104,7 @@ func exportFolder(path string, folder string) error {
 	}
 	for _, file := range files {
 		inputFileName := folder + "/" + file.Name()
-		fileName := cleanIndex(inputFileName)
+		fileName := cleanIndex(inputFileName, file.IsDir())
 		outputFile := strings.TrimPrefix(fileName, embeddedRoot)
 		if file.IsDir() {
 			err = os.MkdirAll(fmt.Sprintf("%s/%s", path, outputFile), os.ModePerm)
@@ -107,6 +115,7 @@ func exportFolder(path string, folder string) error {
 			if err != nil {
 				return err
 			}
+			continue
 		}
 
 		err = exportFile(inputFileName, path+outputFile)
