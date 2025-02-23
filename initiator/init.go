@@ -3,7 +3,9 @@ package initiator
 import (
 	"embed"
 	"fmt"
+	"fold/configurator"
 	"fold/console"
+	"fold/db"
 	"fold/util"
 	"io"
 	"io/fs"
@@ -25,7 +27,7 @@ var (
 	dataOs embed.FS
 )
 
-func Init(template string, path string, port int) {
+func Init(template string, path string, port int, config configurator.AppConfig) {
 	console.CyanPrintln(fmt.Sprintf("Initializing new project with template %s in folder %s", template, path))
 	err := util.IsEmptyDir(path)
 	if err != nil {
@@ -37,6 +39,10 @@ func Init(template string, path string, port int) {
 		panic("template not found " + template)
 	}
 	prodPath := fmt.Sprintf("%s/%v", path, port)
+	err = db.SaveJson(fmt.Sprintf("%s/project.json", path), config)
+	if err != nil {
+		panic(err)
+	}
 	err = os.MkdirAll(prodPath, os.ModePerm)
 	err = os.MkdirAll(fmt.Sprintf("%s/%s", prodPath, "www"), os.ModePerm)
 	err = os.MkdirAll(fmt.Sprintf("%s/%s", prodPath, "providers"), os.ModePerm)

@@ -36,6 +36,7 @@ type AppConfig struct {
 	Name        string `json:"name" validate:"required"`
 	Description string `json:"description"`
 	Version     string `json:"version"`
+	AllowOrigin string `json:"allow_origin"`
 }
 
 func loadConfig(dataPath string) AppConfig {

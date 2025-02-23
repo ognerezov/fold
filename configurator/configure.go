@@ -26,6 +26,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	}
 	mux := goji.NewMux()
 	mux.Use(router.LogRequest)
+	mux.Use(AddHeaders)
 
 	store := *mem.TheStore
 	clean := path.CreateRootCleaner(dataPath)

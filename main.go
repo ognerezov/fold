@@ -32,6 +32,14 @@ func main() {
 	flag.StringVar(&arguments.AppArguments.Name, "name", "fold", "Application name")
 	flag.StringVar(&arguments.AppArguments.Name, "n", "fold", "Application name (shorthand)")
 
+	var description string
+	flag.StringVar(&description, "description", "", "Project description")
+	var version string
+	flag.StringVar(&version, "version", "1.0.0", "Project version")
+	var allowOrigin string
+	flag.StringVar(&allowOrigin, "origin", "", "Allow origin")
+	flag.StringVar(&allowOrigin, "o", "", "Allow origin (shorthand)")
+
 	var help bool
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&help, "h", false, "Show help (shorthand)")
@@ -61,7 +69,16 @@ func main() {
 	arguments.InitArgs.Port = arguments.AppArguments.Port
 
 	if init {
-		initiator.Init(arguments.InitArgs.Template, dataPath, arguments.InitArgs.Port)
+		if allowOrigin == "" {
+			allowOrigin = fmt.Sprintf("http://localhost:%v", arguments.AppArguments.Port)
+		}
+		appConfig := configurator.AppConfig{
+			Name:        arguments.AppArguments.Name,
+			Description: description,
+			Version:     version,
+			AllowOrigin: allowOrigin,
+		}
+		initiator.Init(arguments.InitArgs.Template, dataPath, arguments.InitArgs.Port, appConfig)
 		return
 	}
 

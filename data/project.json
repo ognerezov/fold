@@ -1,4 +1,5 @@
 {
   "name" : "fold",
-  "description": "No code backend solution"
+  "description": "No code backend solution",
+  "allow_origin": "*"
 }
