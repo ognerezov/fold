@@ -24,7 +24,7 @@
             </div>
             <div class="centered-column wave g-6" >
                 <form id="passwordLogin" class="m-frame width-80 start-column g-2">
-                    <label for="username" class="label-text fill-x ">Username</label>
+                    <label for="username" class="label-text fill-x">Username</label>
                     <input id="username" class="input" name="username" type="text"  placeholder="Enter your username">
                     <label for="password" class="label-text fill-x ">Password</label>
                     <input id="password" class="input" name="password" type="password"  placeholder="Enter your password">
@@ -81,7 +81,7 @@
     </div>
     </body>
     <script type="module">
-        import { googleAuthLink, login } from './src/login.js';
+        import { googleAuthLink, login, showSupportedAuthOptions } from './src/login.js';
         import { parseForm, hide, show } from "./src/util.js";
         import { listenForErrors, listenLoading, redirectToControl, listenForUser} from "./src/main.js";
 
@@ -100,18 +100,23 @@
             const userInfo = document.getElementById("me")
             const userInfoText = document.getElementById("meText")
             const logoutBtn = document.getElementById("logout")
+            const logo = document.getElementById("logo")
+            const loginControls = showSupportedAuthOptions({
+                password : [passwordForm],
+                google : [googleButton]
+            })
             listenLoading(window,
                 ()=>{
-                    hide(passwordForm)
-                    hide(googleButton)
+                    hide(loginControls)
+                    hide(logo)
                     show(loading)
                 },()=>{
-                    show(passwordForm)
-                    show(googleButton)
+                    show(loginControls)
+                    show(logo)
                     hide(loading)
                 } )
 
-            listenForUser(window, [googleButton, passwordForm], [userInfo, logoutBtn], userInfoText, logoutBtn)
+            listenForUser(window, loginControls, [userInfo, logoutBtn], userInfoText, logoutBtn)
 
             const terminal = document.getElementById("terminal");
             const terminalText = document.getElementById("terminal-text");

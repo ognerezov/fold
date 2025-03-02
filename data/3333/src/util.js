@@ -5,16 +5,11 @@ export async function send(url, query, method = "GET", headers, body = undefined
             headers : headers || {},
             body : body
         });
-        if (!response.ok) {
-            return {
-                status: response.status
-            }
-        }
         const json =  await response.json();
 
         return {
             json : json,
-            status : 200
+            status : response.status
         }
 
     } catch (error) {
@@ -54,10 +49,22 @@ export function authHeaders(token){
 }
 
 export function hide(element){
+    if(Array.isArray(element)){
+        for(const el of element){
+            el.classList.add("hidden");
+        }
+        return
+    }
     element.classList.add("hidden");
 }
 
 export function show(element){
+    if(Array.isArray(element)){
+        for(const el of element){
+            el.classList.remove("hidden");
+        }
+        return
+    }
     element.classList.remove("hidden");
 }
 

@@ -19,6 +19,7 @@ type Principle struct {
 	Roles    []string `json:"roles"`
 	Id       string   `json:"id"`
 	password string
+	token    string
 }
 
 var Guest = Principle{
@@ -55,6 +56,10 @@ func Authenticate(r *http.Request) (*Principle, error) {
 	return principle, err
 }
 
+func (principle *Principle) Token() string {
+	return principle.token
+}
+
 func (principle *Principle) BearerToken(iss string) (string, error) {
 	j, er := principle.TokenFor(iss)
 	if er != nil {
@@ -76,12 +81,13 @@ func (principle *Principle) TokenFor(iss string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+	principle.token = tokenString
 	return tokenString, nil
 }
 
 func FromToken(tokenString string) (*Principle, error) {
-	token, err := verifyToken(tokenString[len("Bearer "):])
+	cleanToken := tokenString[len("Bearer "):]
+	token, err := verifyToken(cleanToken)
 	if err != nil || token == nil {
 		return nil, err
 	}
@@ -101,6 +107,7 @@ func FromToken(tokenString string) (*Principle, error) {
 	return &Principle{
 		Id:    sub,
 		Roles: roles,
+		token: cleanToken,
 	}, nil
 }
 

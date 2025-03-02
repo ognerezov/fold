@@ -9,10 +9,15 @@ import (
 )
 
 func WriteResponse(data any, w http.ResponseWriter) {
+	WriteServerResponse(data, 200, w)
+}
+
+func WriteServerResponse(data any, code int, w http.ResponseWriter) {
 	h, err := json.MarshalIndent(data, "", "    ")
 	if err != nil {
 		ServerError(err, w)
 	}
+	w.WriteHeader(code)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_, e := w.Write(h)
 	if e != nil {

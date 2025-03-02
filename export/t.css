@@ -110,7 +110,7 @@ body{
     @apply bg-wave text-white;
 }
 
-.width-80 {
+.p-6{
     @apply w-4/5 mx-auto
 }
 
@@ -169,6 +169,12 @@ body{
 .logo-size{
     width: 185px;
     height: 185px;
+}
+
+.with-shadow {
+    @apply shadow-xl p-6;
+    animation-name: animate-top;
+    animation-duration: 0.6s;
 }
 
 .gsi-material-button {
@@ -291,4 +297,9 @@ body{
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+@keyframes animate-top {
+    from {top: -300px; opacity: 0}
+    to {top: 0; opacity: 1}
 }

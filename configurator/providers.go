@@ -18,11 +18,12 @@ type ProviderExporter[T any] interface {
 	Export(string) error
 }
 
-func InitProviders(dataPath string) error {
+func InitProviders(dataPath string) ([]string, error) {
 	files, err := ReadDir(dataPath + "/providers")
 	if err != nil {
 		console.RedPrintln(err.Error())
 	}
+	res := make([]string, 0)
 	for _, file := range files {
 		if !file.IsDir() {
 			continue
@@ -39,11 +40,12 @@ func InitProviders(dataPath string) error {
 				provider.RegistrationAllowed = arguments.AppArguments.RegistrationAllowed
 				AppProviders.Google = provider
 				(*TheInstructions)[googleAuth] = provider.AuthControl
+				res = append(res, name)
 			}
 
 			continue
 		}
 		console.RedPrintln(fmt.Sprintf("Unknown provider %s", name))
 	}
-	return nil
+	return res, nil
 }

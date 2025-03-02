@@ -744,7 +744,7 @@ body{
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
 }
 
-.width-80 {
+.p-6 {
   margin-left: auto;
   margin-right: auto;
   width: 80%;
@@ -828,6 +828,18 @@ body{
 .logo-size{
   width: 185px;
   height: 185px;
+}
+
+.with-shadow {
+  padding: 1.5rem;
+  --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+  animation-name: animate-top;
+  animation-duration: 0.6s;
 }
 
 .gsi-material-button {
@@ -946,5 +958,17 @@ body{
 
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes animate-top {
+  from {
+    top: -300px;
+    opacity: 0
+  }
+
+  to {
+    top: 0;
+    opacity: 1
   }
 }

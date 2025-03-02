@@ -1,0 +1,6 @@
+{
+    "id": "create_project",
+    "method": "POST",
+    "expose": true,
+    "description": "New gcloud project"
+}

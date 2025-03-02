@@ -78,6 +78,16 @@ func (t *Table) MapRow(row []Data) map[string]any {
 	return res
 }
 
+func (t *Table) GetStringValue(row []Data, columnName string) *string {
+	for index, value := range row {
+		if t.cols[index].name == columnName {
+			res := value.Str()
+			return &res
+		}
+	}
+	return nil
+}
+
 func (t *Table) MapJoinRow(row []Data, store *Store, tablePathMap JoinPathMap, level int) map[string]any {
 	res := make(map[string]any)
 	fmt.Println(*t)

@@ -12,6 +12,7 @@ import (
 	"fold/openapi"
 	"fold/router"
 	"fold/util"
+	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/sheets/v4"
 	"net/http"
@@ -46,6 +47,7 @@ type GoogleJson struct {
 	RegistrationAllowed     bool
 	Drive                   *drive.Service
 	Sheets                  *sheets.Service
+	CloudResourceManager    *cloudresourcemanager.Service
 
 	Type              string `json:"type"`
 	PrivateKeyId      string `json:"private_key_id"`

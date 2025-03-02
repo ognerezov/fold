@@ -7,6 +7,7 @@ import (
 	"fold/api"
 	"fold/console"
 	"fold/controls"
+	"fold/mem"
 	"fold/openapi"
 	"fold/path"
 	"fold/router"
@@ -33,10 +34,11 @@ type Application struct {
 }
 
 type AppConfig struct {
-	Name        string `json:"name" validate:"required"`
-	Description string `json:"description"`
-	Version     string `json:"version"`
-	AllowOrigin string `json:"allow_origin"`
+	Name          string   `json:"name" validate:"required"`
+	Description   string   `json:"description"`
+	Version       string   `json:"version"`
+	AllowOrigin   string   `json:"allow_origin"`
+	AuthProviders []string `json:"auth_providers"`
 }
 
 func loadConfig(dataPath string) AppConfig {
@@ -51,7 +53,12 @@ func loadConfig(dataPath string) AppConfig {
 func CreateApplication(address string, dataPath string) {
 	path.Root = dataPath
 	config = loadConfig(dataPath)
-	err := InitProviders(dataPath)
+	var err error
+	config.AuthProviders, err = InitProviders(dataPath)
+	_, ok := mem.TheStore.GetTable(util.UserPath)
+	if ok {
+		config.AuthProviders = append(config.AuthProviders, "password")
+	}
 	if err != nil {
 		console.RedPrintln("InitProviders error: " + err.Error())
 	}

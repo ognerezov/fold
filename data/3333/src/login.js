@@ -1,14 +1,38 @@
-import {JSON_HEADERS, send, toQueryString} from "./util.js";
+import {hide, JSON_HEADERS, send, show, toQueryString} from "./util.js";
 import google from "../providers/google.js";
 import {saveTokenResponse} from "./cookies.js";
 import {endLoadingEvent, startLoadingEvent, ERROR_RECEIVED} from "./main.js";
+import project from "./project.js"
+
+export function showSupportedAuthOptions(elements){
+    if (!elements){
+        return
+    }
+    const supportedAuth = project.auth_providers || []
+    const res = []
+    Object.keys(elements).forEach((key)=>{
+        for(const element of elements[key]) {
+            if (supportedAuth.includes(key)) {
+                show(element)
+                res.push(element)
+                console.log("show", element)
+            } else {
+                hide(element)
+                console.log("hide", element)
+            }
+        }
+    })
+
+    return res;
+}
+
 // https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets
 export function googleAuthLink(){
     const query = {
         client_id: google?.web?.client_id,
         response_type: "code",
         state: "state_parameter_passthrough_value",
-        scope:"https://www.googleapis.com/auth/userinfo.email",
+        scope:"https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/cloud-platform",
         redirect_uri: getRedirect(),
         prompt: "consent",
         include_granted_scopes: true,

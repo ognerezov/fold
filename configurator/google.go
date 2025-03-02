@@ -8,6 +8,7 @@ import (
 	"fold/oauth"
 	"fold/path"
 	"fold/util"
+	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -53,6 +54,12 @@ func InitGoogleProvider(dataPath string) (*oauth.GoogleJson, error) {
 					console.RedPrintln(err.Error())
 				} else {
 					googleJson.Sheets = s
+				}
+				cloud, err := cloudresourcemanager.NewService(ctx, option.WithCredentialsFile(filename))
+				if err != nil {
+					console.RedPrintln(err.Error())
+				} else {
+					googleJson.CloudResourceManager = cloud
 				}
 			} else {
 				googleJson.Attach(json)

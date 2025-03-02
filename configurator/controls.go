@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"fold/console"
 	"fold/controls"
+	"fold/gcloud"
 	"fold/openapi"
 	"fold/util"
 	goji "goji.io"
@@ -15,21 +16,23 @@ import (
 )
 
 const (
-	echo         = "echo"
-	restart      = "restart"
-	googleAuth   = "google_auth"
-	adaptor      = "adaptor"
-	reload       = "reload"
-	controlRoute = "/src/fold.js"
+	echo          = "echo"
+	restart       = "restart"
+	googleAuth    = "google_auth"
+	adaptor       = "adaptor"
+	reload        = "reload"
+	controlRoute  = "/src/fold.js"
+	createProject = "create_project"
 )
 
 type InstructionMap map[string]controls.ControlFactory
 
 var (
 	TheInstructions = &InstructionMap{
-		echo:    controls.GetEcho,
-		adaptor: ConfigureAdaptor,
-		reload:  controls.ConfigureReLoader,
+		echo:          controls.GetEcho,
+		adaptor:       ConfigureAdaptor,
+		reload:        controls.ConfigureReLoader,
+		createProject: gcloud.GetProjectCreator,
 	}
 )
 
