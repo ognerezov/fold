@@ -31,6 +31,14 @@ type GoogleSecret struct {
 	JavascriptOrigins       []string `json:"javascript_origins"`
 }
 
+var (
+	googleJson *GoogleJson
+)
+
+func SetGoogleJson(gj *GoogleJson) {
+	googleJson = gj
+}
+
 type GoogleJson struct {
 	Web                     *GoogleSecret `json:"web"`
 	Installed               *GoogleSecret `json:"installed"`
@@ -63,7 +71,7 @@ type CodeTokenRequest struct {
 	RedirectUri string `json:"redirect_uri"`
 }
 
-type CodeTokenResponse struct {
+type GoogleTokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	ExpiresIn    int    `json:"expires_in"`
 	TokenType    string `json:"token_type"`
@@ -214,7 +222,7 @@ func (gj *GoogleJson) Do(data map[string]any, w http.ResponseWriter, _ *http.Req
 		router.BadRequest(err, w)
 		return
 	}
-	fmt.Println(tokenReq.Code)
+
 	resp, err := util.SendRequest(req)
 	if err != nil {
 		router.ServerError(err, w)
@@ -230,7 +238,7 @@ func (gj *GoogleJson) Do(data map[string]any, w http.ResponseWriter, _ *http.Req
 		return
 	}
 	decoder := json.NewDecoder(resp.Body)
-	var tokenResp CodeTokenResponse
+	var tokenResp GoogleTokenResponse
 	err = decoder.Decode(&tokenResp)
 
 	if err != nil {
@@ -303,6 +311,25 @@ func (gj *GoogleJson) TokenRequest(code string, redirectUri string) (*http.Reque
 	data.Set("client_id", gj.Id())
 	data.Set("client_secret", gj.ServerSecret())
 	data.Set("grant_type", "authorization_code")
+	res, err := http.NewRequest("POST", uri, strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	res.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	return res, err
+}
+
+func (gj *GoogleJson) RefreshRequest(refreshToken string) (*http.Request, error) {
+	uri := gj.TokenUrl()
+	if uri == "" {
+		return nil, errors.New("token uri is empty")
+	}
+	console.GreenPrintln("Proceed http request to " + uri)
+	data := url.Values{}
+	data.Set("refresh_token", refreshToken)
+	data.Set("client_id", gj.Id())
+	data.Set("client_secret", gj.ServerSecret())
+	data.Set("grant_type", "refresh_token")
 	res, err := http.NewRequest("POST", uri, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, err

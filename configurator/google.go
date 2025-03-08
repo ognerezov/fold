@@ -73,6 +73,7 @@ func InitGoogleProvider(dataPath string) (*oauth.GoogleJson, error) {
 	if err != nil {
 		console.RedPrintln(err.Error())
 	}
+	oauth.SetGoogleJson(googleJson)
 	if gotAny {
 		//fmt.Println(*(googleJson.Web))
 		//fmt.Println(*(googleJson.Installed))

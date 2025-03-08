@@ -23,3 +23,13 @@ func Ok() StatusResponse {
 		Status: "ok",
 	}
 }
+
+type MessageResponse struct {
+	Message string `json:"message"`
+}
+
+func GetMessageResponse(err error) MessageResponse {
+	return MessageResponse{
+		Message: err.Error(),
+	}
+}
