@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (tr *CodeTokenResponse) ExchangeForToken(uri string, iss string) (*UserInfo, error) {
+func (tr *GoogleTokenResponse) ExchangeForToken(uri string, iss string) (*UserInfo, error) {
 	userInfo, err := tr.GetUserInfo(uri)
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func (tr *CodeTokenResponse) ExchangeForToken(uri string, iss string) (*UserInfo
 	return userInfo, nil
 }
 
-func (tr *CodeTokenResponse) GetRow(token string, email string, provider string) map[string]string {
+func (tr *GoogleTokenResponse) GetRow(token string, email string, provider string) map[string]string {
 	return map[string]string{
 		"id":            token,
 		"user_id":       email,
@@ -44,7 +44,7 @@ func (tr *CodeTokenResponse) GetRow(token string, email string, provider string)
 	}
 }
 
-func (tr *CodeTokenResponse) GetUserInfo(uri string) (*UserInfo, error) {
+func (tr *GoogleTokenResponse) GetUserInfo(uri string) (*UserInfo, error) {
 	data := url.Values{}
 	data.Set("access_token", tr.AccessToken)
 

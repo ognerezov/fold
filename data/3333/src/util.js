@@ -88,3 +88,13 @@ export function parseForm(form, schema){
 export function cloneObject(obj){
     return JSON.parse(JSON.stringify(obj))
 }
+
+export function linkify(text) {
+    const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+
+    const res= text.replace(urlRegex, function(url) {
+        return '<a class="paper-link pointer" href="' + url + '" target="_blank">' + url + '</a>';
+    });
+
+    return `<div class="fill-x msg-box">${res}</div>`
+}

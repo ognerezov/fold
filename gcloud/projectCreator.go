@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"fold/api"
 	"fold/console"
 	"fold/controls"
 	"fold/oauth"
@@ -42,10 +43,11 @@ func (pc ProjectCreator) Do(data map[string]any, w http.ResponseWriter, r *http.
 		router.ServerError(err, w)
 		return
 	}
+
 	tokenSource := oauth.SourceToken(principle.Token())
 	token, err := tokenSource.Token()
 	if err != nil {
-		router.ServerError(err, w)
+		router.WriteServerResponse(api.GetMessageResponse(err), 500, w)
 		return
 	}
 	fmt.Println(token)
@@ -70,7 +72,6 @@ func (pc ProjectCreator) Do(data map[string]any, w http.ResponseWriter, r *http.
 		var m map[string]any
 		e := util.Restructure(err, &m)
 		if e == nil {
-			fmt.Println(m)
 			router.WriteServerResponse(m, int(m["code"].(float64)), w)
 			return
 		}

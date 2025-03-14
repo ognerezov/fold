@@ -97,6 +97,9 @@ body{
 .fill-x {
     @apply w-full
 }
+.width-80{
+    @apply w-4/5 mx-auto
+}
 
 .fill-y {
     @apply h-full
@@ -110,8 +113,8 @@ body{
     @apply bg-wave text-white;
 }
 
-.p-6{
-    @apply w-4/5 mx-auto
+.p_6{
+    @apply p-6
 }
 
 .wave-frame{
@@ -165,6 +168,51 @@ body{
 .m_05{
      @apply m-0.5
  }
+.pt_05{
+     @apply pt-0.5
+ }
+
+.mt_05{
+     @apply mt-0.5
+ }
+.pb_05{
+     @apply pb-0.5
+ }
+
+.mb_05{
+     @apply mb-0.5
+ }
+.pl_05{
+     @apply pl-0.5
+ }
+.ml_05{
+     @apply m-0.5
+ }
+.pr_05{
+     @apply pr-0.5
+ }
+.mr_05{
+     @apply mr-0.5
+ }
+.pb_2{
+    @apply pb-2
+}
+.mb_2{
+    @apply mb-2
+}
+.pb_3{
+    @apply pb-3
+}
+.mb_3{
+    @apply mb-3
+}
+.paper-link{
+    @apply underline text-paper hover:no-underline
+}
+.msg-box{
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+}
 
 .logo-size{
     width: 185px;

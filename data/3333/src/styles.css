@@ -727,6 +727,12 @@ body{
   width: 100%;
 }
 
+.width-80 {
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+}
+
 .fill-y {
   height: 100%;
 }
@@ -744,10 +750,8 @@ body{
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
 }
 
-.p-6 {
-  margin-left: auto;
-  margin-right: auto;
-  width: 80%;
+.p_6 {
+  padding: 1.5rem;
 }
 
 .wave-frame {
@@ -825,6 +829,69 @@ body{
   margin: 0.125rem;
 }
 
+.pt_05 {
+  padding-top: 0.125rem;
+}
+
+.mt_05 {
+  margin-top: 0.125rem;
+}
+
+.pb_05 {
+  padding-bottom: 0.125rem;
+}
+
+.mb_05 {
+  margin-bottom: 0.125rem;
+}
+
+.pl_05 {
+  padding-left: 0.125rem;
+}
+
+.ml_05 {
+  margin: 0.125rem;
+}
+
+.pr_05 {
+  padding-right: 0.125rem;
+}
+
+.mr_05 {
+  margin-right: 0.125rem;
+}
+
+.pb_2 {
+  padding-bottom: 0.5rem;
+}
+
+.mb_2 {
+  margin-bottom: 0.5rem;
+}
+
+.pb_3 {
+  padding-bottom: 0.75rem;
+}
+
+.mb_3 {
+  margin-bottom: 0.75rem;
+}
+
+.paper-link {
+  --tw-text-opacity: 1;
+  color: rgb(252 251 247 / var(--tw-text-opacity, 1));
+  text-decoration-line: underline;
+}
+
+.paper-link:hover {
+  text-decoration-line: none;
+}
+
+.msg-box{
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+}
+
 .logo-size{
   width: 185px;
   height: 185px;
@@ -835,9 +902,6 @@ body{
   --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-  margin-left: auto;
-  margin-right: auto;
-  width: 80%;
   animation-name: animate-top;
   animation-duration: 0.6s;
 }

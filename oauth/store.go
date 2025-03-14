@@ -1,16 +1,29 @@
 package oauth
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"fold/console"
 	"fold/mem"
+	"fold/util"
 	"golang.org/x/oauth2"
+	"net/http"
+	"strings"
 	"time"
 )
 
 type TokenSource struct {
 	InternalToken string
 	Table         *mem.Table
+	GoogleJson    *GoogleJson
+}
+
+func (ts *TokenSource) Provider() string {
+	if ts.GoogleJson != nil {
+		return "google"
+	}
+	return ""
 }
 
 func (ts *TokenSource) Token() (*oauth2.Token, error) {
@@ -19,19 +32,69 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 		return nil, fmt.Errorf("user not found")
 	}
 	oauth := ts.Table.MapRow(row)
-	const layout = "2025-02-22 22:26:44.727221 +0100 CET m=+2789.332512543"
 
-	tm, _ := time.Parse(layout, oauth["updated"].(string))
+	token := mapToken(oauth)
+	if util.IsTimePast(token.Expiry, 10) {
+		tokenResponse, err := ts.RefreshToken(token.RefreshToken)
+		fmt.Println(tokenResponse)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		email := oauth["user_id"].(string)
+		row, err := ts.Table.Update(ts.InternalToken, tokenResponse.GetRow(ts.InternalToken, email, ts.Provider()))
+		if err != nil {
+			return nil, err
+		}
+		return mapToken(row), nil
+	}
+	return token, nil
+}
+
+func (ts *TokenSource) RefreshToken(refreshToken string) (*GoogleTokenResponse, error) {
+	req, err := ts.GoogleJson.RefreshRequest(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := util.SendRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer util.HideBody(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		decoder := json.NewDecoder(resp.Body)
+		var errResp map[string]any
+		err = decoder.Decode(&errResp)
+		console.RedPrintln(fmt.Sprintf("RefreshToken error: %v, response code: %v", errResp, resp.Status))
+		return nil, errors.New(fmt.Sprintf("server reponded with status %v", resp.Status))
+	}
+	decoder := json.NewDecoder(resp.Body)
+	var tokenResp GoogleTokenResponse
+	err = decoder.Decode(&tokenResp)
+	if err != nil {
+		return nil, err
+	}
+	return &tokenResp, nil
+}
+
+func mapToken(oauth map[string]any) *oauth2.Token {
+	const layout = "2006-01-02 15:04:05.999999999 -0700 MST"
+	updated := oauth["updated"].(string)
+	tm, err := time.Parse(layout, strings.Split(updated, " m=")[0])
+	if err != nil {
+		console.RedPrintln(err.Error())
+		return nil
+	}
 	expires := oauth["expires_in"].(int64)
-	tm.Add(time.Duration(expires) * time.Second)
-	token := &oauth2.Token{
+
+	return &oauth2.Token{
 		AccessToken:  oauth["access_token"].(string),
 		TokenType:    oauth["token_type"].(string),
 		RefreshToken: oauth["refresh_token"].(string),
 		ExpiresIn:    expires,
-		Expiry:       tm,
+		Expiry:       tm.Add(time.Duration(expires) * time.Second),
 	}
-	return token, nil
 }
 
 func (ts *TokenSource) Interface() oauth2.TokenSource {
@@ -59,6 +122,7 @@ func SourceToken(internalToken string) TokenSource {
 	return TokenSource{
 		InternalToken: internalToken,
 		Table:         table,
+		GoogleJson:    googleJson,
 	}
 }
 

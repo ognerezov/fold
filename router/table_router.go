@@ -48,7 +48,7 @@ func ProcessPatch(route string, id string, record map[string]string, w http.Resp
 		return
 	}
 
-	data, err := table.Update(id, record, mem.TheStore)
+	data, err := table.Update(id, record)
 
 	if err != nil {
 		ReturnError(err, 404, w)

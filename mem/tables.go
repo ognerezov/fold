@@ -159,7 +159,7 @@ func (t *Table) update(row *[]Data, data map[string]string) int {
 	return colUpdates
 }
 
-func (t *Table) Update(id string, record map[string]string, store *Store) (map[string]any, error) {
+func (t *Table) Update(id string, record map[string]string) (map[string]any, error) {
 	row := t.GetRow(id)
 	if row == nil {
 		return nil, errors.New("entity not found")
@@ -168,7 +168,7 @@ func (t *Table) Update(id string, record map[string]string, store *Store) (map[s
 	if colsUpdated > 0 {
 		t.OnUpdate()
 	}
-	return t.MapJoinRow(t.GetRow(id), store, t.InitPathTable(), 0), nil
+	return t.MapJoinRow(t.GetRow(id), TheStore, t.InitPathTable(), 0), nil
 }
 
 func (t *Table) DeleteById(id string) int {

@@ -1,5 +1,5 @@
 import {deleteCookie, getCookie} from "./cookies.js"
-import {authHeaders, send, hide, show} from "./util.js";
+import {authHeaders, send, hide, show, linkify} from "./util.js";
 import project from "./project.js"
 const iss = project.name
 
@@ -71,7 +71,7 @@ export function listenForErrors(element, terminalElements, textOutput, closeButt
         (event)=>{
             const errorMessage = event?.detail || "Failed to process request"
             show(textOutput)
-            textOutput.innerText = errorMessage
+            textOutput.innerHTML = linkify(errorMessage)
             for(const el of terminalElements){
                 show(el)
             }
