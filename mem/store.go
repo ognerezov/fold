@@ -161,6 +161,16 @@ func (s Store) ReIndex() {
 	}
 }
 
+func (s Store) Tables() []string {
+	res := make([]string, len(s.tables))
+	count := 0
+	for key := range s.tables {
+		res[count] = key
+		count++
+	}
+	return res
+}
+
 var (
 	TheStore *Store = &Store{
 		noSql:         make(map[string]*NoSql),

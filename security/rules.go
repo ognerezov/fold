@@ -31,13 +31,37 @@ func (r Rule) PathMatches(s string) bool {
 	return re.MatchString(s)
 }
 
-func (r Rule) Authorize(p *Principle, _ *http.Request) (bool, error) {
+func (r Rule) Authorize(p *Principle, req *http.Request) (bool, error) {
+	roleFound := false
 	for _, role := range p.Roles {
 		if role == r.Authority {
-			return true, nil
+			roleFound = true
 		}
 	}
-	return false, errors.New("not authorized for this action")
+	if !roleFound {
+		return false, errors.New("not authorized for this action")
+	}
+	if r.Filter == "" {
+		return true, nil
+	}
+	pathParam, queryParams := util.GetUrlParams(r.Filter, req)
+
+	allParams := make([]string, 0)
+	if pathParam != "" {
+		allParams = append(allParams, pathParam)
+	}
+	if queryParams != nil {
+		allParams = append(allParams, queryParams...)
+	}
+	for _, param := range allParams {
+		if param == "" {
+			continue
+		}
+		if param != p.Id {
+			return false, errors.New("you don't have access to the requested resource")
+		}
+	}
+	return true, nil
 }
 
 func (r Rule) Matches(req *http.Request) bool {
@@ -47,14 +71,8 @@ func (r Rule) Matches(req *http.Request) bool {
 		return false
 	}
 	if r.Filter != "" {
-		var param string
-		util.PathParamValue(req, r.Filter, &param)
-		q, err := util.MapQuery(req)
-		var queryParam []string
-		if err != nil {
-			queryParam = q[r.Filter]
-		}
-		if param == "" && queryParam == nil {
+		param, queryParams := util.GetUrlParams(r.Filter, req)
+		if param == "" && queryParams == nil {
 			return false
 		}
 	}

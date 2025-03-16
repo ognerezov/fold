@@ -14,16 +14,18 @@ import (
 	goji "goji.io"
 	"io/fs"
 	"os"
+	"strings"
+)
+
+var (
+	ProcessedPersonalRoutes = map[string]bool{}
 )
 
 type ServerConfigurator func(string, int) (*goji.Mux, error)
 
 func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	console.YellowPrintln("Configure server for dir " + dataPath)
-	err := util.SaveJavascript(dataPath+projectRoute, config)
-	if err != nil {
-		panic(err)
-	}
+	ProcessedPersonalRoutes = map[string]bool{}
 	mux := goji.NewMux()
 	mux.Use(router.LogRequest)
 	mux.Use(AddHeaders)
@@ -34,7 +36,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	openapiRoute := openapi.Filename
 	openapiFileName := dataPath + openapiRoute
 	_ = os.Remove(openapiFileName)
-	err = AppProviders.Export(dataPath)
+	err := AppProviders.Export(dataPath)
 	if err != nil {
 		console.RedPrintln("export error: " + err.Error())
 	}
@@ -60,6 +62,16 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 		security.EncodePasswords(userTable)
 	}
 	securityRulesTable, _ := store.GetTable(arguments.AppArguments.ApiPath + "/security/rules")
+	_, ok := mem.TheStore.GetTable(util.UserPath)
+	if ok {
+		config.AuthProviders = append(config.AuthProviders, "password")
+	}
+	err = util.SaveJavascript(dataPath+projectRoute, config)
+	if err != nil {
+		panic(err)
+	} else {
+		SetRawHandlers(projectRoute, dataPath+projectRoute, mux, apiDescription)
+	}
 	if securityRulesTable != nil {
 		var rules []security.Rule
 		e := mem.TableToStructs(securityRulesTable, mem.AllQuery(), &rules)
@@ -144,4 +156,26 @@ func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMa
 		console.RedPrintln("Registering raw file handler for " + filename)
 		SetRawHandlers(route, filename, mux, apiDescription)
 	}
+}
+
+func ParsePersonalRoute(path *string) *string {
+	if util.PersonalDataRegexp.MatchString(*path) {
+		match := util.PersonalDataRegexp.FindStringSubmatch(*path)
+
+		if match != nil && len(match) > 1 {
+			userId := match[1]
+			value := strings.Replace(*path, userId, ":user", -1)
+
+			_, ok := ProcessedPersonalRoutes[value]
+
+			if ok {
+				return nil
+			}
+			ProcessedPersonalRoutes[value] = true
+			return &value
+		}
+		return path
+	}
+
+	return path
 }

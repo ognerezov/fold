@@ -87,7 +87,7 @@ func (pc ProjectCreator) Describe() ([]openapi.Parameter, map[string]openapi.Res
 			{
 				Name: "projectId",
 				Schema: openapi.Schema{
-					Type:        "string",
+					Type:        "json",
 					Description: "Unique Project identifier. It must be 6 to 30 lowercase ASCII letters, digits, or hyphens",
 				},
 			},

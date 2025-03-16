@@ -20,8 +20,8 @@ func main() {
 	flag.BoolVar(&arguments.AppArguments.RegistrationAllowed, "reg", true, "User registration allowed")
 
 	var filePath string
-	flag.StringVar(&filePath, "file", "", "Serve single file")
-	flag.StringVar(&filePath, "f", "", "Working single (shorthand)")
+	flag.StringVar(&filePath, "file", "", "Serve or init with single file")
+	flag.StringVar(&filePath, "f", "", "Serve or init with single file (shorthand)")
 
 	flag.IntVar(&arguments.AppArguments.Port, "port", 8888, "Port to listen on")
 	flag.IntVar(&arguments.AppArguments.Port, "p", 8888, "Port to listen on (shorthand)")
@@ -77,6 +77,9 @@ func main() {
 			Description: description,
 			Version:     version,
 			AllowOrigin: allowOrigin,
+		}
+		if filePath != "" {
+			console.RedPrintln("Init google cloud project")
 		}
 		initiator.Init(arguments.InitArgs.Template, dataPath, arguments.InitArgs.Port, appConfig)
 		return

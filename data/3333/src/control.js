@@ -9,8 +9,12 @@ import {
     USER_RECEIVED
 } from "./main.js";
 
+let fileInputs = {
+}
+
 export function actionForm(label, params, formParent, hideOnForm, submit){
     hide(hideOnForm)
+    fileInputs = {}
     const form = document.createElement("form")
     form.onsubmit = submit
     form.className = "m-frame fill-x start-column g-2 with-shadow wave"
@@ -30,8 +34,14 @@ export function actionForm(label, params, formParent, hideOnForm, submit){
         const input = document.createElement("input")
         input.className = "input"
         input.id = param.name
-        input.placeholder = param.schema.description
-        input.type = ["integer", "float"].includes(param.schema.type) ? "number" : "text"
+        if(['json'].includes(param.schema.type)){
+           input.type = "file"
+           input.accept = "." + param.schema.type
+           input.onchange = onFileInput
+        }else {
+            input.placeholder = param.schema.description
+            input.type = ["integer", "float"].includes(param.schema.type) ? "number" : "text"
+        }
         input.name = param.name
         form.appendChild(input)
     }
@@ -54,7 +64,7 @@ export function actionForm(label, params, formParent, hideOnForm, submit){
     ok.innerText = "Submit"
     ok.type = "submit"
     ok.className = "btn btn-deep m_05"
-    ok.onclick = (event) => {
+    ok.onclick = () => {
         window.dispatchEvent(clearErrorEvent)
     }
     footer.appendChild(ok)
@@ -77,8 +87,10 @@ export function actionButton(key, s, token, formParent, hideOnForm, className = 
     button.onclick = showForm ? ()=>  actionForm(s.label, params, formParent, hideOnForm,
             async (event)=> {
                 event.preventDefault();
-                const data = parseForm(event, schema)
+                let data = parseForm(event, schema)
+                data = {...data, ...fileInputs}
                 console.log(data)
+
                 await useControlEndpoint(key, token, data)
             }) :
         ()=>  useControlEndpoint(key, token)
@@ -122,4 +134,28 @@ export async function useControlEndpoint(id, token = null, params ){
     }
     window.dispatchEvent(endLoadingEvent)
     return res || { error : "no response"}
+}
+
+function onFileInput(event) {
+    const file = event.target.files[0]; // Get the selected file
+    console.log(event)
+    if (file && file.type === "application/json") { // Ensure it's a JSON file
+        const reader = new FileReader(); // Create a FileReader
+
+        reader.onload = function(e) {
+            const content = e.target.result; // Get the file content
+            try {
+                const json = JSON.parse(content); // Parse the JSON
+                console.log(json)
+                fileInputs[event.target.id] = json
+            } catch (error) {
+                console.error("Error parsing JSON:", error);
+                alert("Invalid JSON file. Please upload a valid JSON file.");
+            }
+        };
+
+        reader.readAsText(file); // Read the file as text
+    } else {
+        alert("Please upload a valid JSON file.");
+    }
 }

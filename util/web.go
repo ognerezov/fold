@@ -6,11 +6,21 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 )
 
+const (
+	PersonalDataFolders = UserPath + "/"
+	User                = "user"
+	PersonalDataPattern = "/user/([^/]+)/.+$"
+	PersonalPathPattern = "/user/:user/.+$"
+)
+
 var (
-	httpClient = &http.Client{}
+	httpClient         = &http.Client{}
+	PersonalDataRegexp = regexp.MustCompile(PersonalDataPattern)
+	PersonalPathRegexp = regexp.MustCompile(PersonalPathPattern)
 )
 
 func MapQuery(r *http.Request) (map[string][]string, error) {
@@ -72,12 +82,28 @@ func SendRequest(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
+func GetUrlParams(name string, req *http.Request) (string, []string) {
+	var param string
+	PathParamValue(req, name, &param)
+	q, err := MapQuery(req)
+	var queryParams []string
+	if err != nil {
+		queryParams = q[name]
+	}
+	return param, queryParams
+}
+
 func PathParamValue(req *http.Request, name string, out *string) {
 	defer func() {
 		if recover() != nil {
 			*out = ""
 		}
 	}()
+	userPath, userValue := PersonalDataRouteParam(req)
+	if userPath == name {
+		*out = userValue
+		return
+	}
 	*out = pat.Param(req, name)
 }
 
@@ -87,4 +113,27 @@ func ParamLiterals(params []string, delimiter string) string {
 	}
 
 	return ""
+}
+
+func RestorePersonalRoute(path string, r *http.Request) string {
+	if !PersonalPathRegexp.MatchString(path) {
+		return path
+	}
+	userId := pat.Param(r, "user")
+	return strings.Replace(path, ":user", userId, -1)
+}
+
+func PersonalDataRouteParam(r *http.Request) (string, string) {
+	path := r.URL.Path
+
+	if !PersonalPathRegexp.MatchString(path) {
+		match := PersonalDataRegexp.FindStringSubmatch(path)
+
+		if match != nil && len(match) > 1 {
+			return User, match[1]
+		}
+		return User, ""
+	}
+
+	return "", ""
 }

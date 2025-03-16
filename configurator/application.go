@@ -7,7 +7,6 @@ import (
 	"fold/api"
 	"fold/console"
 	"fold/controls"
-	"fold/mem"
 	"fold/openapi"
 	"fold/path"
 	"fold/router"
@@ -55,10 +54,6 @@ func CreateApplication(address string, dataPath string) {
 	config = loadConfig(dataPath)
 	var err error
 	config.AuthProviders, err = InitProviders(dataPath)
-	_, ok := mem.TheStore.GetTable(util.UserPath)
-	if ok {
-		config.AuthProviders = append(config.AuthProviders, "password")
-	}
 	if err != nil {
 		console.RedPrintln("InitProviders error: " + err.Error())
 	}
