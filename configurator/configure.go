@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"fold/arguments"
 	"fold/console"
+	"fold/gcloud"
 	"fold/interfaces"
 	"fold/mem"
 	"fold/openapi"
@@ -26,6 +27,9 @@ type ServerConfigurator func(string, int) (*goji.Mux, error)
 func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	console.YellowPrintln("Configure server for dir " + dataPath)
 	ProcessedPersonalRoutes = map[string]bool{}
+
+	(*TheInstructions)[createProject] = gcloud.ConfigureProjectCreator(dataPath)
+
 	mux := goji.NewMux()
 	mux.Use(router.LogRequest)
 	mux.Use(AddHeaders)

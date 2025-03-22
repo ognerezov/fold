@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"fold/console"
 	"fold/controls"
-	"fold/gcloud"
 	"fold/openapi"
 	"fold/util"
 	goji "goji.io"
@@ -29,10 +28,9 @@ type InstructionMap map[string]controls.ControlFactory
 
 var (
 	TheInstructions = &InstructionMap{
-		echo:          controls.GetEcho,
-		adaptor:       ConfigureAdaptor,
-		reload:        controls.ConfigureReLoader,
-		createProject: gcloud.GetProjectCreator,
+		echo:    controls.GetEcho,
+		adaptor: ConfigureAdaptor,
+		reload:  controls.ConfigureReLoader,
 	}
 )
 

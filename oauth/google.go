@@ -12,6 +12,7 @@ import (
 	"fold/openapi"
 	"fold/router"
 	"fold/util"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/sheets/v4"
@@ -154,6 +155,10 @@ func (gj *GoogleJson) Export(path string) error {
 		console.RedPrintln(err.Error())
 	}
 	return db.SaveJson(path+".json", gj.WithoutSecret())
+}
+
+func (gj *GoogleJson) Save(path string) error {
+	return db.SaveJson(path+".json", gj)
 }
 
 func (gj *GoogleJson) AnyClient() *GoogleSecret {
@@ -342,4 +347,22 @@ func (gj *GoogleJson) AuthControl(_ string, _ any) *controls.Control {
 	var googleAuthControl controls.Control
 	googleAuthControl = gj
 	return &googleAuthControl
+}
+
+func (gj *GoogleJson) OAuthConfig() *oauth2.Config {
+	webClient := gj.Web
+	if webClient == nil {
+		return nil
+	}
+
+	return &oauth2.Config{
+		ClientID:     webClient.ClientId,
+		ClientSecret: webClient.ClientSecret,
+		RedirectURL:  webClient.RedirectUris[0],
+		Scopes:       []string{"https://www.googleapis.com/auth/cloud-platform"},
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  webClient.AuthUri,
+			TokenURL: webClient.TokenUri,
+		},
+	}
 }

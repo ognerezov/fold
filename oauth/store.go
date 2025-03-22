@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -76,6 +77,15 @@ func (ts *TokenSource) RefreshToken(refreshToken string) (*GoogleTokenResponse, 
 		return nil, err
 	}
 	return &tokenResp, nil
+}
+
+func (ts *TokenSource) Build(ctx context.Context) (*oauth2.TokenSource, error) {
+	token, err := ts.Token()
+	if err != nil {
+		return nil, err
+	}
+	res := googleJson.OAuthConfig().TokenSource(ctx, token)
+	return &res, nil
 }
 
 func mapToken(oauth map[string]any) *oauth2.Token {

@@ -11,17 +11,10 @@ import (
 	"fold/openapi"
 	"fold/router"
 	"fold/security"
-	"fold/util"
-	"golang.org/x/oauth2"
-	"google.golang.org/api/cloudresourcemanager/v3"
+	"google.golang.org/api/iamcredentials/v1"
 	"google.golang.org/api/option"
 	"net/http"
 )
-
-type CreateProjectRequest struct {
-	ProjectId string `json:"projectId"`
-	Name      string `json:"name"`
-}
 
 type ProjectCreator string
 
@@ -36,66 +29,56 @@ func (pc ProjectCreator) Do(data map[string]any, w http.ResponseWriter, r *http.
 		router.BadRequest(errors.New("request is empty"), w)
 		return
 	}
-
-	var req CreateProjectRequest
-	err := util.Restructure(data, &req)
-	if err != nil {
-		router.ServerError(err, w)
-		return
-	}
-
+	fmt.Println(data)
+	service_account := data["credentials"].(string)
 	tokenSource := oauth.SourceToken(principle.Token())
-	token, err := tokenSource.Token()
-	if err != nil {
-		router.WriteServerResponse(api.GetMessageResponse(err), 500, w)
-		return
-	}
-	fmt.Println(token)
-	manager, err := cloudresourcemanager.NewService(context.Background(),
-		option.WithTokenSource(oauth2.StaticTokenSource(token)))
 
-	if err != nil {
+	scopes := []string{"https://www.googleapis.com/auth/cloud-platform"}
 
+	// Create a context.
+	ctx := context.Background()
+
+	// Create an IAM Credentials client.
+
+	ts, err := tokenSource.Build(ctx)
+	if err != nil {
 		router.ServerError(err, w)
 		return
 	}
 
-	op, err := manager.Projects.Create(&cloudresourcemanager.Project{
-		ProjectId:   req.ProjectId,
-		DisplayName: req.Name,
-		Tags: map[string]string{
-			"managed": "fold",
-		},
-	}).Do()
-
+	client, err := iamcredentials.NewService(ctx, option.WithTokenSource(*ts))
 	if err != nil {
-		var m map[string]any
-		e := util.Restructure(err, &m)
-		if e == nil {
-			router.WriteServerResponse(m, int(m["code"].(float64)), w)
-			return
-		}
+		router.ServerError(err, w)
+		return
+	}
+	resource := fmt.Sprintf("projects/-/serviceAccounts/%s", service_account)
+	request := &iamcredentials.GenerateAccessTokenRequest{
+		Scope:    scopes,
+		Lifetime: "3600s", // Token lifetime (max 1 hour).
+	}
+	/*
+	   This part doesn't work any way. It seems that user authenticated in main project can't perform action
+	   in his own project. User-friendly setup implementation is postponed
+	*/
+	response, err := client.Projects.ServiceAccounts.GenerateAccessToken(resource, request).Do()
+	if err != nil {
 		router.ServerError(err, w)
 		return
 	}
 
+	fmt.Println("Access Token:", response.AccessToken)
+	x := api.Ok()
+	op := &x
 	router.WriteResponse(*op, w)
 }
 
 func (pc ProjectCreator) Describe() ([]openapi.Parameter, map[string]openapi.Response) {
 	return []openapi.Parameter{
 			{
-				Name: "projectId",
-				Schema: openapi.Schema{
-					Type:        "json",
-					Description: "Unique Project identifier. It must be 6 to 30 lowercase ASCII letters, digits, or hyphens",
-				},
-			},
-			{
-				Name: "name",
+				Name: "credentials",
 				Schema: openapi.Schema{
 					Type:        "string",
-					Description: "Optional display name, 4 to 30 characters: lowercase and uppercase letters, numbers, hyphen, single-quotes",
+					Description: "Service account email address.",
 				},
 			},
 		}, map[string]openapi.Response{
@@ -110,8 +93,10 @@ func (pc ProjectCreator) Describe() ([]openapi.Parameter, map[string]openapi.Res
 		}
 }
 
-func GetProjectCreator(id string, _ any) *controls.Control {
-	var ctr controls.Control
-	ctr = ProjectCreator(id)
-	return &ctr
+func ConfigureProjectCreator(dataPath string) controls.ControlFactory {
+	return func(s string, a any) *controls.Control {
+		var ctr controls.Control
+		ctr = ProjectCreator(dataPath)
+		return &ctr
+	}
 }
