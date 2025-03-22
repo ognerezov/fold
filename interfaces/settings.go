@@ -3,6 +3,7 @@ package interfaces
 import (
 	"fold/console"
 	"fold/oauth"
+	"fold/util"
 	"os"
 )
 
@@ -22,6 +23,11 @@ func (p *Providers) Export(path string) error {
 			console.RedPrintln(err.Error())
 		}
 		return err
+	} else {
+		err = util.SaveJavascript(path+ProvidersOutputPath+"google"+".js",
+			map[string]any{
+				"disabled": true,
+			})
 	}
 	return nil
 }

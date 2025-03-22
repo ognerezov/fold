@@ -59,7 +59,7 @@ type Initiator func(string, int) error
 
 func DefaultInit(path string, port int) error {
 	portPath := fmt.Sprintf("%v/%v", path, port)
-	err := exportFolders(portPath, []string{Index, "user", "security", "pub"})
+	err := exportFolders(portPath, []string{Index, "user", "security", "pub", "src"})
 	if err != nil {
 		return err
 	}

@@ -5,10 +5,11 @@ id,security_authorities_id,security_audience_id,filter,action
 4,guest,providers,,read
 5,guest,pub,,
 6,guest,auth,,
-7,user,user,id,
+7,user,user,user,
 8,admin,security,,read
-9,guest,echo,,
+9,guest,signin,,
 10,guest,restart,,
 11,guest,alias,,
 12,user,me,,read
-13,guest,control,,read
+13,guest,dashboard,,read
+14,user,create,,

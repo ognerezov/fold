@@ -23,8 +23,8 @@ func main() {
 	flag.StringVar(&filePath, "file", "", "Serve or init with single file")
 	flag.StringVar(&filePath, "f", "", "Serve or init with single file (shorthand)")
 
-	flag.IntVar(&arguments.AppArguments.Port, "port", 8888, "Port to listen on")
-	flag.IntVar(&arguments.AppArguments.Port, "p", 8888, "Port to listen on (shorthand)")
+	flag.IntVar(&arguments.AppArguments.Port, "port", 3333, "Port to listen on")
+	flag.IntVar(&arguments.AppArguments.Port, "p", 3333, "Port to listen on (shorthand)")
 
 	flag.StringVar(&arguments.AppArguments.ApiPath, "api", "", "Server base path")
 	flag.StringVar(&arguments.AppArguments.ApiPath, "a", "", "Server base path (shorthand)")
