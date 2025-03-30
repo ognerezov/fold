@@ -7,6 +7,7 @@ import (
 	"fold/configurator"
 	"fold/console"
 	"fold/initiator"
+	"fold/migrations"
 	"fold/threads"
 	"strings"
 )
@@ -48,8 +49,25 @@ func main() {
 	flag.BoolVar(&init, "init", false, "Init new project folder")
 	flag.BoolVar(&init, "i", false, "Init new project folder (shorthand)")
 
+	var migrate bool
+	flag.BoolVar(&migrate, "migrate", false, "Migrate data")
+	flag.BoolVar(&migrate, "m", false, "Migrate data (shorthand)")
+
 	flag.StringVar(&arguments.InitArgs.Template, "template", initiator.DefaultTemplate, "Project template")
 	flag.StringVar(&arguments.InitArgs.Template, "t", initiator.DefaultTemplate, "Project template (shorthand)")
+
+	flag.StringVar(&arguments.InitArgs.SourceType, "source", migrations.Dir, "Data migration source type")
+	flag.StringVar(&arguments.InitArgs.SourceType, "s", migrations.Dir, "Data migration source type (shorthand)")
+
+	flag.StringVar(&arguments.InitArgs.DestinationType, "destination", migrations.Drive, "Data migration destination type")
+	flag.StringVar(&arguments.InitArgs.DestinationType, "ds", migrations.Drive, "Data migration destination type (shorthand)")
+
+	flag.StringVar(&arguments.InitArgs.CredentialsFile, "credentials", "", "Credentials file")
+	flag.StringVar(&arguments.InitArgs.CredentialsFile, "c", "", "Credentials file (shorthand)")
+
+	var drive string
+	flag.StringVar(&drive, migrations.Drive, "", "Google Drive folder id")
+	flag.StringVar(&drive, "dr", "", "Google Drive folder id (shorthand)")
 
 	flag.Parse()
 	fmt.Println(arguments.AppArguments)
@@ -60,6 +78,10 @@ func main() {
 
 	if dataPath != "" && filePath != "" && !init {
 		panic("Both directory and single data file paths specified. Only one of them allowed.")
+	}
+
+	if init && migrate {
+		panic("Only one step at a time. Init or migrate. Not both at the same time.")
 	}
 
 	if dataPath == "" {
@@ -82,6 +104,26 @@ func main() {
 			console.RedPrintln("Init google cloud project")
 		}
 		initiator.Init(arguments.InitArgs.Template, dataPath, arguments.InitArgs.Port, appConfig)
+		return
+	}
+
+	if migrate {
+		console.RedPrintln("Init data migration...")
+		if arguments.InitArgs.SourceType == migrations.Dir {
+			arguments.InitArgs.Source = dataPath
+		} else if arguments.InitArgs.SourceType == migrations.Drive {
+			arguments.InitArgs.Source = drive
+		}
+		if arguments.InitArgs.DestinationType == migrations.Drive {
+			arguments.InitArgs.Destination = drive
+		} else if arguments.InitArgs.DestinationType == migrations.Dir {
+			arguments.InitArgs.Destination = dataPath
+		}
+		if arguments.InitArgs.Source == "" || arguments.InitArgs.Destination == "" {
+			panic("Both arguments source and destination are required")
+		}
+
+		migrations.Migrate(arguments.InitArgs)
 		return
 	}
 

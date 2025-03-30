@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/api/cloudresourcemanager/v3"
 	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 	"net/http"
 	"net/url"
@@ -145,7 +147,55 @@ func (gj *GoogleJson) Attach(other *GoogleJson) *GoogleJson {
 		gj.JavascriptOrigins = other.JavascriptOrigins
 	}
 
+	if other.ClientEmail != "" {
+		gj.ClientEmail = other.ClientEmail
+	}
+	if other.UniverseDomain != "" {
+		gj.UniverseDomain = other.UniverseDomain
+	}
+
 	return gj
+}
+
+func (gj *GoogleJson) HasServices() bool {
+	return gj.Drive != nil || gj.Sheets != nil || gj.CloudResourceManager != nil
+}
+
+func (gj *GoogleJson) AttachFile(filename string) error {
+	console.YellowPrintln(fmt.Sprintf("Reading Google json file from %s", filename))
+	var js *GoogleJson
+	err := util.FromJson(filename, &js)
+	if err != nil {
+		console.RedPrintln(err.Error())
+		return err
+	}
+
+	if !gj.HasServices() && js.PrivateKey != "" {
+		console.MagentaPrintln("Found Google service account json")
+		ctx := context.Background()
+		var drv *drive.Service
+		drv, err = drive.NewService(ctx, option.WithCredentialsFile(filename))
+		gj.Drive = drv
+		if err != nil {
+			console.RedPrintln(err.Error())
+		} else {
+			console.MagentaPrintln("Google API Client created")
+		}
+		s, err := sheets.NewService(ctx, option.WithCredentialsFile(filename))
+		if err != nil {
+			console.RedPrintln(err.Error())
+		} else {
+			gj.Sheets = s
+		}
+		cloud, err := cloudresourcemanager.NewService(ctx, option.WithCredentialsFile(filename))
+		if err != nil {
+			console.RedPrintln(err.Error())
+		} else {
+			gj.CloudResourceManager = cloud
+		}
+	}
+	gj.Attach(js)
+	return nil
 }
 
 func (gj *GoogleJson) Export(path string) error {
@@ -365,4 +415,29 @@ func (gj *GoogleJson) OAuthConfig() *oauth2.Config {
 			TokenURL: webClient.TokenUri,
 		},
 	}
+}
+
+func (gj *GoogleJson) CreateFolder(name string, parents []string) (*string, error) {
+	fmt.Println(fmt.Sprintf("CreateFolders(%v) in %s", parents, name))
+	file := &drive.File{
+		Name:     name,
+		MimeType: "application/vnd.google-apps.folder",
+		Parents:  parents,
+	}
+
+	createdFile, err := gj.Drive.Files.Create(file).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return &createdFile.Id, nil
+}
+
+func FromFile(filename string) (*GoogleJson, error) {
+	gj := &GoogleJson{}
+	err := gj.AttachFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return gj, nil
 }

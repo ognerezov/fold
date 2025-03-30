@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"fold/util"
 	"io/fs"
+	"mime"
 	"path/filepath"
 	"strings"
 )
@@ -29,4 +30,15 @@ func SubStructure(path string, info fs.FileInfo, clean DirMapper) (string, strin
 	var route = "/" + clean(filepath.Dir(path))
 
 	return route, name
+}
+
+func PrepareFileName(rootDataDir string, fileName string, clean DirMapper) (string, string, string, string, string) {
+	route := clean(filepath.Dir(fileName))
+	filename := fmt.Sprintf("%s/%s", rootDataDir, clean(fileName))
+	ext := filepath.Ext(fileName)
+	m := ""
+	if ext != "" {
+		m = mime.TypeByExtension(ext)
+	}
+	return route, filename, filepath.Base(fileName), ext, m
 }

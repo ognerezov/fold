@@ -3,6 +3,7 @@ package mem
 import (
 	"fmt"
 	"fold/openapi"
+	"google.golang.org/api/sheets/v4"
 )
 
 type ColumnDefinition struct {
@@ -71,6 +72,15 @@ func (c *ColumnDefinition) Schema() openapi.Schema {
 	}
 	return openapi.Schema{
 		Type: String,
+	}
+}
+
+func (c *ColumnDefinition) CellData() *sheets.CellData {
+	v := sheets.ExtendedValue{
+		StringValue: &c.name,
+	}
+	return &sheets.CellData{
+		UserEnteredValue: &v,
 	}
 }
 

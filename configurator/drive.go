@@ -124,8 +124,6 @@ func (fid DriveFileHandler) P() *drive.File {
 }
 
 func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.ApiDescription, next *interfaces.Phase) {
-	fmt.Println(id)
-	fmt.Println(basePath)
 	driveService := AppProviders.Google.Drive
 	if driveService == nil {
 		console.RedPrintln("drive service not found in configurator")

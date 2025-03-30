@@ -36,3 +36,14 @@
 ### Notes:
 - If you’re in a hurry, you can skip some optional steps like adding logos or detailed app information in the consent screen.
 - For testing purposes, you can use `http://localhost` as the redirect URI.
+
+### ToDo:
+- Create Project
+- Create Service account (check for required permissions)
+- Allow Google Drive && Google SpreadSheet Api
+- Create and download key.json for service account
+- Share Google Drive folder to service account email
+
+### If your get error when creating service account key:
+- Add to yourself permission to administrate organization policies
+- Turn of policy disabling service account key creations

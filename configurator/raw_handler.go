@@ -49,7 +49,7 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.A
 		if err != nil {
 			return
 		}
-		mem.TheStore.Cache(feRoute, bytes, FilePath(filePath))
+		mem.TheStore.Cache(feRoute, bytes, mem.FilePath(filePath))
 		mux.HandleFunc(pat.Get(feRoute), func(w http.ResponseWriter, r *http.Request) {
 			console.BluePrintln("Searching cache for " + feRoute)
 			var ok bool

@@ -434,7 +434,28 @@ func (t *Table) SheetRows() []*sheets.RowData {
 	return res
 }
 
+func (t *Table) SheetRowsWithHeader() []*sheets.RowData {
+	res := make([]*sheets.RowData, 1)
+	r := sheets.RowData{
+		Values: make([]*sheets.CellData, len(t.cols)),
+	}
+	for j, val := range t.cols {
+		r.Values[j] = val.CellData()
+	}
+	res[0] = &r
+	res = append(res, t.SheetRows()...)
+	return res
+}
+
 func (t *Table) ReplaceSheetRequest() []*sheets.Request {
+	return t.SheetRequest(false)
+}
+
+func (t *Table) CreateSheetRequest() []*sheets.Request {
+	return t.SheetRequest(true)
+}
+
+func (t *Table) SheetRequest(withHeader bool) []*sheets.Request {
 	if t.Spreadsheet == nil {
 		console.RedPrintln("Spreadsheet is nil for table " + t.name)
 		return []*sheets.Request{}
@@ -453,15 +474,22 @@ func (t *Table) ReplaceSheetRequest() []*sheets.Request {
 		console.RedPrintln("Spreadsheet does not have a sheet with sheetId " + t.name)
 		return []*sheets.Request{}
 	}
-
+	var startRow int64 = 1
+	if withHeader {
+		startRow = 0
+	}
+	rows := t.SheetRows()
+	if withHeader {
+		rows = t.SheetRowsWithHeader()
+	}
 	return []*sheets.Request{
 		{
 			DeleteDimension: &sheets.DeleteDimensionRequest{
 				Range: &sheets.DimensionRange{
 					SheetId:    sheetId,
 					Dimension:  "ROWS",
-					StartIndex: 1,
-					EndIndex:   t.Len(),
+					StartIndex: startRow,
+					EndIndex:   t.Len() + 1,
 				},
 			},
 		},
@@ -469,10 +497,10 @@ func (t *Table) ReplaceSheetRequest() []*sheets.Request {
 			UpdateCells: &sheets.UpdateCellsRequest{
 				Range: &sheets.GridRange{
 					SheetId:          sheetId,
-					StartRowIndex:    1,
+					StartRowIndex:    startRow,
 					StartColumnIndex: 0,
 				},
-				Rows:   t.SheetRows(),
+				Rows:   rows,
 				Fields: "*",
 			},
 		},
