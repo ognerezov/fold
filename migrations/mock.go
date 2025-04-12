@@ -18,6 +18,10 @@ func (m MockImporter) SaveFile(data FileData) error {
 	return nil
 }
 
+func (m MockImporter) GetFolderId(folder string, _ string) (*string, error) {
+	return &folder, nil
+}
+
 func MockImport(*arguments.InitArguments) (Importer, error) {
 	var importer Importer
 	importer = MockImporter(true)

@@ -23,12 +23,6 @@ func (ec ExporterConfig) Process(importer migrations.Importer) error {
 	if !ok {
 		return fmt.Errorf("template folders not found %v", ec.Template)
 	}
-	//for _, folder := range folders {
-	//	err := importer.CreateFolder(folder)
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
 	for _, folder := range folders {
 		err := ProcessFolder(embeddedPath(folder), importer)
 		if err != nil {

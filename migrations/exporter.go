@@ -17,6 +17,7 @@ type FileData struct {
 type Importer interface {
 	CreateFolder(name string) error
 	SaveFile(data FileData) error
+	GetFolderId(folder string, parent string) (*string, error)
 }
 
 type Exporter interface {

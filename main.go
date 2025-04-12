@@ -147,6 +147,14 @@ func main() {
 	console.GreenPrintln("___________________________")
 	console.GreenPrintln("Starting server")
 	console.GreenPrintln("___________________________")
+
+	if drive != "" {
+		if arguments.InitArgs.CredentialsFile == "" {
+			panic("credentials file not specified")
+		}
+		configurator.CreateDriveApplication(drive, arguments.InitArgs.CredentialsFile)
+	}
+
 	if filePath != "" {
 		configurator.CreateFileApplication("", filePath)
 		return
