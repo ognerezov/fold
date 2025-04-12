@@ -100,9 +100,17 @@ func main() {
 			Version:     version,
 			AllowOrigin: allowOrigin,
 		}
-		if filePath != "" {
-			console.RedPrintln("Init google cloud project")
+
+		if drive != "" && arguments.InitArgs.CredentialsFile == "" {
+			panic("Credentials file required for this init type")
 		}
+
+		if drive != "" {
+			arguments.InitArgs.Destination = drive
+			initiator.InitDrive(arguments.InitArgs, &appConfig)
+			return
+		}
+
 		initiator.Init(arguments.InitArgs.Template, dataPath, arguments.InitArgs.Port, appConfig)
 		return
 	}

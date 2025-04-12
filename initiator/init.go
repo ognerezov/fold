@@ -8,7 +8,6 @@ import (
 	"fold/db"
 	"fold/util"
 	"io"
-	"io/fs"
 	"os"
 	"strings"
 )
@@ -22,6 +21,9 @@ const (
 var (
 	Initiators = map[string]Initiator{
 		DefaultTemplate: DefaultInit,
+	}
+	FoldersToCopy = map[string][]string{
+		DefaultTemplate: {Index, "user", "security", "pub", "src"},
 	}
 	//go:embed data/*
 	dataOs embed.FS
@@ -59,7 +61,7 @@ type Initiator func(string, int) error
 
 func DefaultInit(path string, port int) error {
 	portPath := fmt.Sprintf("%v/%v", path, port)
-	err := exportFolders(portPath, []string{Index, "user", "security", "pub", "src"})
+	err := exportFolders(portPath, FoldersToCopy[DefaultTemplate])
 	if err != nil {
 		return err
 	}
@@ -68,7 +70,7 @@ func DefaultInit(path string, port int) error {
 
 func exportFolders(path string, folders []string) error {
 	for _, folder := range folders {
-		err := exportFolder(path, fmt.Sprintf("%s/%s", embeddedRoot, folder))
+		err := exportFolder(path, embeddedPath(folder))
 		if err != nil {
 			return err
 		}
@@ -90,12 +92,10 @@ func cleanIndex(folder string, isDir bool) string {
 }
 
 func exportFolder(path string, folder string) error {
-	console.YellowPrintln("exporting folder: " + folder)
-	files, err := dataOs.ReadDir(folder)
+	files, isIndex, err := readEmbeddedFolder(folder)
 	if err != nil {
 		return err
 	}
-	isIndex := folder == fmt.Sprintf("%s/%s", embeddedRoot, Index)
 	if !isIndex {
 		err = os.MkdirAll(fmt.Sprintf("%s/%s", path, strings.TrimPrefix(folder, embeddedRoot)), os.ModePerm)
 		if err != nil {
@@ -103,9 +103,7 @@ func exportFolder(path string, folder string) error {
 		}
 	}
 	for _, file := range files {
-		inputFileName := folder + "/" + file.Name()
-		fileName := cleanIndex(inputFileName, file.IsDir())
-		outputFile := strings.TrimPrefix(fileName, embeddedRoot)
+		inputFileName, outputFile := structureFileName(folder, file)
 		if file.IsDir() {
 			err = os.MkdirAll(fmt.Sprintf("%s/%s", path, outputFile), os.ModePerm)
 			if err != nil {
@@ -129,16 +127,11 @@ func exportFolder(path string, folder string) error {
 
 func exportFile(src, dst string) error {
 	console.YellowPrintln("exporting file: " + src)
-	in, err := dataOs.Open(src)
+	in, closeFile, err := readEmbeddedFile(src)
 	if err != nil {
 		return err
 	}
-	defer func(in fs.File) {
-		err = in.Close()
-		if err != nil {
-			console.RedPrintln(err.Error())
-		}
-	}(in)
+	defer closeFile()
 	out, err := os.Create(dst)
 	if err != nil {
 		return err

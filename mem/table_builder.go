@@ -1,5 +1,7 @@
 package mem
 
+import "fold/csv"
+
 func ReadHeader(header []string) ([]*ColumnDefinition, Indexes, string) {
 	res := make([]*ColumnDefinition, len(header))
 	var indexes = Indexes{}
@@ -45,4 +47,14 @@ func IsId(column string) bool {
 func GetHeaderDefinition(name string, index int) *ColumnDefinition {
 	var isId = IsId(name)
 	return SimpleDefinition(name, isId, index)
+}
+
+func TableFromBytes(bytes []byte) (*Table, error) {
+	records, err := csv.BytesToCsv(bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return TableFromRecords(records), nil
+
 }
