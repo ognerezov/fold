@@ -7,6 +7,7 @@ import (
 	"fold/csv"
 	"fold/interfaces"
 	"fold/mem"
+	"fold/migrations"
 	"fold/openapi"
 	"fold/router"
 	"fold/util"
@@ -15,12 +16,17 @@ import (
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/sheets/v4"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 )
 
 const (
 	SpreadSheetMime = "application/vnd.google-apps.spreadsheet"
+)
+
+var (
+	migrationHandlers = make(map[string]*migrations.DriverHandler)
 )
 
 type DriveFileHandler drive.File
@@ -123,40 +129,37 @@ func (fid DriveFileHandler) P() *drive.File {
 	return &res
 }
 
-func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.ApiDescription, next *interfaces.Phase) {
-	driveService := AppProviders.Google.Drive
-	if driveService == nil {
-		console.RedPrintln("drive service not found in configurator")
-		return
-	}
-	q := fmt.Sprintf("'%s' in parents", id)
-	fmt.Println(q)
-	r, err := driveService.Files.List().Q(q).
-		SupportsAllDrives(true).
-		IncludeItemsFromAllDrives(true).
-		PageSize(100).
-		Fields("nextPageToken, files(id, name, parents, kind, mimeType)").
-		Do()
-
+func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.ApiDescription, next *interfaces.Phase, mHandler *migrations.DriverHandler, endpoints Endpoints) {
+	files, err := AppProviders.Google.ReadDir(id)
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
 
-	for _, file := range r.Files {
+	for _, file := range files {
 		fileId := file.Id
 		fileName := file.Name
+		// Will mount this files later
+		if slices.Contains(doNotServe, fileName) {
+			continue
+		}
 		fileHandler := DriveFileHandler(*file)
 		m, ext, hasExt := GetContentType(fileName)
 		fileRoute := basePath
-		if strings.TrimSuffix(fileName, ".json") != "index" {
+		if strings.TrimSuffix(fileName, ext) != "index" {
 			if strings.HasSuffix(basePath, "/") {
 				fileRoute = fmt.Sprintf("%s%s", basePath, fileName)
 			} else {
 				fileRoute = fmt.Sprintf("%s/%s", basePath, fileName)
 			}
 		}
+		fmt.Println(basePath)
+		fmt.Println(fileRoute)
 		fileRoute = util.TableToPath(fileRoute)
+		route := fileRoute
+		if hasExt {
+			route = strings.TrimSuffix(fileRoute, ext)
+		}
 		if file.MimeType == SpreadSheetMime {
 			console.YellowPrintln("File is a Spreadsheet")
 			table, err := fileHandler.FetchCsv()
@@ -165,11 +168,6 @@ func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.Ap
 				console.RedPrintln(err.Error())
 			} else {
 				store := mem.TheStore
-				route := fileRoute
-				if hasExt {
-					route = strings.TrimSuffix(fileRoute, ext)
-				}
-
 				store.SetTable(route, table, fileHandler)
 				next.Append(SetTableHandlers(route, mux, api))
 			}
@@ -177,17 +175,28 @@ func SetDriveHandlers(basePath string, id string, mux *goji.Mux, api *openapi.Ap
 		}
 
 		if ext == ".json" {
-			SetJsonDriveHandlers(fileRoute, fileHandler, mux, api)
+			SetJsonDriveHandlers(route, fileHandler, mux, api)
 			continue
 		}
+		if ext == ".fold" {
+			console.GreenPrintln("Registering fold action handler " + fileName)
+			SetControlHandlers(route, fileName, mux, api, endpoints)
+		}
 		if file.MimeType == "application/vnd.google-apps.folder" {
-			console.YellowPrintln("File is a nested folder")
-			SetDriveHandlers(fileRoute, file.Id, mux, api, next)
+			console.YellowPrintln("File is a nested folder " + fileName)
+			migrationHandlers[id] = migrations.CreateDriveHandler(AppProviders.Google, id)
+			folderId := file.Id
+			mHandler.RegisterFolder(&folderId, fileName)
+			SetDriveHandlers(fileRoute, file.Id, mux, api, next, mHandler, endpoints)
 			continue
 		}
 		bytes, err := FetchDriveFile(fileId)
 		if err != nil {
 			console.RedPrintln(err.Error())
+			continue
+		}
+		if ext == ".html" {
+			SetRawDriveHandlers(route, fileHandler, m, bytes, mux, api)
 			continue
 		}
 		SetRawDriveHandlers(fileRoute, fileHandler, m, bytes, mux, api)

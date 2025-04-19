@@ -152,7 +152,7 @@ func main() {
 		if arguments.InitArgs.CredentialsFile == "" {
 			panic("credentials file not specified")
 		}
-		configurator.CreateDriveApplication(drive, arguments.InitArgs.CredentialsFile)
+		configurator.CreateDriveApplication("", drive, arguments.InitArgs.CredentialsFile)
 	}
 
 	if filePath != "" {

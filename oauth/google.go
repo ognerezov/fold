@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -92,6 +93,9 @@ func (gs *GoogleSecret) WithoutSecret() *GoogleSecret {
 func (gj *GoogleJson) WithoutSecret() GoogleJson {
 	res := *gj
 	res.ClientSecret = ""
+	res.Drive = nil
+	res.Sheets = nil
+	res.CloudResourceManager = nil
 	if gj.Web != nil {
 		res.Web = gj.Web.WithoutSecret()
 	}
@@ -431,6 +435,67 @@ func (gj *GoogleJson) CreateFolder(name string, parents []string) (*string, erro
 	}
 
 	return &createdFile.Id, nil
+}
+
+func (gj *GoogleJson) ReadDir(folderId string) ([]*drive.File, error) {
+	driveService := gj.Drive
+	if driveService == nil {
+		return nil, errors.New("drive service not found in configurator")
+	}
+	q := fmt.Sprintf("'%s' in parents", folderId)
+	r, err := driveService.Files.List().Q(q).
+		SupportsAllDrives(true).
+		IncludeItemsFromAllDrives(true).
+		PageSize(100).
+		Fields("nextPageToken, files(id, name, parents, kind, mimeType)").
+		Do()
+	if err != nil {
+		return nil, err
+	}
+	return r.Files, nil
+}
+
+func (gj *GoogleJson) GetFileByName(fileName string, folder string) (*drive.File, error) {
+	r, err := gj.Drive.Files.List().
+		Q(fmt.Sprintf("name = '%s' and '%s' in parents and trashed = false", fileName, folder)).
+		PageSize(1).
+		Fields("files(id, name)").
+		Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve files: %v", err)
+	}
+
+	if len(r.Files) == 0 {
+		return nil, nil
+	}
+
+	return r.Files[0], nil
+}
+
+func (gj *GoogleJson) CreateFile(fileName string, folder string, binary []byte, mime string) (*drive.File, error) {
+	driveFile := &drive.File{
+		Name:     fileName,
+		MimeType: mime,
+		Parents:  []string{folder},
+	}
+
+	return gj.Drive.Files.Create(driveFile).Media(bytes.NewReader(binary)).Do()
+}
+
+func (gj *GoogleJson) UpdateFile(driveFile *drive.File, binary []byte) (*drive.File, error) {
+
+	reader := bytes.NewReader(binary)
+
+	return gj.Drive.Files.Update(driveFile.Id, driveFile).Media(reader).Do()
+}
+
+func (gj *GoogleJson) SaveFile(fileName string, folder string, binary []byte, mime string) (*drive.File, error) {
+	driveFile, _ := gj.GetFileByName(fileName, folder)
+	if driveFile != nil {
+		return gj.UpdateFile(driveFile, binary)
+	}
+
+	return gj.CreateFile(fileName, folder, binary, mime)
 }
 
 func FromFile(filename string) (*GoogleJson, error) {

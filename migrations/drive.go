@@ -84,8 +84,8 @@ func (dh DriverHandler) CreateFolder(name string) error {
 	return nil
 }
 
-func (dh DriverHandler) SaveFile(data FileData) error {
-	path := strings.Split(data.Path, "/")
+func (dh DriverHandler) GetRegisteredFolder(dataPath string) (*string, error) {
+	path := strings.Split(dataPath, "/")
 	var folderId *string
 	folder := path[len(path)-1]
 	if folder == "" {
@@ -93,10 +93,18 @@ func (dh DriverHandler) SaveFile(data FileData) error {
 	} else {
 		f, ok := dh.folders[folder]
 		if !ok {
-			console.RedPrintln(fmt.Sprintf("Folder is %s", data.Path))
-			return errors.New("Could not find folder " + folder)
+			return nil, errors.New("Could not find folder " + folder)
 		}
 		folderId = f
+	}
+	return folderId, nil
+}
+
+func (dh DriverHandler) SaveFile(data FileData) error {
+	folderId, err := dh.GetRegisteredFolder(data.Path)
+	if err != nil {
+		console.RedPrintln(err.Error())
+		return err
 	}
 
 	if data.Table != nil {
@@ -136,6 +144,19 @@ func (dh DriverHandler) SaveFile(data FileData) error {
 		Parents:  []string{*folderId},
 	}
 
-	_, err := dh.googleJson.Drive.Files.Create(driveFile).Media(bytes.NewReader(data.Binary)).Do()
+	_, err = dh.googleJson.Drive.Files.Create(driveFile).Media(bytes.NewReader(data.Binary)).Do()
 	return err
+}
+
+func (dh DriverHandler) RegisterFolder(id *string, name string) {
+	fmt.Println(fmt.Sprintf("Registering folder %s refer %s", name, *id))
+	dh.folders[name] = id
+}
+
+func (dh DriverHandler) CreateOrUpdateFile(fileName string, folder string, binary []byte, mime string) (*drive.File, error) {
+	folderId, err := dh.GetRegisteredFolder(folder)
+	if err != nil {
+		return nil, err
+	}
+	return dh.googleJson.SaveFile(fileName, *folderId, binary, mime)
 }

@@ -7,6 +7,7 @@ import (
 	"fold/gcloud"
 	"fold/interfaces"
 	"fold/mem"
+	"fold/migrations"
 	"fold/openapi"
 	"fold/path"
 	"fold/router"
@@ -20,23 +21,15 @@ import (
 
 var (
 	ProcessedPersonalRoutes = map[string]bool{}
+	doNotServe              = []string{"openapi.json", "fold.js", "project.js", "google.js"}
 )
 
 type ServerConfigurator func(string, int) (*goji.Mux, error)
 
 func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	console.YellowPrintln("Configure server for dir " + dataPath)
-	ProcessedPersonalRoutes = map[string]bool{}
-
-	(*TheInstructions)[createProject] = gcloud.ConfigureProjectCreator(dataPath)
-
-	mux := goji.NewMux()
-	mux.Use(router.LogRequest)
-	mux.Use(AddHeaders)
-
-	store := *mem.TheStore
+	mux, store, apiDescription := initialize(dataPath, port)
 	clean := path.CreateRootCleaner(dataPath)
-	apiDescription := openapi.InitApi(dataPath, port, "1")
 	openapiRoute := openapi.Filename
 	openapiFileName := dataPath + openapiRoute
 	_ = os.Remove(openapiFileName)
@@ -61,6 +54,34 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 		return nil, err
 	}
 
+	setupSecurity(store, mux, controlEndpoints)
+
+	err = util.SaveJavascript(dataPath+projectRoute, config)
+	if err != nil {
+		panic(err)
+	} else {
+		SetRawHandlers(projectRoute, dataPath+projectRoute, mux, apiDescription)
+	}
+	// even empty file is required
+	controlFilename := dataPath + controlRoute
+	err = util.SaveJavascript(controlFilename, controlEndpoints)
+	if err != nil {
+		console.RedPrintln(err.Error())
+	} else {
+		SetRawHandlers(arguments.AppArguments.ApiPath+controlRoute, controlFilename, mux, apiDescription)
+	}
+	security.SetAuthHandlers(arguments.AppArguments.ApiPath, mux, App.Name())
+
+	err = apiDescription.Save(openapiFileName)
+	if err == nil {
+		SetRawHandlers(arguments.AppArguments.ApiPath+openapi.Route, openapiFileName, mux, nil)
+	} else {
+		console.RedPrintln(err.Error())
+	}
+	return mux, nil
+}
+
+func setupSecurity(store mem.Store, mux *goji.Mux, controlEndpoints Endpoints) {
 	userTable, _ := store.GetTable(util.UserPath)
 	if userTable != nil {
 		security.EncodePasswords(userTable)
@@ -70,12 +91,6 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	if ok {
 		config.AuthProviders = append(config.AuthProviders, "password")
 	}
-	err = util.SaveJavascript(dataPath+projectRoute, config)
-	if err != nil {
-		panic(err)
-	} else {
-		SetRawHandlers(projectRoute, dataPath+projectRoute, mux, apiDescription)
-	}
 	if securityRulesTable != nil {
 		var rules []security.Rule
 		e := mem.TableToStructs(securityRulesTable, mem.AllQuery(), &rules)
@@ -84,8 +99,8 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 		}
 		console.YellowPrintln("Applying security rules")
 		if len(rules) > 0 {
-			config := security.RulesSecurityConfig(rules)
-			mux.Use(config.AuthorizeRequest)
+			conf := security.RulesSecurityConfig(rules)
+			mux.Use(conf.AuthorizeRequest)
 			pubRules := make([]security.Rule, 0)
 			for _, rule := range rules {
 				if rule.IsPublic() {
@@ -106,23 +121,20 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 			}
 		}
 	}
-	// even empty file is required
-	controlFilename := dataPath + controlRoute
-	err = util.SaveJavascript(controlFilename, controlEndpoints)
-	if err != nil {
-		console.RedPrintln(err.Error())
-	} else {
-		SetRawHandlers(arguments.AppArguments.ApiPath+controlRoute, controlFilename, mux, apiDescription)
-	}
-	security.SetAuthHandlers(arguments.AppArguments.ApiPath, mux, App.Name())
+}
 
-	err = apiDescription.Save(openapiFileName)
-	if err == nil {
-		SetRawHandlers(arguments.AppArguments.ApiPath+openapi.Route, openapiFileName, mux, nil)
-	} else {
-		console.RedPrintln(err.Error())
-	}
-	return mux, nil
+func initialize(dataPath string, port int) (*goji.Mux, mem.Store, *openapi.ApiDescription) {
+	ProcessedPersonalRoutes = map[string]bool{}
+
+	(*TheInstructions)[createProject] = gcloud.ConfigureProjectCreator(dataPath)
+
+	mux := goji.NewMux()
+	mux.Use(router.LogRequest)
+	mux.Use(AddHeaders)
+
+	store := *mem.TheStore
+	apiDescription := openapi.InitApi(config.Name, port, "1")
+	return mux, store, apiDescription
 }
 
 func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMapper, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
@@ -155,7 +167,8 @@ func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMa
 	case ".drive":
 		console.GreenPrintln("Registering google drive folder handler " + filename)
 		routePath, id := path.SubStructure(p, info, clean)
-		SetDriveHandlers(arguments.AppArguments.ApiPath+routePath, id, mux, apiDescription, next)
+		migrationHandlers[id] = migrations.CreateDriveHandler(AppProviders.Google, id)
+		SetDriveHandlers(arguments.AppArguments.ApiPath+routePath, id, mux, apiDescription, next, migrationHandlers[id], controlEndpoints)
 	default:
 		console.RedPrintln("Registering raw file handler for " + filename)
 		SetRawHandlers(route, filename, mux, apiDescription)

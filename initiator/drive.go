@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// TODO is it possible to get ouath client json?
 func InitDrive(args *arguments.InitArguments, config *configurator.AppConfig) {
 	importer, err := migrations.DriveImporter(args)
 	if err != nil {
@@ -15,6 +16,10 @@ func InitDrive(args *arguments.InitArguments, config *configurator.AppConfig) {
 	}
 	portFolder := strconv.Itoa(args.Port)
 	err = importer.CreateFolder(portFolder)
+	if err != nil {
+		panic(err)
+	}
+	err = importer.CreateFolder("providers")
 	if err != nil {
 		panic(err)
 	}

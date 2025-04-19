@@ -5,6 +5,7 @@ import (
 	"fold/arguments"
 	"fold/console"
 	"fold/util"
+	"google.golang.org/api/drive/v3"
 	"net/http"
 	"os"
 	"sort"
@@ -14,6 +15,7 @@ type PortConfig struct {
 	port      int
 	path      string
 	configure ServerConfigurator
+	driveFile *drive.File
 }
 
 type PortsConfig []PortConfig

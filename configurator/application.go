@@ -21,7 +21,9 @@ var (
 )
 
 const (
-	projectRoute = "/src/project.js"
+	projectRoute    = "/src/project.js"
+	projectJson     = "project.json"
+	projectJsonPath = "/" + projectJson
 )
 
 type Application struct {
@@ -42,7 +44,7 @@ type AppConfig struct {
 
 func loadConfig(dataPath string) AppConfig {
 	var config AppConfig
-	err := util.FromJson(dataPath+"/project.json", &config)
+	err := util.FromJson(dataPath+projectJsonPath, &config)
 	if err != nil {
 		panic(err)
 	}
@@ -65,6 +67,10 @@ func CreateApplication(address string, dataPath string) {
 
 	ports := ConfigurePorts(dataPath, ConfigureServer)
 
+	ServePorts(address, ports)
+}
+
+func ServePorts(address string, ports PortsConfig) {
 	services := make(map[int]*Service, len(ports))
 	l := len(ports)
 	for i := 0; i < l-1; i++ {
