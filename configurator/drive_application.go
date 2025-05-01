@@ -108,7 +108,6 @@ func ConfigureDriveServer(folderId string, port int) (*goji.Mux, error) {
 	}
 
 	security.SetAuthHandlers(arguments.AppArguments.ApiPath, mux, App.Name())
-
 	err = SaveAndServe(openapi.Filename, apiDescription, migrationHandler, mux, apiDescription)
 	if err != nil {
 		console.RedPrintln(err.Error())
