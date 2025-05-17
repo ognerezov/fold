@@ -5,15 +5,15 @@
     "q": "lowcode server"
   },
   "invocation": {
-    "onApplicationStart" : false,
+    "onApplicationStart" : true,
     "onRequest": true,
     "overrideIfExists": false
   },
-  "store" : "8000/pub/search_results.json",
+  "store" : "3333/pub/search_results.json",
   "path" : "/customsearch/v1",
   "credentials" : {
     "usage" : {
-      "required": false,
+      "required": true,
       "exchangeRequired" : false,
       "save": false
     },
