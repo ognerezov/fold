@@ -1,9 +1,0 @@
-{
-    "id": "restart",
-    "method": "GET",
-    "config": {
-        "port" : 3333
-    },
-    "description" : "Restart service",
-    "expose": true
-}

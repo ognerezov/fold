@@ -1,9 +1,0 @@
-{
-    "id": "reload",
-    "method": "GET",
-    "config":{
-        "path" : "/pub/ide"
-    },
-     "description" : "Reload table",
-     "expose": true
-}
