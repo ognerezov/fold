@@ -1,14 +1,22 @@
 package security
 
+import "fold/console"
+
 var (
-	secretKey     = []byte("secret-key")
-	guestPassword = "1234"
+	secretKey     []byte
+	guestPassword string
 )
 
-const (
-	Query = "query"
-	Body  = "body"
-)
+func SetSecretKey(key string) {
+	if key == "" {
+		console.RedPrintln("secret key is empty. Authentication is blocked")
+	}
+	secretKey = []byte(key)
+}
+
+func SetGuestPassword(password string) {
+	guestPassword = password
+}
 
 type CredentialsUsage struct {
 	Required         bool `json:"required"`

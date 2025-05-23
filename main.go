@@ -9,6 +9,7 @@ import (
 	"fold/initiator"
 	"fold/migrations"
 	"fold/threads"
+	"fold/util"
 	"strings"
 )
 
@@ -95,10 +96,12 @@ func main() {
 			allowOrigin = fmt.Sprintf("http://localhost:%v", arguments.AppArguments.Port)
 		}
 		appConfig := configurator.AppConfig{
-			Name:        arguments.AppArguments.Name,
-			Description: description,
-			Version:     version,
-			AllowOrigin: allowOrigin,
+			Name:          arguments.AppArguments.Name,
+			Description:   description,
+			Version:       version,
+			AllowOrigin:   allowOrigin,
+			JWTSecret:     util.RandomString(12),
+			GuestPassword: util.RandomString(8),
 		}
 
 		if drive != "" && arguments.InitArgs.CredentialsFile == "" {

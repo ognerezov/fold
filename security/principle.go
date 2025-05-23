@@ -69,6 +69,9 @@ func (principle *Principle) BearerToken(iss string) (string, error) {
 }
 
 func (principle *Principle) TokenFor(iss string) (string, error) {
+	if len(secretKey) == 0 {
+		return "", fmt.Errorf("secret key is empty")
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"sub": principle.Id,

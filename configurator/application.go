@@ -10,6 +10,7 @@ import (
 	"fold/openapi"
 	"fold/path"
 	"fold/router"
+	"fold/security"
 	"fold/util"
 	"net/http"
 	"path/filepath"
@@ -40,6 +41,8 @@ type AppConfig struct {
 	Version       string   `json:"version"`
 	AllowOrigin   string   `json:"allow_origin"`
 	AuthProviders []string `json:"auth_providers"`
+	JWTSecret     string   `json:"jwt_secret"`
+	GuestPassword string   `json:"guest_password"`
 }
 
 func loadConfig(dataPath string) AppConfig {
@@ -48,6 +51,10 @@ func loadConfig(dataPath string) AppConfig {
 	if err != nil {
 		panic(err)
 	}
+	security.SetSecretKey(config.JWTSecret)
+	security.SetGuestPassword(config.GuestPassword)
+	config.JWTSecret = ""
+	config.GuestPassword = ""
 	return config
 }
 
