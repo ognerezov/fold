@@ -3,7 +3,6 @@ package security
 import (
 	"errors"
 	"fmt"
-	"fold/console"
 	"fold/util"
 	"net/http"
 	"regexp"
@@ -65,7 +64,6 @@ func (r Rule) Authorize(p *Principle, req *http.Request) (bool, error) {
 }
 
 func (r Rule) Matches(req *http.Request) bool {
-	console.MagentaPrintln("Authenticating " + req.URL.Path)
 	pathMatches := r.PathMatches(req.URL.Path)
 	if !pathMatches {
 		return false

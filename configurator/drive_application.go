@@ -92,12 +92,12 @@ func ConfigureDriveServer(folderId string, port int) (*goji.Mux, error) {
 	migrationHandlers[folderId] = migrationHandler
 	SetDriveHandlers(arguments.AppArguments.ApiPath, folderId, mux, apiDescription, next, migrationHandler, controlEndpoints)
 	next.Act()
-	setupSecurity(store, mux, controlEndpoints)
-	err := SaveAndServe(projectRoute, config, migrationHandler, mux, apiDescription)
+	protected := setupSecurity(store, mux, controlEndpoints)
+	err := SaveAndServe(projectFile, config, migrationHandler, mux, apiDescription)
 	if err != nil {
 		console.RedPrintln(err.Error())
 	}
-	err = SaveAndServe(controlRoute, controlEndpoints, migrationHandler, mux, apiDescription)
+	err = SaveAndServe(controlFile, controlEndpoints, migrationHandler, mux, apiDescription)
 	if err != nil {
 		console.RedPrintln(err.Error())
 	}
@@ -106,8 +106,9 @@ func ConfigureDriveServer(folderId string, port int) (*goji.Mux, error) {
 	if err != nil {
 		console.RedPrintln(err.Error())
 	}
-
-	security.SetAuthHandlers(arguments.AppArguments.ApiPath, mux, App.Name())
+	if protected {
+		security.SetAuthHandlers(arguments.AppArguments.ApiPath, mux, App.Name())
+	}
 	err = SaveAndServe(openapi.Filename, apiDescription, migrationHandler, mux, apiDescription)
 	if err != nil {
 		console.RedPrintln(err.Error())

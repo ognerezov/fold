@@ -2,9 +2,11 @@ package util
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"fold/console"
 	"io"
+	"io/fs"
 	"os"
 )
 
@@ -92,9 +94,6 @@ func IsEmptyDir(name string) error {
 	defer CloseFile(f)
 
 	files, err := f.ReadDir(1)
-	if err != nil {
-		return err
-	}
 	if len(files) != 0 {
 		for _, fileName := range AllowedHiddenFiles {
 			if fileName == files[0].Name() {
@@ -104,4 +103,15 @@ func IsEmptyDir(name string) error {
 		return fmt.Errorf("%s is not empty", name)
 	}
 	return nil
+}
+
+func Exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+	return false, err
 }

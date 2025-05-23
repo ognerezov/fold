@@ -20,7 +20,8 @@ const (
 	googleAuth    = "google_auth"
 	adaptor       = "adaptor"
 	reload        = "reload"
-	controlRoute  = "/src/fold.js"
+	controlFile   = srtRoute + "/fold.js"
+	controlRoute  = srtRoute + "/fold"
 	createProject = "create_project"
 )
 

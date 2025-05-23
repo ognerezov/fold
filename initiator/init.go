@@ -14,16 +14,19 @@ import (
 
 const (
 	DefaultTemplate = "default"
+	PublicTemplate  = "public"
 	embeddedRoot    = "data"
 	Index           = "index"
 )
 
 var (
 	Initiators = map[string]Initiator{
-		DefaultTemplate: DefaultInit,
+		DefaultTemplate: CreateDefaultInitiator(DefaultTemplate),
+		PublicTemplate:  CreateDefaultInitiator(PublicTemplate),
 	}
 	FoldersToCopy = map[string][]string{
 		DefaultTemplate: {Index, "user", "security", "pub", "src"},
+		PublicTemplate:  {"pub"},
 	}
 	//go:embed data/*
 	dataOs embed.FS
@@ -59,13 +62,15 @@ func Init(template string, path string, port int, config configurator.AppConfig)
 
 type Initiator func(string, int) error
 
-func DefaultInit(path string, port int) error {
-	portPath := fmt.Sprintf("%v/%v", path, port)
-	err := exportFolders(portPath, FoldersToCopy[DefaultTemplate])
-	if err != nil {
-		return err
+func CreateDefaultInitiator(template string) Initiator {
+	return func(path string, port int) error {
+		portPath := fmt.Sprintf("%v/%v", path, port)
+		err := exportFolders(portPath, FoldersToCopy[template])
+		if err != nil {
+			return err
+		}
+		return nil
 	}
-	return nil
 }
 
 func exportFolders(path string, folders []string) error {

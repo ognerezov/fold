@@ -54,24 +54,29 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 		return nil, err
 	}
 
-	setupSecurity(store, mux, controlEndpoints)
+	protected := setupSecurity(store, mux, controlEndpoints)
+	ok, _ := util.Exists(dataPath + srtRoute)
+	if ok {
+		// files required to run ui
+		err = util.SaveJavascript(dataPath+projectFile, config)
+		if err != nil {
+			panic(err)
+		} else {
+			SetRawHandlers(projectRoute, dataPath+projectFile, mux, apiDescription)
+		}
 
-	err = util.SaveJavascript(dataPath+projectRoute, config)
-	if err != nil {
-		panic(err)
-	} else {
-		SetRawHandlers(projectRoute, dataPath+projectRoute, mux, apiDescription)
+		// even empty file is required
+		controlFilename := dataPath + controlFile
+		err = util.SaveJavascript(controlFilename, controlEndpoints)
+		if err != nil {
+			console.RedPrintln(err.Error())
+		} else {
+			SetRawHandlers(arguments.AppArguments.ApiPath+controlRoute, controlFilename, mux, apiDescription)
+		}
 	}
-	// even empty file is required
-	controlFilename := dataPath + controlRoute
-	err = util.SaveJavascript(controlFilename, controlEndpoints)
-	if err != nil {
-		console.RedPrintln(err.Error())
-	} else {
-		SetRawHandlers(arguments.AppArguments.ApiPath+controlRoute, controlFilename, mux, apiDescription)
+	if protected {
+		security.SetAuthHandlers(arguments.AppArguments.ApiPath, mux, App.Name())
 	}
-	security.SetAuthHandlers(arguments.AppArguments.ApiPath, mux, App.Name())
-
 	err = apiDescription.Save(openapiFileName)
 	if err == nil {
 		SetRawHandlers(arguments.AppArguments.ApiPath+openapi.Route, openapiFileName, mux, nil)
@@ -81,7 +86,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	return mux, nil
 }
 
-func setupSecurity(store mem.Store, mux *goji.Mux, controlEndpoints Endpoints) {
+func setupSecurity(store mem.Store, mux *goji.Mux, controlEndpoints Endpoints) bool {
 	userTable, _ := store.GetTable(util.UserPath)
 	if userTable != nil {
 		security.EncodePasswords(userTable)
@@ -98,29 +103,34 @@ func setupSecurity(store mem.Store, mux *goji.Mux, controlEndpoints Endpoints) {
 			console.RedPrintln(e.Error())
 		}
 		console.YellowPrintln("Applying security rules")
-		if len(rules) > 0 {
-			conf := security.RulesSecurityConfig(rules)
-			mux.Use(conf.AuthorizeRequest)
-			pubRules := make([]security.Rule, 0)
-			for _, rule := range rules {
-				if rule.IsPublic() {
-					pubRules = append(pubRules, rule)
-				}
-			}
-			for _, endpoint := range controlEndpoints {
-				for _, rule := range pubRules {
-					if rule.AppliesTo(endpoint.Path, endpoint.Method) {
-						endpoint.Public = true
-					}
-				}
-			}
-		} else {
-			mux.Use(security.Public.AuthorizeRequest)
+		if len(rules) == 0 {
 			for _, endpoint := range controlEndpoints {
 				endpoint.Public = true
 			}
+			return false
 		}
+		conf := security.RulesSecurityConfig(rules)
+		mux.Use(conf.AuthorizeRequest)
+		pubRules := make([]security.Rule, 0)
+		for _, rule := range rules {
+			if rule.IsPublic() {
+				pubRules = append(pubRules, rule)
+			}
+		}
+		for _, endpoint := range controlEndpoints {
+			for _, rule := range pubRules {
+				if rule.AppliesTo(endpoint.Path, endpoint.Method) {
+					endpoint.Public = true
+				}
+			}
+		}
+		return true
 	}
+	for _, endpoint := range controlEndpoints {
+		endpoint.Public = true
+	}
+	return false
+
 }
 
 func initialize(dataPath string, port int) (*goji.Mux, mem.Store, *openapi.ApiDescription) {

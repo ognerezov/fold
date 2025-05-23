@@ -22,7 +22,9 @@ var (
 )
 
 const (
-	projectRoute    = "/src/project.js"
+	srtRoute        = "/src"
+	projectFile     = srtRoute + "/project.js"
+	projectRoute    = srtRoute + "/project"
 	projectJson     = "project.json"
 	projectJsonPath = "/" + projectJson
 )
