@@ -119,7 +119,20 @@ use `fold --init` or `fold --init --template public` commands to create basic fi
 | `--help` | `-h` | bool | Show help |
 
 
-## License
+# License
 
 Fold Server is licensed under the [GPLv3](http://choosealicense.com/licenses/gpl-3.0) license for all open source applications.
 A commercial license is required for all commercial applications (including sites, themes and apps you plan to sell).
+
+# Contacts
+If you have any questions regarding technical details, support, or licensing for our software, feel free to reach out — we're here to help!
+
+📩 **Contact:** [ognerezov@foldserver.net](mailto:ognerezov@foldserver.net) for prompt and friendly assistance with:
+
+- 🛠️ Technical guidance or troubleshooting
+- 🤝 Integration and usage support
+- 📄 Licensing terms and commercial use cases
+
+We look forward to hearing from you!
+
+(c) Sergey Okhotnikov 2025
