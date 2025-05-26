@@ -1,0 +1,18 @@
+[
+    {
+        "id": 1,
+        "content": {
+            "text": "Hello",
+            "html": "<div>Hello</div"
+        },
+        "recipient": "user2@email.com"
+    },
+    {
+        "id": 2,
+        "content": {
+            "text": "World",
+            "html": "<div>World</div"
+        },
+        "recipient": "user2@email.com"
+    }
+]

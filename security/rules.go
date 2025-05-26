@@ -19,12 +19,12 @@ type Rule struct {
 func (r Rule) PathMatches(s string) bool {
 	var path string
 	if r.Audience == "*" {
-		path = "/.*"
+		path = "^/.*"
 	} else if r.Audience == "/" {
 		// just root page or address without path
 		path = "^/?$"
 	} else {
-		path = fmt.Sprintf("/%s.*", r.Audience)
+		path = fmt.Sprintf("^/%s.*", r.Audience)
 	}
 	re := regexp.MustCompile(path)
 	return re.MatchString(s)
