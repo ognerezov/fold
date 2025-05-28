@@ -77,12 +77,11 @@ use `fold --init` or `fold --init --template public` commands to create basic fi
 # Command Line Options
 
 ## Server Options
-| Option | Shorthand | Type | Description                      | Default |
-|--------|-----------|------|----------------------------------|---------|
-| `--api` | `-a` | string | Server base path. v1 for example | |
-| `--port` | `-p` | int | Port to listen on                | `3333` |
-| `--origin` | `-o` | string | Allow origin                     | |
-| `--reg` | | bool | User registration allowed        | `true` |
+| Option | Shorthand | Type | Description        | Default |
+|--------|-----------|------|--------------------|---------|
+| `--port` | `-p` | int | Port to listen on  | `3333` |
+| `--origin` | `-o` | string | Allow origin       | |
+| `--reg` | | bool | User registration allowed | `true` |
 
 ## File & Directory Options
 | Option | Shorthand | Type | Description                                                        | Default |

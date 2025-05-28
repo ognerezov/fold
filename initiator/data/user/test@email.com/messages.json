@@ -5,7 +5,8 @@
             "text": "Hello",
             "html": "<div>Hello</div"
         },
-        "recipient": "user2@email.com"
+        "recipient": "user2@email.com",
+        "subject": "Hi"
     },
     {
         "id": 2,
@@ -13,6 +14,7 @@
             "text": "World",
             "html": "<div>World</div"
         },
-        "recipient": "user2@email.com"
+        "recipient": "user2@email.com",
+        "subject": "Re"
     }
 ]
