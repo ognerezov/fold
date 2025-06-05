@@ -1,12 +1,13 @@
 services:
   fold:
     build: .
-#    image: ognerezov/fold
     container_name: fold
     environment:
-      - INPUT_DIR=/service
-      - INPUT_INIT=true
+      - INPUT_DIR=/service/init
+      - INPUT_WORK_DIR=/service/fe
+#      - INPUT_RUN=npm run dev
+      - INPUT_TEST=npm install && npm run test
     ports:
       - '3333:3333'
     volumes:
-      - /Users/ognerezov/pro/fold-data/init:/service:rw
+      - /Users/ognerezov/pro/fold-data:/service:rw
