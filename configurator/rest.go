@@ -62,7 +62,7 @@ var (
 func BuildConfig(dataPath string, host string) *RestConfig {
 	rootIndex := dataPath + "/index.json"
 	var config RestIndexConfig
-	err := util.FromJson(rootIndex, &config)
+	err := util.AnyFromJson(rootIndex, &config)
 	if err != nil {
 		console.RedPrintln(err.Error())
 		panic("Invalid index.json file: " + rootIndex)
@@ -278,7 +278,7 @@ func ConfigureResources(dataPath string) []*RestConfig {
 
 func FromJson(filename string) (*RestResourceConfig, error) {
 	var config RestResourceConfig
-	err := util.FromJson(filename, &config)
+	err := util.AnyFromJson(filename, &config)
 	if err != nil {
 		return nil, err
 	}

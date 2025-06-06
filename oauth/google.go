@@ -168,7 +168,7 @@ func (gj *GoogleJson) HasServices() bool {
 func (gj *GoogleJson) AttachFile(filename string) error {
 	console.YellowPrintln(fmt.Sprintf("Reading Google json file from %s", filename))
 	var js *GoogleJson
-	err := util.FromJson(filename, &js)
+	err := util.AnyFromJson(filename, &js)
 	if err != nil {
 		console.RedPrintln(err.Error())
 		return err

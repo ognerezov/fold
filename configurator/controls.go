@@ -85,7 +85,7 @@ type Controller struct {
 func SetControlHandlers(route string, filePath string, mux *goji.Mux, api *openapi.ApiDescription, controlEndpoints Endpoints) {
 	var config ControllerData
 
-	err := util.FromJson(filePath, &config)
+	err := util.AnyFromJson(filePath, &config)
 	if err != nil {
 		console.RedPrintln("Error registering route " + route + " : " + err.Error())
 		return

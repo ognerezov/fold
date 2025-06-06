@@ -8,6 +8,7 @@ import (
 	"fold/console"
 	"fold/initiator"
 	"fold/migrations"
+	"fold/recorder"
 	"fold/threads"
 	"fold/util"
 	"strings"
@@ -70,6 +71,10 @@ func main() {
 	flag.StringVar(&drive, migrations.Drive, "", "Google Drive folder id")
 	flag.StringVar(&drive, "dr", "", "Google Drive folder id (shorthand)")
 
+	var recordFile string
+	flag.StringVar(&recordFile, "record", "", "Record api json file")
+	flag.StringVar(&recordFile, "r", "", "Record api json file")
+
 	flag.Parse()
 	fmt.Println(arguments.AppArguments)
 	if help {
@@ -81,13 +86,31 @@ func main() {
 		panic("Both directory and single data file paths specified. Only one of them allowed.")
 	}
 
-	if init && migrate {
+	if init && (migrate || recordFile != "") {
 		panic("Only one step at a time. Init or migrate. Not both at the same time.")
 	}
 
 	if dataPath == "" {
 		dataPath = "./"
 	}
+
+	if recordFile != "" {
+		var recordApiDescription recorder.RecordApiDescription
+		err := util.AnyFromJson(recordFile, &recordApiDescription)
+		if err != nil {
+			panic(err)
+		}
+		if recordApiDescription.Port == 0 {
+			recordApiDescription.Port = arguments.AppArguments.Port
+		}
+
+		err = recorder.Record(dataPath, &recordApiDescription)
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
+
 	arguments.InitArgs.Output = dataPath
 	arguments.InitArgs.Port = arguments.AppArguments.Port
 

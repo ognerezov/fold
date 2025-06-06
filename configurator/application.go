@@ -49,7 +49,7 @@ type AppConfig struct {
 
 func loadConfig(dataPath string) AppConfig {
 	var config AppConfig
-	err := util.FromJson(dataPath+projectJsonPath, &config)
+	err := util.AnyFromJson(dataPath+projectJsonPath, &config)
 	if err != nil {
 		panic(err)
 	}

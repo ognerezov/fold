@@ -1,8 +1,14 @@
 package openapi
 
 import (
+	"errors"
 	"fmt"
 	"fold/db"
+	"strings"
+)
+
+var (
+	Authorization = "Authorization"
 )
 
 type ApiDescription struct {
@@ -119,6 +125,7 @@ type Method struct {
 	Parameters  []Parameter         `json:"parameters,omitempty"`
 	RequestBody *RequestBody        `json:"requestBody,omitempty"`
 	Responses   map[string]Response `json:"responses,omitempty"`
+	Security    map[string][]string `json:"security,omitempty"`
 }
 
 func (m *Method) WithParams(params []Parameter) *Method {
@@ -129,8 +136,44 @@ func (m *Method) WithParams(params []Parameter) *Method {
 }
 
 type Components struct {
-	RequestBodies map[string]RequestBody `json:"requestBodies,omitempty"`
-	Schemas       map[string]Schema      `json:"schemas,omitempty"`
-	Examples      map[string]Example     `json:"examples,omitempty"`
-	Parameters    map[string]Parameter   `json:"parameters,omitempty"`
+	RequestBodies   map[string]RequestBody    `json:"requestBodies,omitempty"`
+	Schemas         map[string]Schema         `json:"schemas,omitempty"`
+	Examples        map[string]Example        `json:"examples,omitempty"`
+	Parameters      map[string]Parameter      `json:"parameters,omitempty"`
+	SecuritySchemes map[string]SecuritySchema `json:"securitySchemes,omitempty"`
+}
+
+type SecuritySchema struct {
+	Type         string `json:"type,omitempty"`
+	Name         string `json:"name,omitempty"`
+	Scheme       string `json:"scheme,omitempty"`
+	BearerFormat string `json:"bearerFormat,omitempty"`
+	In           string `json:"in,omitempty"`
+	Secret       string
+}
+
+func (s *SecuritySchema) SecurityHeader() (*string, *string) {
+	if s.In == "" || strings.ToLower(s.In) == "header" || strings.ToLower(s.In) == "headers" {
+		if s.Type == "http" || s.Type == "https" {
+			val := fmt.Sprintf("%s %s", s.Scheme, s.Secret)
+			return &Authorization, &val
+		}
+		if strings.ToLower(s.Type) == "apikey" {
+			return &s.Name, &s.Secret
+		}
+
+		panic(errors.New("invalid security header type: " + s.Type))
+	}
+	return nil, nil
+}
+
+func (s *SecuritySchema) SecurityQuery() *string {
+	if strings.ToLower(s.In) == "query" {
+		if strings.ToLower(s.Type) == "apikey" {
+			val := fmt.Sprintf("%s=%s", s.Name, s.Secret)
+			return &val
+		}
+		panic(errors.New("invalid security query type: " + s.Type))
+	}
+	return nil
 }

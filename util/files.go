@@ -47,7 +47,7 @@ func DoesFileExist(filePath string) bool {
 	return true
 }
 
-func FromJson[T any](filename string, out *T) error {
+func AnyFromJson[T any](filename string, out *T) error {
 	f, err := os.OpenFile(filename, os.O_RDONLY, 0)
 	if err != nil {
 		return err

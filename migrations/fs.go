@@ -6,7 +6,10 @@ import (
 	"fold/console"
 	"fold/mem"
 	"fold/path"
+	"fold/util"
 	"io/fs"
+	"os"
+	"strings"
 )
 
 type DataPath string
@@ -74,4 +77,26 @@ func FsExporter(arguments *arguments.InitArguments) (Exporter, error) {
 	exporter = DataPath(p)
 
 	return exporter, nil
+}
+
+func FsImporter(dataPath string) (Importer, error) {
+	return DataPath(dataPath), nil
+}
+
+func (d DataPath) CreateFolder(name string) error {
+	p := fmt.Sprintf("%s/%s", string(d), name)
+	err := os.MkdirAll(p, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d DataPath) SaveFile(data FileData) error {
+	return util.Save(fmt.Sprintf("%s/%s/%s", string(d), data.Path, data.Filename), data.Binary)
+}
+
+func (d DataPath) GetFolderId(folder string, _ string) (*string, error) {
+	res := strings.TrimPrefix(folder, string(d)+"/")
+	return &res, nil
 }

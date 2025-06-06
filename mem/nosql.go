@@ -353,3 +353,15 @@ func (n *NoSql) Schema() openapi.Schema {
 
 	return n.data.Schema()
 }
+
+func (n *NoSql) ToArray() *NoSql {
+	if n.is == Array {
+		return n
+	}
+	return &NoSql{
+		is:         Array,
+		DriveFile:  n.DriveFile,
+		File:       n.File,
+		collection: []*NoSql{n},
+	}
+}
