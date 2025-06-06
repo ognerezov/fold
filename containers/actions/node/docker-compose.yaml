@@ -1,3 +1,4 @@
+name: fold-vitest
 services:
   fold:
     build: .
@@ -5,7 +6,6 @@ services:
     environment:
       - INPUT_DIR=/service/init
       - INPUT_WORK_DIR=/service/fe
-#      - INPUT_RUN=npm run dev
       - INPUT_TEST=npm install && npm run test
     ports:
       - '3333:3333'
