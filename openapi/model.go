@@ -149,17 +149,19 @@ type SecuritySchema struct {
 	Scheme       string `json:"scheme,omitempty"`
 	BearerFormat string `json:"bearerFormat,omitempty"`
 	In           string `json:"in,omitempty"`
-	Secret       string
 }
 
-func (s *SecuritySchema) SecurityHeader() (*string, *string) {
+func (s *SecuritySchema) SecurityHeader(secret string) (*string, *string) {
+	if secret == "" {
+		return nil, nil
+	}
 	if s.In == "" || strings.ToLower(s.In) == "header" || strings.ToLower(s.In) == "headers" {
 		if s.Type == "http" || s.Type == "https" {
-			val := fmt.Sprintf("%s %s", s.Scheme, s.Secret)
+			val := fmt.Sprintf("%s %s", s.Scheme, secret)
 			return &Authorization, &val
 		}
 		if strings.ToLower(s.Type) == "apikey" {
-			return &s.Name, &s.Secret
+			return &s.Name, &secret
 		}
 
 		panic(errors.New("invalid security header type: " + s.Type))
@@ -167,10 +169,13 @@ func (s *SecuritySchema) SecurityHeader() (*string, *string) {
 	return nil, nil
 }
 
-func (s *SecuritySchema) SecurityQuery() *string {
+func (s *SecuritySchema) SecurityQuery(secret string) *string {
+	if secret == "" {
+		return nil
+	}
 	if strings.ToLower(s.In) == "query" {
 		if strings.ToLower(s.Type) == "apikey" {
-			val := fmt.Sprintf("%s=%s", s.Name, s.Secret)
+			val := fmt.Sprintf("%s=%s", s.Name, secret)
 			return &val
 		}
 		panic(errors.New("invalid security query type: " + s.Type))
