@@ -18,6 +18,8 @@ import (
 
 const (
 	HTML = ".html"
+	JSON = ".json"
+	CSV  = ".csv"
 )
 
 var (
@@ -38,19 +40,23 @@ func GetContentType(filePath string) (string, string, bool) {
 }
 
 func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.ApiDescription) {
+	SetRawMethodHandlers(route, filePath, "GET", mux, api)
+}
+
+func SetRawMethodHandlers(route string, filePath string, method string, mux *goji.Mux, api *openapi.ApiDescription) {
 	m, ext, hasExt := GetContentType(filePath)
 	feRoute := route + ext
-	if ext == HTML || !hasExt {
+	if ext == HTML || !hasExt || ext == JSON || ext == CSV {
 		feRoute = route
 	}
 	if hasExt && FrontendFiles[ext] && arguments.AppArguments.Cache {
-		console.BluePrintln("Registering GET " + feRoute)
+		console.BluePrintln(fmt.Sprintf("Registering %s: %s", method, feRoute))
 		bytes, err := util.ReadFile(filePath)
 		if err != nil {
 			return
 		}
 		mem.TheStore.Cache(feRoute, bytes, mem.FilePath(filePath))
-		mux.HandleFunc(pat.Get(feRoute), func(w http.ResponseWriter, r *http.Request) {
+		mux.HandleFunc(pat.NewWithMethods(feRoute, method), func(w http.ResponseWriter, r *http.Request) {
 			console.BluePrintln("Searching cache for " + feRoute)
 			var ok bool
 			bytes, ok = mem.TheStore.GetCached(feRoute)
@@ -72,8 +78,8 @@ func SetRawHandlers(route string, filePath string, mux *goji.Mux, api *openapi.A
 		}
 		return
 	}
-	console.BluePrintln("Registering GET " + feRoute)
-	mux.HandleFunc(pat.Get(feRoute), func(w http.ResponseWriter, r *http.Request) {
+	console.BluePrintln(fmt.Sprintf("Registering %s: %s", method, feRoute))
+	mux.HandleFunc(pat.NewWithMethods(feRoute, method), func(w http.ResponseWriter, r *http.Request) {
 		console.BluePrintln("Searching filesystem for " + feRoute)
 		fmt.Println(filePath)
 		bytes, err := util.ReadFile(filePath)

@@ -87,7 +87,7 @@ func GetUrlParams(name string, req *http.Request) (string, []string) {
 	PathParamValue(req, name, &param)
 	q, err := MapQuery(req)
 	var queryParams []string
-	if err != nil {
+	if err == nil {
 		queryParams = q[name]
 	}
 	return param, queryParams

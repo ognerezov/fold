@@ -16,12 +16,18 @@ import (
 	goji "goji.io"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 var (
 	ProcessedPersonalRoutes = map[string]bool{}
 	doNotServe              = []string{"openapi.json", "fold.js", "project.js", "google.js"}
+)
+
+const (
+	RawRoutesFolder = "_raw_routes"
+	RawSeparator    = "_"
 )
 
 type ServerConfigurator func(string, int) (*goji.Mux, error)
@@ -148,6 +154,12 @@ func initialize(dataPath string, port int) (*goji.Mux, mem.Store, *openapi.ApiDe
 }
 
 func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMapper, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
+
+	if strings.Contains(p, RawRoutesFolder) {
+		ConfigureRawFolder(dataPath, p, mux, apiDescription)
+		return
+	}
+
 	store := *mem.TheStore
 	route, filename, extension := path.Structure(dataPath, p, info, clean)
 	route = arguments.AppArguments.ApiPath + route
@@ -183,6 +195,17 @@ func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMa
 		console.RedPrintln("Registering raw file handler for " + filename)
 		SetRawHandlers(route, filename, mux, apiDescription)
 	}
+}
+
+func ConfigureRawFolder(dataPath, _filename string, mux *goji.Mux, api *openapi.ApiDescription) {
+	clean := path.CreateRootCleaner(fmt.Sprintf("%v/%v", dataPath, RawRoutesFolder))
+	_name := clean(_filename)
+	parts := strings.Split(_name, RawSeparator)
+	method := strings.ToUpper(parts[0])
+	name := strings.Join(parts[1:], RawSeparator)
+	route := "/" + strings.TrimSuffix(name, filepath.Ext(name))
+	fmt.Println(_filename)
+	SetRawMethodHandlers(route, _filename, method, mux, api)
 }
 
 func ParsePersonalRoute(path *string) *string {
