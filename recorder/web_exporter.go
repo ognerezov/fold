@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"fold/configurator"
 	"fold/console"
 	"fold/mem"
 	"fold/migrations"
@@ -16,14 +17,14 @@ import (
 func (rad RecordApiDescription) Process(importer migrations.Importer) error {
 
 	for _, invocation := range rad.Invocations {
-		for name, scheme := range invocation.SecuritySchemes {
-			secret, ok := rad.Credentials[name]
+		for name := range invocation.SecuritySchemes {
+			_, ok := rad.Credentials[name]
 			if ok {
 				console.YellowPrintln(fmt.Sprintf("Set secret for security scheem %s from json", name))
-				scheme.Secret = secret
 			} else {
 				console.YellowPrintln(fmt.Sprintf("Input secret for security scheem %s:", name))
-				scheme.Secret = console.ReadStr("Type secret %s: ")
+				rad.Credentials[name] = strings.TrimSpace(console.ReadStr(fmt.Sprintf("Type secret %s: ", name)))
+				fmt.Println(rad.Credentials)
 			}
 		}
 	}
@@ -33,13 +34,14 @@ func (rad RecordApiDescription) Process(importer migrations.Importer) error {
 		if invocation.Data != nil {
 			b, e := json.MarshalIndent(invocation.Data, "", "    ")
 			if e != nil {
-				body = bytes.NewReader(b)
+				panic(e)
 			}
+			body = bytes.NewReader(b)
 		}
 		url := invocation.Url
 		hasQuery := strings.Contains(url, "?")
-		for _, securityScheme := range invocation.SecuritySchemes {
-			securityQuery := securityScheme.SecurityQuery()
+		for name, securityScheme := range invocation.SecuritySchemes {
+			securityQuery := securityScheme.SecurityQuery(rad.Credentials[name])
 			if securityQuery != nil {
 				if hasQuery {
 					url += "&" + *securityQuery
@@ -49,15 +51,16 @@ func (rad RecordApiDescription) Process(importer migrations.Importer) error {
 				break
 			}
 		}
-		console.GreenPrintln("Proceed http request to " + url)
-		request, err := http.NewRequest(invocation.Method, url, body)
+		method := strings.ToUpper(invocation.Method)
+		console.GreenPrintln(fmt.Sprintf("Proceed http request to %s: %s", method, url))
+		request, err := http.NewRequest(method, url, body)
 		if err != nil {
 			panic(err)
 		}
 		request.Header.Set("Content-Type", "application/json")
 
-		for _, securityScheme := range invocation.SecuritySchemes {
-			securityHeaderName, securityHeaderValue := securityScheme.SecurityHeader()
+		for name, securityScheme := range invocation.SecuritySchemes {
+			securityHeaderName, securityHeaderValue := securityScheme.SecurityHeader(rad.Credentials[name])
 			if securityHeaderName != nil {
 				request.Header.Set(*securityHeaderName, *securityHeaderValue)
 				break
@@ -85,10 +88,17 @@ func (rad RecordApiDescription) Process(importer migrations.Importer) error {
 			noSql = noSql.ToArray()
 		}
 
+		path := strings.Join(parts[:len(parts)-1], "/")
+		filename := parts[len(parts)-1] + ".json"
+		if method != "GET" {
+			path = fmt.Sprintf("%s/%s", configurator.RawRoutesFolder, path)
+			filename = fmt.Sprintf("%s%s%s", invocation.Method, configurator.RawSeparator, filename)
+		}
+
 		data := migrations.FileData{
 			Binary:   b,
-			Path:     strings.Join(parts[:len(parts)-1], "/"),
-			Filename: parts[len(parts)-1] + ".json",
+			Path:     path,
+			Filename: filename,
 			MimeType: resp.Header.Get("Content-Type"),
 			NoSql:    noSql,
 		}
