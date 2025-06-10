@@ -1,0 +1,11 @@
+name: fold-be
+services:
+  fold:
+    build: .
+    container_name: fold-be
+    environment:
+      - INPUT_DIR=/service/init
+    ports:
+      - '3333:3333'
+    volumes:
+      - /Users/ognerezov/pro/fold-data:/service:rw

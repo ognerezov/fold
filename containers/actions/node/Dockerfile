@@ -1,5 +1,5 @@
 FROM --platform=linux/amd64 node
-COPY fold fold
-COPY run.sh run.sh
+COPY fold /usr/local/bin/fold
+COPY run.sh /usr/local/bin/run_fold.sh
 
-ENTRYPOINT ["./run.sh"]
+ENTRYPOINT ["run_fold.sh"]

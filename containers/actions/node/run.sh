@@ -40,7 +40,7 @@ cleanup() {
 trap cleanup EXIT SIGINT SIGTERM
 
 # Start backend process
-backend_cmd="./fold ${args[@]}"
+backend_cmd="fold ${args[@]}"
 echo "Starting backend: $backend_cmd"
 eval "$backend_cmd" > "$backend_log" 2>&1 &
 backend_pid=$!
@@ -83,6 +83,6 @@ if [ "$test_exit" -ne 0 ]; then
 fi
 
 # Output result in GitHub Actions format
-cat "$test_output" >> "$GITHUB_OUTPUT"
+cat "$test_output"
 
 exit "$test_exit"
