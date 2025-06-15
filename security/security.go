@@ -29,8 +29,14 @@ func SetAuthHandlers(apiPath string, mux *goji.Mux, iss string) {
 		}
 
 		console.GreenPrintln(fmt.Sprintf("Processing login request for: %s", login.Username))
-		principle, err := FromTable(login.Username, login.Password, apiPath)
-
+		id := login.Id
+		if id == "" {
+			id = login.Username
+		}
+		if id == "" {
+			id = login.Email
+		}
+		principle, err := FromTable(id, login.Password, apiPath)
 		if err != nil {
 			router.ReturnError(err, 401, w)
 			return
