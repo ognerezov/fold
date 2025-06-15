@@ -14,7 +14,7 @@ import (
 
 func SetJsonHandlers(rawRoute string, mux *goji.Mux, api *openapi.ApiDescription) {
 
-	noSql, _ := (*mem.TheStore).NoSql(rawRoute)
+	noSql, _ := mem.TheStore.NoSql(rawRoute)
 	schema := noSql.Schema()
 	entitySchema := noSql.Entity()
 
@@ -25,7 +25,7 @@ func SetJsonHandlers(rawRoute string, mux *goji.Mux, api *openapi.ApiDescription
 	route := *routePointer
 	console.BluePrintln("Registering GET " + route)
 	mux.HandleFunc(pat.Get(route), func(w http.ResponseWriter, r *http.Request) {
-		n, ok := (*mem.TheStore).NoSql(util.RestorePersonalRoute(route, r))
+		n, ok := mem.TheStore.NoSql(util.RestorePersonalRoute(route, r))
 		if !ok {
 			router.NotFound(w)
 		}
@@ -34,7 +34,7 @@ func SetJsonHandlers(rawRoute string, mux *goji.Mux, api *openapi.ApiDescription
 	})
 	console.BluePrintln("Registering PATCH " + route)
 	mux.HandleFunc(pat.Patch(route), func(w http.ResponseWriter, r *http.Request) {
-		n, ok := (*mem.TheStore).NoSql(util.RestorePersonalRoute(route, r))
+		n, ok := mem.TheStore.NoSql(util.RestorePersonalRoute(route, r))
 		if !ok {
 			router.NotFound(w)
 		}
@@ -50,7 +50,7 @@ func SetJsonHandlers(rawRoute string, mux *goji.Mux, api *openapi.ApiDescription
 	})
 	console.BluePrintln("Registering POST " + route)
 	mux.HandleFunc(pat.Post(route), func(w http.ResponseWriter, r *http.Request) {
-		n, ok := (*mem.TheStore).NoSql(util.RestorePersonalRoute(route, r))
+		n, ok := mem.TheStore.NoSql(util.RestorePersonalRoute(route, r))
 		if !ok {
 			router.NotFound(w)
 		}
@@ -65,7 +65,7 @@ func SetJsonHandlers(rawRoute string, mux *goji.Mux, api *openapi.ApiDescription
 	})
 	console.BluePrintln("Registering DELETE " + route)
 	mux.HandleFunc(pat.Delete(route), func(w http.ResponseWriter, r *http.Request) {
-		n, ok := (*mem.TheStore).NoSql(util.RestorePersonalRoute(route, r))
+		n, ok := mem.TheStore.NoSql(util.RestorePersonalRoute(route, r))
 		if !ok {
 			router.NotFound(w)
 		}

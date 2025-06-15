@@ -92,13 +92,12 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	return mux, nil
 }
 
-func setupSecurity(store mem.Store, mux *goji.Mux, controlEndpoints Endpoints) bool {
-	userTable, _ := store.GetTable(util.UserPath)
+func setupSecurity(store *mem.Store, mux *goji.Mux, controlEndpoints Endpoints) bool {
+	userTable, ok := store.GetUserTable()
 	if userTable != nil {
 		security.EncodePasswords(userTable)
 	}
 	securityRulesTable, _ := store.GetTable(arguments.AppArguments.ApiPath + "/security/rules")
-	_, ok := mem.TheStore.GetTable(util.UserPath)
 	if ok {
 		config.AuthProviders = append(config.AuthProviders, "password")
 	}
@@ -139,7 +138,7 @@ func setupSecurity(store mem.Store, mux *goji.Mux, controlEndpoints Endpoints) b
 
 }
 
-func initialize(dataPath string, port int) (*goji.Mux, mem.Store, *openapi.ApiDescription) {
+func initialize(dataPath string, port int) (*goji.Mux, *mem.Store, *openapi.ApiDescription) {
 	ProcessedPersonalRoutes = map[string]bool{}
 
 	(*TheInstructions)[createProject] = gcloud.ConfigureProjectCreator(dataPath)
@@ -148,7 +147,7 @@ func initialize(dataPath string, port int) (*goji.Mux, mem.Store, *openapi.ApiDe
 	mux.Use(router.LogRequest)
 	mux.Use(AddHeaders)
 
-	store := *mem.TheStore
+	store := mem.TheStore
 	apiDescription := openapi.InitApi(config.Name, port, "1")
 	return mux, store, apiDescription
 }
@@ -160,7 +159,7 @@ func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMa
 		return
 	}
 
-	store := *mem.TheStore
+	store := mem.TheStore
 	route, filename, extension := path.Structure(dataPath, p, info, clean)
 	route = arguments.AppArguments.ApiPath + route
 	fileHandler := mem.FilePath(filename)

@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	PersonalDataFolders = UserPath + "/"
 	User                = "user"
 	PersonalDataPattern = "/user/([^/]+)/.+$"
 	PersonalPathPattern = "/user/:user/.+$"

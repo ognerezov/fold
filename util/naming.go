@@ -27,16 +27,22 @@ func NamingLookups(name string) (bool, []string, []string, error) {
 	return true, tables, cols, nil
 }
 
+/*
+   mapping _ to / is disabled for now
+*/
+
 func TableToPath(table string) string {
-	if strings.HasPrefix(table, "/") {
-		return strings.Replace(table, "_", "/", -1)
-	}
-	return "/" + strings.Replace(table, "_", "/", -1)
+	return WithLeadingSlash(table)
+	//if strings.HasPrefix(table, "/") {
+	//	return strings.Replace(table, "_", "/", -1)
+	//}
+	//return "/" + strings.Replace(table, "_", "/", -1)
 }
 
 func PathToTable(path string) string {
-	s := strings.Replace(path, "/", "", 1)
-	return strings.Replace(s, "/", "_", -1)
+	return path
+	//s := strings.Replace(path, "/", "", 1)
+	//return strings.Replace(s, "/", "_", -1)
 }
 
 func SplitArray[t any](arr []t, split int) ([]t, []t) {

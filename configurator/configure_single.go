@@ -18,7 +18,7 @@ func ConfigureSingleFileServer(dataPath string, port int) (*goji.Mux, error) {
 	mux := goji.NewMux()
 	mux.Use(router.LogRequest)
 
-	store := *mem.TheStore
+	store := mem.TheStore
 	dir := filepath.Dir(dataPath)
 	clean := path.CreateRootCleaner(dir)
 	apiDescription := openapi.InitApi(dataPath, port, "1")
