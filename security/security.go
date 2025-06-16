@@ -59,7 +59,7 @@ func SetAuthHandlers(apiPath string, mux *goji.Mux, iss string) {
 		getMe(w, r)
 	})
 
-	mux.HandleFunc(pat.Get(apiPath+"/user"), func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(pat.Get(apiPath+"/usr"), func(w http.ResponseWriter, r *http.Request) {
 		getMe(w, r)
 	})
 }
