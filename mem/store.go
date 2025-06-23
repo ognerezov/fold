@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"fold/console"
 	"fold/util"
+	"strings"
 )
 
 type Store struct {
@@ -14,14 +15,15 @@ type Store struct {
 	cacheFetchers map[string]BytesFetcher
 	noSqlFetchers map[string]NoSqlFetcher
 	csvFetchers   map[string]CsvFetcher
+	userTable     string
 }
 
-func (s Store) Cache(key string, b []byte, refresh BytesFetcher) {
+func (s *Store) Cache(key string, b []byte, refresh BytesFetcher) {
 	s.cache[key] = b
 	s.cacheFetchers[key] = refresh
 }
 
-func (s Store) RefreshCache(key string) error {
+func (s *Store) RefreshCache(key string) error {
 	fetcher, ok := s.cacheFetchers[key]
 	if !ok {
 		return errors.New("key not found")
@@ -34,22 +36,22 @@ func (s Store) RefreshCache(key string) error {
 	return nil
 }
 
-func (s Store) GetCached(key string) ([]byte, bool) {
+func (s *Store) GetCached(key string) ([]byte, bool) {
 	res, ok := s.cache[key]
 	return res, ok
 }
 
-func (s Store) SetNoSql(key string, value *NoSql, fetcher NoSqlFetcher) {
+func (s *Store) SetNoSql(key string, value *NoSql, fetcher NoSqlFetcher) {
 	s.noSql[key] = value
 	s.noSqlFetchers[key] = fetcher
 }
 
-func (s Store) NoSql(key string) (*NoSql, bool) {
+func (s *Store) NoSql(key string) (*NoSql, bool) {
 	n, ok := s.noSql[key]
 	return n, ok
 }
 
-func (s Store) RefreshNoSql(key string) error {
+func (s *Store) RefreshNoSql(key string) error {
 	fetcher, ok := s.noSqlFetchers[key]
 	if !ok {
 		return errors.New("key not found")
@@ -62,13 +64,38 @@ func (s Store) RefreshNoSql(key string) error {
 	return nil
 }
 
-func (s Store) SetTable(key string, value *Table, fetcher CsvFetcher) {
+func (s *Store) SetTable(key string, value *Table, fetcher CsvFetcher) {
 	value.name = key
 	s.tables[key] = value
 	s.csvFetchers[key] = fetcher
+	if strings.HasSuffix(key, util.UserPath) {
+		s.userTable = key
+	}
 }
 
-func (s Store) RefreshTable(key string) error {
+func (s *Store) GetUserTable() (*Table, bool) {
+	if s.userTable == "" {
+		return nil, false
+	}
+	return s.GetTable(s.userTable)
+}
+
+func (s *Store) GetUserById(id string) map[string]any {
+	userTable, ok := s.GetUserTable()
+	if !ok {
+		return nil
+	}
+	return userTable.PlainGet(id)
+}
+
+func (s *Store) GetUsersRoleTable() (*Table, bool) {
+	if s.userTable == "" {
+		return nil, false
+	}
+	return s.GetTable(s.userTable + util.RolePath)
+}
+
+func (s *Store) RefreshTable(key string) error {
 	fetcher, ok := s.csvFetchers[key]
 	if !ok {
 		return errors.New("key not found")
@@ -81,7 +108,7 @@ func (s Store) RefreshTable(key string) error {
 	return nil
 }
 
-func (s Store) Refresh(key string) error {
+func (s *Store) Refresh(key string) error {
 	_, ok := s.cacheFetchers[key]
 	if ok {
 		return s.RefreshCache(key)
@@ -97,29 +124,29 @@ func (s Store) Refresh(key string) error {
 	return errors.New("no handler found")
 }
 
-func (s Store) GetTable(key string) (*Table, bool) {
+func (s *Store) GetTable(key string) (*Table, bool) {
 	console.CyanPrintln("Get table: " + key)
 	t, ok := s.tables[key]
 	return t, ok
 }
 
-func (s Store) DeleteTable(key string) {
+func (s *Store) DeleteTable(key string) {
 	delete(s.tables, key)
 }
 
-func (s Store) Get(table string, id string) map[string]any {
-	return s.tables[table].Get(id, &s)
+func (s *Store) Get(table string, id string) map[string]any {
+	return s.tables[table].Get(id, s)
 }
 
-func (s Store) PlainGet(table string, id string) map[string]any {
+func (s *Store) PlainGet(table string, id string) map[string]any {
 	return s.tables[table].PlainGet(id)
 }
 
-func (s Store) All(table string) []map[string]any {
+func (s *Store) All(table string) []map[string]any {
 	return s.tables[table].All()
 }
 
-func (s Store) ReIndex() {
+func (s *Store) ReIndex() {
 	for name, table := range s.tables {
 		for _, col := range table.cols {
 			found, tableNames, colNames, err := util.NamingLookups(col.name)
@@ -161,7 +188,7 @@ func (s Store) ReIndex() {
 	}
 }
 
-func (s Store) Tables() []string {
+func (s *Store) Tables() []string {
 	res := make([]string, len(s.tables))
 	count := 0
 	for key := range s.tables {
@@ -172,12 +199,13 @@ func (s Store) Tables() []string {
 }
 
 var (
-	TheStore *Store = &Store{
+	TheStore = &Store{
 		noSql:         make(map[string]*NoSql),
 		tables:        make(map[string]*Table),
 		cache:         make(map[string][]byte),
 		cacheFetchers: make(map[string]BytesFetcher),
 		noSqlFetchers: make(map[string]NoSqlFetcher),
 		csvFetchers:   make(map[string]CsvFetcher),
+		userTable:     "",
 	}
 )

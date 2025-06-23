@@ -313,7 +313,7 @@ func (gj *GoogleJson) Do(data map[string]any, w http.ResponseWriter, _ *http.Req
 	RemovePreviousRecords(userInfo.Email, provider)
 	StoreOauth(tokenResp.GetRow(userInfo.Token, userInfo.Email, provider))
 	if gj.RegistrationAllowed {
-		table, ok := mem.TheStore.GetTable(util.UserPath)
+		table, ok := mem.TheStore.GetUserTable()
 		if !ok {
 			console.YellowPrintln("User table not found")
 		} else {

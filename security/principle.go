@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"fold/console"
 	"fold/mem"
-	"fold/util"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"time"
@@ -115,7 +114,7 @@ func FromToken(tokenString string) (*Principle, error) {
 }
 
 func FromTable(id string, password string, prefix string) (*Principle, error) {
-	userData := mem.TheStore.PlainGet(prefix+util.UserPath, id)
+	userData := mem.TheStore.GetUserById(id)
 	if userData == nil || len(userData) == 0 {
 		return nil, fmt.Errorf("user not found")
 	}
@@ -133,7 +132,7 @@ func FromTable(id string, password string, prefix string) (*Principle, error) {
 }
 
 func GetUserRoles(id string, prefix string) []string {
-	rolesTable, _ := mem.TheStore.GetTable(prefix + util.RolePath)
+	rolesTable, _ := mem.TheStore.GetUsersRoleTable()
 	roleRows := rolesTable.SearchRows("user_id", id)
 	roles := make([]string, len(roleRows))
 	for i, row := range roleRows {

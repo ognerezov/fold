@@ -18,7 +18,7 @@ func NamingLookups(name string) (bool, []string, []string, error) {
 
 	for split := 1; split < len(literals); split++ {
 		head, tail := SplitArray(literals, split)
-		tables[split-1] = strings.Join(head, HeaderDelimiter)
+		tables[split-1] = WithLeadingSlash(strings.Join(head, HeaderDelimiter))
 		cols[split-1] = strings.Join(tail, HeaderDelimiter)
 		fmt.Printf("Found variant %s -> %s", tables[split-1], cols[split-1])
 		fmt.Println()
@@ -27,16 +27,22 @@ func NamingLookups(name string) (bool, []string, []string, error) {
 	return true, tables, cols, nil
 }
 
+/*
+   mapping _ to / is disabled for now
+*/
+
 func TableToPath(table string) string {
-	if strings.HasPrefix(table, "/") {
-		return strings.Replace(table, "_", "/", -1)
-	}
-	return "/" + strings.Replace(table, "_", "/", -1)
+	return WithLeadingSlash(table)
+	//if strings.HasPrefix(table, "/") {
+	//	return strings.Replace(table, "_", "/", -1)
+	//}
+	//return "/" + strings.Replace(table, "_", "/", -1)
 }
 
 func PathToTable(path string) string {
-	s := strings.Replace(path, "/", "", 1)
-	return strings.Replace(s, "/", "_", -1)
+	return path
+	//s := strings.Replace(path, "/", "", 1)
+	//return strings.Replace(s, "/", "_", -1)
 }
 
 func SplitArray[t any](arr []t, split int) ([]t, []t) {
@@ -76,4 +82,30 @@ func WithLeadingSlash(s string) string {
 
 func JoinedPath(root string, entry os.DirEntry) string {
 	return fmt.Sprintf("%s/%s", root, strings.Replace(entry.Name(), "/", "", -1))
+}
+
+func FindCommonPrefix(a, b string) string {
+	minLen := len(a)
+	if len(b) < minLen {
+		minLen = len(b)
+	}
+
+	commonPrefix := ""
+	for i := 0; i < minLen; i++ {
+		if a[i] != b[i] {
+			break
+		}
+		commonPrefix += string(a[i])
+	}
+
+	return commonPrefix
+}
+
+// RemoveCommonPrefix removes the common prefix from both strings
+func RemoveCommonPrefix(a, b string) (string, string) {
+	prefix := FindCommonPrefix(a, b)
+	if prefix == "" {
+		return a, b
+	}
+	return a[len(prefix):], b[len(prefix):]
 }

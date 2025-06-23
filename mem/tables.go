@@ -13,6 +13,7 @@ import (
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/sheets/v4"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -129,7 +130,8 @@ func (t *Table) MapJoinRow(row []Data, store *Store, tablePathMap JoinPathMap, l
 		for index, joinRow := range joinRows {
 			joins[index] = joinTable.MapJoinRow(joinRow, store, tablePathMap, level+1)
 		}
-		res[column.foreignTable] = joins
+		_, key := util.RemoveCommonPrefix(t.name, column.foreignTable)
+		res[strings.TrimPrefix(key, "/")] = joins
 	}
 	return res
 }
