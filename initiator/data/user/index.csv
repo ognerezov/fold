@@ -1,4 +1,2 @@
 id,password,input_password,name
-root,"",fold,Root
-guest,"",1234,Guest
 test@email.com,,test,John Doe
