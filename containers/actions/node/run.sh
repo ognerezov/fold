@@ -50,7 +50,8 @@ if [[ -z "${INPUT_WORK_DIR}" ]]; then
 else
     cd "${INPUT_WORK_DIR}"
 fi
-
+# Install dependencies
+npm install
 if [[ -z "${INPUT_RUN}" ]]; then
     echo "Run command not provided. not running frontend server"
 else
@@ -62,7 +63,7 @@ fi
 
 # Wait for services to become available
 echo "Waiting for services to start..."
-sleep 5  # Adjust as needed for your services
+sleep 7  # Adjust as needed for your services
 # Run tests and capture output
 echo "Running tests: $test_cmd"
 set +e  # Temporarily allow errors so we can capture test exit code
