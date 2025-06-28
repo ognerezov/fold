@@ -107,6 +107,46 @@ func FromString(s string) *Data {
 	return &data
 }
 
+func FromAnyValue(v any) Data {
+	switch child := v.(type) {
+	case string:
+		return *FromString(child)
+	case bool:
+		return Data{
+			b:  child,
+			is: Bool,
+		}
+
+	case int:
+		return Data{
+			i:  int64(child),
+			is: Int,
+		}
+	case int32:
+		return Data{
+			i:  int64(child),
+			is: Int,
+		}
+	case int64:
+		return Data{
+			i:  child,
+			is: Int,
+		}
+	case float32:
+		return Data{
+			f:  float64(child),
+			is: Int,
+		}
+	case float64:
+		return Data{
+			f:  child,
+			is: Int,
+		}
+	}
+
+	return *FromString("")
+}
+
 func (d Data) Number() *float64 {
 	if d.is == Float {
 		return &d.f

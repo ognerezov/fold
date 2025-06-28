@@ -14,6 +14,8 @@ type Invocation struct {
 	SecuritySchemes map[string]openapi.SecuritySchema `json:"securitySchemes,omitempty"`
 	ChangePath      string                            `json:"changePath,omitempty"`
 	SaveAs          string                            `json:"saveAs,omitempty"`
+	Headers         map[string]string                 `json:"headers,omitempty"`
+	Sanitize        map[string]Sanitizer              `json:"sanitize,omitempty"`
 }
 
 type RecordApiDescription struct {

@@ -1,0 +1,39 @@
+{
+  "invocations" : [
+    {
+      "url": "http://localhost:3333/v1/places:searchNearby",
+      "method": "POST",
+      "data": {
+        "includedTypes": ["restaurant"],
+        "maxResultCount": 20,
+        "locationRestriction": {
+          "circle": {
+            "center": {
+              "latitude": 39.45434,
+              "longitude": -0.33025},
+            "radius": 1500.0
+          }
+        }
+      },
+      "sanitize" : {
+        "displayName" : {
+          "method" : "randomize",
+          "combine" : 2,
+          "values" : [
+            ["John", "Jane", "Martin", "Patricia"],
+            ["Smith", "Doe", "Jones", "Brown"]
+          ]
+        },
+        "nationalPhoneNumber" : {
+
+        },
+        "internationalPhoneNumber" : {
+            "method" : "randomize",
+            "values": [["+34 961 00 00 01", "+34 961 00 00 02","+34 961 00 00 03"]]
+        }
+      }
+    }
+  ],
+  "credentials": {
+  }
+}

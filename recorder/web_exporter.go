@@ -10,6 +10,7 @@ import (
 	"fold/migrations"
 	"fold/util"
 	"io"
+	"math/rand"
 	"net/http"
 	"strings"
 )
@@ -58,6 +59,11 @@ func (rad RecordApiDescription) Process(importer migrations.Importer) error {
 			panic(err)
 		}
 		request.Header.Set("Content-Type", "application/json")
+		if invocation.Headers != nil {
+			for key, value := range invocation.Headers {
+				request.Header.Set(key, value)
+			}
+		}
 
 		for name, securityScheme := range invocation.SecuritySchemes {
 			securityHeaderName, securityHeaderValue := securityScheme.SecurityHeader(rad.Credentials[name])
@@ -82,6 +88,45 @@ func (rad RecordApiDescription) Process(importer migrations.Importer) error {
 
 		if err != nil {
 			panic(err)
+		}
+
+		if invocation.Sanitize != nil {
+			for k, sanitizer := range invocation.Sanitize {
+				if sanitizer.Method != Randomize && sanitizer.Method != "" {
+					panic("Unknown sanitize method: " + sanitizer.Method)
+				}
+				valueFunction := func(_ any) any {
+					return nil
+				}
+				switch sanitizer.Method {
+				case Randomize:
+					combine := sanitizer.Combine
+					if combine == 0 {
+						combine = 1
+					}
+					values := util.RestructureArrays(sanitizer.Values, combine)
+					if values != nil {
+						valueFunction = func(_ any) any {
+							res := ""
+							// Should add more aggregate functions here
+							for _, value := range values {
+								separator := " "
+								if res == "" {
+									separator = ""
+								}
+								res = fmt.Sprintf("%v%s%v", res, separator, value[rand.Intn(len(value))])
+							}
+							return res
+						}
+					}
+
+				}
+				noSql.Replace(k, valueFunction)
+			}
+			b, err = json.MarshalIndent(noSql.Val(), "", "  ")
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		if hasQuery {

@@ -200,9 +200,10 @@ func ConfigureRawFolder(dataPath, _filename string, mux *goji.Mux, api *openapi.
 	clean := path.CreateRootCleaner(fmt.Sprintf("%v/%v", dataPath, RawRoutesFolder))
 	_name := clean(_filename)
 	parts := strings.Split(_name, RawSeparator)
-	method := strings.ToUpper(parts[0])
+	pathParts := strings.Split(parts[0], "/")
+	method := strings.ToUpper(pathParts[len(pathParts)-1])
 	name := strings.Join(parts[1:], RawSeparator)
-	route := "/" + strings.TrimSuffix(name, filepath.Ext(name))
+	route := "/" + strings.Join(pathParts[:len(pathParts)-1], "/") + "/" + strings.TrimSuffix(name, filepath.Ext(name))
 	fmt.Println(_filename)
 	SetRawMethodHandlers(route, _filename, method, mux, api)
 }

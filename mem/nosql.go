@@ -365,3 +365,29 @@ func (n *NoSql) ToArray() *NoSql {
 		collection: []*NoSql{n},
 	}
 }
+
+func (n *NoSql) Replace(field string, f util.ValueTransformer) {
+	if n.is == Array {
+		for _, item := range n.collection {
+			item.Replace(field, f)
+		}
+		return
+	}
+	if n.is == Struct {
+		util.ReplaceValue(&n.document, field, f)
+		return
+	}
+	currentValue := n.Val()
+	value := f(currentValue)
+	switch child := value.(type) {
+	case string:
+		n.data = FromString(child)
+	case bool:
+		n.data = &Data{
+			b:  child,
+			is: Bool,
+		}
+	}
+	v := FromAnyValue(value)
+	n.data = &v
+}

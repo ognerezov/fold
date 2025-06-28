@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 	"maps"
 	"strconv"
 )
@@ -41,10 +42,69 @@ func MergeMaps(dest map[string]any, src map[string]any) {
 	maps.Copy(dest, src)
 }
 
+type ValueTransformer func(any) any
+
+func ReplaceValue(dest *map[string]any, key string, f ValueTransformer) {
+	for k, v := range *dest {
+		if k == key {
+			(*dest)[k] = f(v)
+			continue
+		}
+		switch child := v.(type) {
+		case map[string]any:
+			ReplaceValue(&child, key, f)
+		case []any:
+			for _, element := range child {
+				switch ch := element.(type) {
+				case map[string]any:
+					ReplaceValue(&ch, key, f)
+				}
+			}
+		default:
+			fmt.Println(k, child)
+		}
+	}
+}
+
 func Restructure[T any](data any, out *T) error {
 	h, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 	return json.Unmarshal(h, out)
+}
+
+func RestructureArrays(values [][]any, factor int) [][]any {
+	if values == nil || len(values) == 0 {
+		return nil
+	}
+
+	result := make([][]any, factor)
+
+	if factor >= len(values) {
+		j := 0
+		for i := 0; i < factor; i++ {
+			result[i] = values[j]
+			j++
+			if j == len(values) {
+				j = 0
+			}
+		}
+		return result
+	}
+	i := 0
+	for _, v := range values {
+
+		if result[i] == nil {
+			result[i] = v
+			continue
+		}
+		result[i] = append(result[i], v...)
+		i++
+		if i == factor {
+			i = 0
+		}
+	}
+	return result
+
 }
