@@ -12,6 +12,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"slices"
 	"strings"
 )
 
@@ -95,7 +96,7 @@ func (rad RecordApiDescription) Process(importer migrations.Importer) error {
 				if sanitizer.Method != Randomize && sanitizer.Method != "" {
 					panic("Unknown sanitize method: " + sanitizer.Method)
 				}
-				valueFunction := func(_ any) any {
+				valueFunction := func(_ any, _ *[]string) any {
 					return nil
 				}
 				switch sanitizer.Method {
@@ -106,7 +107,8 @@ func (rad RecordApiDescription) Process(importer migrations.Importer) error {
 					}
 					values := util.RestructureArrays(sanitizer.Values, combine)
 					if values != nil {
-						valueFunction = func(_ any) any {
+						valueFunction = func(v any, path *[]string) any {
+
 							res := ""
 							// Should add more aggregate functions here
 							for _, value := range values {
@@ -115,6 +117,14 @@ func (rad RecordApiDescription) Process(importer migrations.Importer) error {
 									separator = ""
 								}
 								res = fmt.Sprintf("%v%s%v", res, separator, value[rand.Intn(len(value))])
+							}
+							if sanitizer.Parents != nil {
+								for _, parent := range sanitizer.Parents {
+									// Not modifying value if a path doesn't match
+									if !slices.Contains(*path, parent) {
+										return v
+									}
+								}
 							}
 							return res
 						}

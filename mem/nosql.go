@@ -373,12 +373,13 @@ func (n *NoSql) Replace(field string, f util.ValueTransformer) {
 		}
 		return
 	}
+	path := make([]string, 0)
 	if n.is == Struct {
-		util.ReplaceValue(&n.document, field, f)
+		util.ReplaceValue(&n.document, field, f, &path)
 		return
 	}
 	currentValue := n.Val()
-	value := f(currentValue)
+	value := f(currentValue, &path)
 	switch child := value.(type) {
 	case string:
 		n.data = FromString(child)

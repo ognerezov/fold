@@ -22,6 +22,9 @@
           "values" : [
             ["John", "Jane", "Martin", "Patricia"],
             ["Smith", "Doe", "Jones", "Brown"]
+          ],
+          "parents" : [
+            "authorAttributions"
           ]
         },
         "nationalPhoneNumber" : {

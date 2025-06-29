@@ -2,7 +2,6 @@ package util
 
 import (
 	"encoding/json"
-	"fmt"
 	"maps"
 	"strconv"
 )
@@ -42,26 +41,29 @@ func MergeMaps(dest map[string]any, src map[string]any) {
 	maps.Copy(dest, src)
 }
 
-type ValueTransformer func(any) any
+type ValueTransformer func(val any, path *[]string) any
 
-func ReplaceValue(dest *map[string]any, key string, f ValueTransformer) {
+func ReplaceValue(dest *map[string]any, key string, f ValueTransformer, path *[]string) {
 	for k, v := range *dest {
 		if k == key {
-			(*dest)[k] = f(v)
+			(*dest)[k] = f(v, path)
 			continue
 		}
+
 		switch child := v.(type) {
 		case map[string]any:
-			ReplaceValue(&child, key, f)
+			updatedPath := append(*path, k)
+			ReplaceValue(&child, key, f, &updatedPath)
 		case []any:
+			updatedPath := append(*path, k)
 			for _, element := range child {
 				switch ch := element.(type) {
 				case map[string]any:
-					ReplaceValue(&ch, key, f)
+					ReplaceValue(&ch, key, f, &updatedPath)
 				}
 			}
 		default:
-			fmt.Println(k, child)
+			//fmt.Println(k, child)
 		}
 	}
 }
