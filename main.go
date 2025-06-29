@@ -86,29 +86,12 @@ func main() {
 		panic("Both directory and single data file paths specified. Only one of them allowed.")
 	}
 
-	if init && (migrate || recordFile != "") {
+	if init && migrate || (migrate && recordFile != "") {
 		panic("Only one step at a time. Init or migrate. Not both at the same time.")
 	}
 
 	if dataPath == "" {
 		dataPath = "./"
-	}
-
-	if recordFile != "" {
-		var recordApiDescription recorder.RecordApiDescription
-		err := util.AnyFromJson(recordFile, &recordApiDescription)
-		if err != nil {
-			panic(err)
-		}
-		if recordApiDescription.Port == 0 {
-			recordApiDescription.Port = arguments.AppArguments.Port
-		}
-
-		err = recorder.Record(dataPath, &recordApiDescription)
-		if err != nil {
-			panic(err)
-		}
-		return
 	}
 
 	arguments.InitArgs.Output = dataPath
@@ -138,6 +121,25 @@ func main() {
 		}
 
 		initiator.Init(arguments.InitArgs.Template, dataPath, arguments.InitArgs.Port, appConfig)
+		if recordFile == "" {
+			return
+		}
+	}
+
+	if recordFile != "" {
+		var recordApiDescription recorder.RecordApiDescription
+		err := util.AnyFromJson(recordFile, &recordApiDescription)
+		if err != nil {
+			panic(err)
+		}
+		if recordApiDescription.Port == 0 {
+			recordApiDescription.Port = arguments.AppArguments.Port
+		}
+
+		err = recorder.Record(dataPath, &recordApiDescription)
+		if err != nil {
+			panic(err)
+		}
 		return
 	}
 

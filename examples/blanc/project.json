@@ -1,0 +1,9 @@
+{
+    "name": "project name",
+    "description": "",
+    "version": "1.0.0",
+    "allow_origin": "http://localhost:3333",
+    "auth_providers": null,
+    "jwt_secret": "auto generated secret",
+    "guest_password": "auto generated password"
+}

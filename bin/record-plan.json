@@ -1,7 +1,7 @@
 {
   "invocations" : [
     {
-      "url": "http://localhost:3333/v1/places:searchNearby",
+      "url": "https://places.googleapis.com/v1/places:searchNearby",
       "method": "POST",
       "data": {
         "includedTypes": ["restaurant"],
@@ -13,6 +13,16 @@
               "longitude": -0.33025},
             "radius": 1500.0
           }
+        }
+      },
+      "headers": {
+        "X-Goog-FieldMask" : "*"
+      },
+      "securitySchemes": {
+        "apiKey" : {
+          "type" : "ApiKey",
+          "in": "headers",
+          "name": "X-Goog-Api-Key"
         }
       },
       "sanitize" : {

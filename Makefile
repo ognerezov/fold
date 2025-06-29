@@ -20,6 +20,12 @@ list-platforms:
 init-public:
 	bin/fold --init --template public --dir examples/new
 
+init-blanc:
+	bin/fold --init --template blanc --dir examples/blanc
+
+init-default:
+	bin/fold --init --dir examples/example1
+
 #Serve
 
 run-new-example:
@@ -29,3 +35,9 @@ run-new-example:
 
 record-localhost:
 	bin/fold --record bin/record-plan.json --dir examples/records/new
+
+record-init:
+	bin/fold --init --template blanc --record bin/record-plan.json --dir examples/records/new
+
+test-record-run:
+	bin/fold --dir examples/records/new

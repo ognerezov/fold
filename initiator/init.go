@@ -15,6 +15,7 @@ import (
 const (
 	DefaultTemplate = "default"
 	PublicTemplate  = "public"
+	BlancTemplate   = "blanc"
 	embeddedRoot    = "data"
 	Index           = "index"
 )
@@ -23,10 +24,12 @@ var (
 	Initiators = map[string]Initiator{
 		DefaultTemplate: CreateDefaultInitiator(DefaultTemplate),
 		PublicTemplate:  CreateDefaultInitiator(PublicTemplate),
+		BlancTemplate:   CreateDefaultInitiator(BlancTemplate),
 	}
 	FoldersToCopy = map[string][]string{
 		DefaultTemplate: {Index, "user", "security", "pub", "src"},
 		PublicTemplate:  {"pub"},
+		BlancTemplate:   {},
 	}
 	//go:embed data/*
 	dataOs embed.FS
