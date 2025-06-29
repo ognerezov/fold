@@ -2,6 +2,7 @@ package recorder
 
 const (
 	Randomize = "randomize"
+	Erase     = "erase"
 )
 
 type Sanitizer struct {

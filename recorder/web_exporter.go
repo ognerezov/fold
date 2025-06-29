@@ -93,7 +93,7 @@ func (rad RecordApiDescription) Process(importer migrations.Importer) error {
 
 		if invocation.Sanitize != nil {
 			for k, sanitizer := range invocation.Sanitize {
-				if sanitizer.Method != Randomize && sanitizer.Method != "" {
+				if sanitizer.Method != Randomize && sanitizer.Method != "" && sanitizer.Method != Erase {
 					panic("Unknown sanitize method: " + sanitizer.Method)
 				}
 				valueFunction := func(_ any, _ *[]string) any {
