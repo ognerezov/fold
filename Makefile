@@ -1,19 +1,19 @@
 #Build
 
-build-mac-apple:
+build-mac:
 	GOOS=darwin GOARCH=arm64 go build -o bin/fold # For local use
 
-build-mac-apple:
+build-mac-apple-silicon:
 	GOOS=darwin GOARCH=arm64 go build -o bin/fold-darwin-arm64 # Apple Silicon
 
-build-mac-apple-intel:
+build-mac-intel:
 	GOOS=darwin GOARCH=amd64 go build -o bin/fold-amd64-darwin # Apple amd64
 
 build-windows:
 	GOOS=windows GOARCH=amd64 go build -o bin/fold-amd64.exe
 
 build-linux:
-	GOOS=linux GOARCH=amd64 go build -o bin/fold-amd64-linux app.go # 64-bit
+	GOOS=linux GOARCH=amd64 go build -o bin/fold-amd64-linux # 64-bit
 
 list-platforms:
 	go tool dist list

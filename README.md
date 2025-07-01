@@ -12,11 +12,11 @@ Fold Server is a zero-dependency single-binary application. No runtime or packag
 
 Visit the [Releases page](https://github.com/ognerezov/fold/releases) and download the latest binary for your platform:
 
-| OS       | File Name Example        |
-|----------|--------------------------|
-| macOS    | `fold-darwin-amd64` or `fold-darwin-arm64` |
-| Linux    | `fold-linux-amd64`       |
-| Windows  | `fold-windows-amd64.exe` |
+| OS      | File Name Example        |
+|---------|--------------------------|
+| macOS   | `fold-darwin-amd64` or `fold-darwin-arm64` |
+| Linux   | `fold-linux-amd64`       |
+| Windows⏳  | `fold-windows-amd64.exe` |
 
 ---
 
@@ -325,6 +325,72 @@ Server restart required to load project.json changes.
 ## File structure examples
 
 use `fold --init` or `fold --init --template public` commands to create basic file structures
+
+---
+
+## 🐳 Running with Docker
+
+You can run Fold Server using the official Docker image:
+
+```yaml
+services:
+  fold:
+    image: ognerezov/fold:latest
+    environment:
+      - INPUT_DIR=/service/dataPath
+    ports:
+      - '3333:3333'
+    volumes:
+      - /local-folder:/service:rw
+```
+
+- Pass arguments via environmental variables `INPUT_<V>` maps to `--<v>`. For example: `INPUT_DIR` maps to `--dir` flag and should point to data folder inside the container.
+- Mount local data and use `/<mounted>/<dataPath>` as internal project directory.
+- Export ports your service uses.
+
+Run directly:
+
+```bash
+docker run -it --rm \
+  -e INPUT_DIR=/service/data \
+  -v $(pwd)/mocks:/service \
+  -p 3333:3333 \
+  ognerezov/fold:latest
+```
+
+---
+
+## 🧪 GitHub Actions Integration
+
+Use Fold Server in your CI pipeline with the [ognerezov/fold-test-node](https://github.com/ognerezov/fold-test-node) GitHub Action:
+
+```yaml
+jobs:
+  integration_tests:
+    runs-on: ubuntu-latest
+    name: A job to test with mock server
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Test
+        id: fold
+        uses: ognerezov/fold-test-node@0.3
+        with:
+          dir: '/github/workspace/mock'
+          work_dir: '/github/workspace'
+          test: 'npm run test'
+          run: 'npm run dev'  # Optional: run your frontend app if needed
+```
+
+### 🔧 Action Parameters
+
+| Key       | Description                                  |
+|-----------|----------------------------------------------|
+| `dir`     | Path to folder with mock data                |
+| `work_dir`| Directory where test command will execute    |
+| `test`    | Command to run tests                         |
+| `run`     | (Optional) Command to run frontend app       |
 
 # License
 
