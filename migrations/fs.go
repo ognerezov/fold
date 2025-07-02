@@ -8,7 +8,7 @@ import (
 	"fold/path"
 	"fold/util"
 	"io/fs"
-	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -17,8 +17,8 @@ type DataPath string
 func (d DataPath) Process(importer Importer) error {
 	dataPath := string(d)
 	clean := path.CreateRootCleaner(dataPath)
-	return path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
-		fmt.Println(p)
+	return path.ProcessPath(dataPath, func(_p string, info fs.FileInfo, err error) error {
+		p := filepath.ToSlash(_p)
 		if p == dataPath {
 			return nil
 		}
@@ -85,7 +85,7 @@ func FsImporter(dataPath string) (Importer, error) {
 
 func (d DataPath) CreateFolder(name string) error {
 	p := fmt.Sprintf("%s/%s", string(d), name)
-	err := os.MkdirAll(p, os.ModePerm)
+	err := util.MkDir(filepath.FromSlash(p))
 	if err != nil {
 		return err
 	}

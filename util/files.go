@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
 )
 
 var (
@@ -22,7 +23,7 @@ func CloseFile(f *os.File) {
 }
 
 func ReadFile(filePath string) ([]byte, error) {
-	f, err := os.OpenFile(filePath, os.O_RDONLY, 0)
+	f, err := os.OpenFile(filepath.FromSlash(filePath), os.O_RDONLY, 0)
 	if err != nil {
 		console.RedPrintln(err.Error())
 		return nil, err
@@ -37,7 +38,7 @@ func ReadFile(filePath string) ([]byte, error) {
 }
 
 func DoesFileExist(filePath string) bool {
-	f, err := os.OpenFile(filePath, os.O_RDONLY, 0)
+	f, err := os.OpenFile(filepath.FromSlash(filePath), os.O_RDONLY, 0)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return false
@@ -48,7 +49,7 @@ func DoesFileExist(filePath string) bool {
 }
 
 func AnyFromJson[T any](filename string, out *T) error {
-	f, err := os.OpenFile(filename, os.O_RDONLY, 0)
+	f, err := os.OpenFile(filepath.FromSlash(filename), os.O_RDONLY, 0)
 	if err != nil {
 		return err
 	}
@@ -64,7 +65,7 @@ func AnyFromJson[T any](filename string, out *T) error {
 }
 
 func Save(file string, bytes []byte) error {
-	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	f, err := os.OpenFile(filepath.FromSlash(file), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
 	}
@@ -87,7 +88,7 @@ func SaveJavascript(path string, data any) error {
 }
 
 func IsEmptyDir(name string) error {
-	f, err := os.Open(name)
+	f, err := os.Open(filepath.FromSlash(name))
 	if err != nil {
 		return err
 	}
@@ -106,7 +107,7 @@ func IsEmptyDir(name string) error {
 }
 
 func Exists(path string) (bool, error) {
-	_, err := os.Stat(path)
+	_, err := os.Stat(filepath.FromSlash(path))
 	if err == nil {
 		return true, nil
 	}
@@ -114,4 +115,8 @@ func Exists(path string) (bool, error) {
 		return false, nil
 	}
 	return false, err
+}
+
+func MkDir(path string) error {
+	return os.MkdirAll(filepath.FromSlash(path), os.ModePerm)
 }

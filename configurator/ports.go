@@ -8,6 +8,7 @@ import (
 	"google.golang.org/api/drive/v3"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 )
 
@@ -30,7 +31,7 @@ func SingleServer(dataPath string, configure ServerConfigurator) PortsConfig {
 }
 
 func ReadDir(dataPath string) ([]os.DirEntry, error) {
-	f, err := os.OpenFile(dataPath, os.O_RDONLY, 0)
+	f, err := os.OpenFile(filepath.FromSlash(dataPath), os.O_RDONLY, 0)
 	if err != nil {
 		console.RedPrintln(err.Error())
 		return nil, err

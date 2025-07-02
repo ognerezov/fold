@@ -38,7 +38,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	clean := path.CreateRootCleaner(dataPath)
 	openapiRoute := openapi.Filename
 	openapiFileName := dataPath + openapiRoute
-	_ = os.Remove(openapiFileName)
+	_ = os.Remove(filepath.FromSlash(openapiFileName))
 	err := AppProviders.Export(dataPath)
 	if err != nil {
 		console.RedPrintln("export error: " + err.Error())
@@ -152,8 +152,8 @@ func initialize(dataPath string, port int) (*goji.Mux, *mem.Store, *openapi.ApiD
 	return mux, store, apiDescription
 }
 
-func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMapper, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
-
+func ConfigureFile(_p string, info fs.FileInfo, dataPath string, clean path.DirMapper, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
+	p := filepath.ToSlash(_p)
 	if strings.Contains(p, RawRoutesFolder) {
 		ConfigureRawFolder(dataPath, p, mux, apiDescription)
 		return

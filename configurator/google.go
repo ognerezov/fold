@@ -6,6 +6,7 @@ import (
 	"fold/oauth"
 	"fold/path"
 	"io/fs"
+	"path/filepath"
 )
 
 func InitGoogleProvider(dataPath string) (*oauth.GoogleJson, error) {
@@ -13,7 +14,8 @@ func InitGoogleProvider(dataPath string) (*oauth.GoogleJson, error) {
 	googleJson := &oauth.GoogleJson{}
 	googleJson.Iss = config.Name
 	gotAny := false
-	err := path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
+	err := path.ProcessPath(dataPath, func(_p string, info fs.FileInfo, err error) error {
+		p := filepath.ToSlash(_p)
 		if info.IsDir() {
 			return nil
 		}
