@@ -10,7 +10,7 @@ import (
 )
 
 func Structure(rootDataDir string, fileName string, info fs.FileInfo, clean DirMapper) (string, string, string) {
-	var route = "/" + clean(filepath.Dir(fileName))
+	var route = filepath.ToSlash("/" + clean(filepath.Dir(fileName)))
 	var name = strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
 
 	if name != "index" {
@@ -27,7 +27,7 @@ func Structure(rootDataDir string, fileName string, info fs.FileInfo, clean DirM
 
 func SubStructure(path string, info fs.FileInfo, clean DirMapper) (string, string) {
 	var name = strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
-	var route = "/" + clean(filepath.Dir(path))
+	var route = filepath.ToSlash("/" + clean(filepath.Dir(path)))
 
 	return route, name
 }

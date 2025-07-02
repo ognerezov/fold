@@ -152,8 +152,7 @@ func initialize(dataPath string, port int) (*goji.Mux, *mem.Store, *openapi.ApiD
 	return mux, store, apiDescription
 }
 
-func ConfigureFile(_p string, info fs.FileInfo, dataPath string, clean path.DirMapper, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
-	p := filepath.ToSlash(_p)
+func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMapper, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
 	if strings.Contains(p, RawRoutesFolder) {
 		ConfigureRawFolder(dataPath, p, mux, apiDescription)
 		return
@@ -203,7 +202,7 @@ func ConfigureRawFolder(dataPath, _filename string, mux *goji.Mux, api *openapi.
 	pathParts := strings.Split(parts[0], "/")
 	method := strings.ToUpper(pathParts[len(pathParts)-1])
 	name := strings.Join(parts[1:], RawSeparator)
-	route := "/" + strings.Join(pathParts[:len(pathParts)-1], "/") + "/" + strings.TrimSuffix(name, filepath.Ext(name))
+	route := filepath.ToSlash("/" + strings.Join(pathParts[:len(pathParts)-1], "/") + "/" + strings.TrimSuffix(name, filepath.Ext(name)))
 	fmt.Println(_filename)
 	SetRawMethodHandlers(route, _filename, method, mux, api)
 }
