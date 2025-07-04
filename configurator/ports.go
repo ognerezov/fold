@@ -64,7 +64,7 @@ func ConfigurePorts(dataPath string, configure ServerConfigurator) PortsConfig {
 		console.YellowPrintln("Checking root path " + file.Name())
 		res = append(res, PortConfig{
 			port:      port,
-			path:      util.JoinedPath(dataPath, file),
+			path:      filepath.FromSlash(util.JoinedPath(dataPath, file)),
 			configure: configure,
 		})
 	}
