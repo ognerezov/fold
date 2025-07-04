@@ -152,7 +152,7 @@ func initialize(dataPath string, port int) (*goji.Mux, *mem.Store, *openapi.ApiD
 	return mux, store, apiDescription
 }
 
-func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMapper, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
+func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.RootCleaner, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
 	if strings.Contains(p, RawRoutesFolder) {
 		ConfigureRawFolder(dataPath, p, mux, apiDescription)
 		return

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Structure(fileName string, info fs.FileInfo, clean DirMapper) (string, string, string) {
+func Structure(fileName string, info fs.FileInfo, clean RootCleaner) (string, string, string) {
 	var route = filepath.ToSlash("/" + clean(filepath.Dir(fileName)))
 	var name = strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
 
@@ -24,14 +24,14 @@ func Structure(fileName string, info fs.FileInfo, clean DirMapper) (string, stri
 	return route, fileName, filepath.Ext(fileName)
 }
 
-func SubStructure(path string, info fs.FileInfo, clean DirMapper) (string, string) {
+func SubStructure(path string, info fs.FileInfo, clean RootCleaner) (string, string) {
 	var name = strings.TrimSuffix(info.Name(), filepath.Ext(info.Name()))
 	var route = filepath.ToSlash("/" + clean(filepath.Dir(path)))
 
 	return route, name
 }
 
-func PrepareFileName(rootDataDir string, fileName string, clean DirMapper) (string, string, string, string, string) {
+func PrepareFileName(rootDataDir string, fileName string, clean RootCleaner) (string, string, string, string, string) {
 	route := clean(filepath.Dir(fileName))
 	filename := fmt.Sprintf("%s/%s", rootDataDir, clean(fileName))
 	ext := filepath.Ext(fileName)
@@ -40,4 +40,8 @@ func PrepareFileName(rootDataDir string, fileName string, clean DirMapper) (stri
 		m = mime.TypeByExtension(ext)
 	}
 	return route, filename, filepath.Base(fileName), ext, m
+}
+
+func PrepareForRegex(str string) string {
+	return strings.Replace(str, "\\", "\\\\", -1)
 }
