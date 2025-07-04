@@ -4,7 +4,6 @@ import (
 	"fold/console"
 	"fold/oauth"
 	"fold/util"
-	"os"
 )
 
 const (
@@ -16,7 +15,7 @@ type Providers struct {
 }
 
 func (p *Providers) Export(path string) error {
-	err := os.MkdirAll(path+ProvidersOutputPath, os.ModePerm)
+	err := util.MkDir(path + ProvidersOutputPath)
 	if p.Google != nil {
 		err = p.Google.Export(path + ProvidersOutputPath + "google")
 		if err != nil {
