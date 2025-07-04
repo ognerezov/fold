@@ -1,10 +1,10 @@
 package path
 
 import (
+	"fmt"
 	"fold/console"
 	"path/filepath"
 	"regexp"
-	"strings"
 )
 
 var (
@@ -15,13 +15,13 @@ var (
 type DirMapper func(path string) string
 
 func CreateRootCleaner(root string) DirMapper {
-	var rootPrefix = pathLeadingSymbols.ReplaceAllString(root, "")
-
+	rootPrefix := pathLeadingSymbols.ReplaceAllString(root, "")
+	rootRegex := regexp.MustCompile(fmt.Sprintf(`^%s%s`, rootPrefix, filepath.FromSlash("/")))
 	return func(path string) string {
 		if path == rootPrefix {
 			return ""
 		}
-		return strings.Replace(path, rootPrefix+"/", "", -1)
+		return rootRegex.ReplaceAllString(path, "")
 	}
 }
 

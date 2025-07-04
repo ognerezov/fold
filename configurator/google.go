@@ -20,7 +20,7 @@ func InitGoogleProvider(dataPath string) (*oauth.GoogleJson, error) {
 			return nil
 		}
 
-		_, filename, extension := path.Structure(dataPath, p, info, clean)
+		_, filename, extension := path.Structure(p, info, clean)
 		switch extension {
 		case ".json":
 			err = googleJson.AttachFile(filename)

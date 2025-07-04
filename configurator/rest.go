@@ -104,7 +104,7 @@ func BuildConfig(dataPath string, host string) *RestConfig {
 		if info.IsDir() {
 			return nil
 		}
-		_, filename, extension := path.Structure(dataPath, p, info, clean)
+		_, filename, extension := path.Structure(p, info, clean)
 		if extension != ".json" || filename == rootIndex {
 			return nil
 		}

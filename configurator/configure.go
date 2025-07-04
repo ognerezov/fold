@@ -159,7 +159,7 @@ func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMa
 	}
 
 	store := mem.TheStore
-	route, filename, extension := path.Structure(dataPath, p, info, clean)
+	route, filename, extension := path.Structure(p, info, clean)
 	route = arguments.AppArguments.ApiPath + route
 	fileHandler := mem.FilePath(filename)
 	switch extension {
