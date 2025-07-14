@@ -357,7 +357,6 @@ docker run -it --rm \
   -p 3333:3333 \
   ognerezov/fold:latest
 ```
-
 ---
 
 ## 🧪 GitHub Actions Integration
