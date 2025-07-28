@@ -6,6 +6,7 @@ import (
 	"fold/util"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 func ReadCsvFile(filePath string) ([][]string, error) {
@@ -25,7 +26,7 @@ func ReadCsvFile(filePath string) ([][]string, error) {
 }
 
 func WriteCsvFile(filePath string, records [][]string) error {
-	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	f, err := os.OpenFile(filepath.FromSlash(filePath), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		log.Fatal("Unable to read output file "+filePath, err)
 	}

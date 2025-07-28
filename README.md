@@ -16,7 +16,7 @@ Visit the [Releases page](https://github.com/ognerezov/fold/releases) and downlo
 |---------|--------------------------|
 | macOS   | `fold-darwin-amd64` or `fold-darwin-arm64` |
 | Linux   | `fold-linux-amd64`       |
-| Windows⏳  | `fold-windows-amd64.exe` |
+| Windows  | `fold-windows-amd64.exe` |
 
 ---
 

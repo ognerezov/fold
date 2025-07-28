@@ -13,6 +13,7 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -98,11 +99,12 @@ func BuildConfig(dataPath string, host string) *RestConfig {
 		})
 	}
 	clean := path.CreateRootCleaner(dataPath)
-	err = path.ProcessPath(dataPath, func(p string, info fs.FileInfo, err error) error {
+	err = path.ProcessPath(dataPath, func(_p string, info fs.FileInfo, err error) error {
+		p := filepath.ToSlash(_p)
 		if info.IsDir() {
 			return nil
 		}
-		_, filename, extension := path.Structure(dataPath, p, info, clean)
+		_, filename, extension := path.Structure(p, info, clean)
 		if extension != ".json" || filename == rootIndex {
 			return nil
 		}
@@ -168,7 +170,7 @@ func (r *RestResourceConfig) SaveJson() error {
 	defer util.HideBody(resp.Body)
 
 	filePath := r.Filename()
-	out, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	out, err := os.OpenFile(filepath.FromSlash(filePath), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
 	}

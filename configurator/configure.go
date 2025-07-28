@@ -38,7 +38,7 @@ func ConfigureServer(dataPath string, port int) (*goji.Mux, error) {
 	clean := path.CreateRootCleaner(dataPath)
 	openapiRoute := openapi.Filename
 	openapiFileName := dataPath + openapiRoute
-	_ = os.Remove(openapiFileName)
+	_ = os.Remove(filepath.FromSlash(openapiFileName))
 	err := AppProviders.Export(dataPath)
 	if err != nil {
 		console.RedPrintln("export error: " + err.Error())
@@ -152,15 +152,14 @@ func initialize(dataPath string, port int) (*goji.Mux, *mem.Store, *openapi.ApiD
 	return mux, store, apiDescription
 }
 
-func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.DirMapper, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
-
+func ConfigureFile(p string, info fs.FileInfo, dataPath string, clean path.RootCleaner, next *interfaces.Phase, mux *goji.Mux, apiDescription *openapi.ApiDescription, controlEndpoints Endpoints) {
 	if strings.Contains(p, RawRoutesFolder) {
 		ConfigureRawFolder(dataPath, p, mux, apiDescription)
 		return
 	}
 
 	store := mem.TheStore
-	route, filename, extension := path.Structure(dataPath, p, info, clean)
+	route, filename, extension := path.Structure(p, info, clean)
 	route = arguments.AppArguments.ApiPath + route
 	fileHandler := mem.FilePath(filename)
 	switch extension {
@@ -203,7 +202,7 @@ func ConfigureRawFolder(dataPath, _filename string, mux *goji.Mux, api *openapi.
 	pathParts := strings.Split(parts[0], "/")
 	method := strings.ToUpper(pathParts[len(pathParts)-1])
 	name := strings.Join(parts[1:], RawSeparator)
-	route := "/" + strings.Join(pathParts[:len(pathParts)-1], "/") + "/" + strings.TrimSuffix(name, filepath.Ext(name))
+	route := filepath.ToSlash("/" + strings.Join(pathParts[:len(pathParts)-1], "/") + "/" + strings.TrimSuffix(name, filepath.Ext(name)))
 	fmt.Println(_filename)
 	SetRawMethodHandlers(route, _filename, method, mux, api)
 }

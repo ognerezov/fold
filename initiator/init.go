@@ -51,9 +51,9 @@ func Init(template string, path string, port int, config configurator.AppConfig)
 	if err != nil {
 		panic(err)
 	}
-	err = os.MkdirAll(prodPath, os.ModePerm)
-	err = os.MkdirAll(fmt.Sprintf("%s/%s", prodPath, "www"), os.ModePerm)
-	err = os.MkdirAll(fmt.Sprintf("%s/%s", prodPath, "providers"), os.ModePerm)
+	err = util.MkDir(prodPath)
+	err = util.MkDir(fmt.Sprintf("%s/%s", prodPath, "www"))
+	err = util.MkDir(fmt.Sprintf("%s/%s", prodPath, "providers"))
 	if err != nil {
 		panic(err)
 	}
@@ -105,7 +105,7 @@ func exportFolder(path string, folder string) error {
 		return err
 	}
 	if !isIndex {
-		err = os.MkdirAll(fmt.Sprintf("%s/%s", path, strings.TrimPrefix(folder, embeddedRoot)), os.ModePerm)
+		err = util.MkDir(fmt.Sprintf("%s/%s", path, strings.TrimPrefix(folder, embeddedRoot)))
 		if err != nil {
 			return err
 		}
@@ -113,7 +113,7 @@ func exportFolder(path string, folder string) error {
 	for _, file := range files {
 		inputFileName, outputFile := structureFileName(folder, file)
 		if file.IsDir() {
-			err = os.MkdirAll(fmt.Sprintf("%s/%s", path, outputFile), os.ModePerm)
+			err = util.MkDir(fmt.Sprintf("%s/%s", path, outputFile))
 			if err != nil {
 				return err
 			}
