@@ -30,7 +30,6 @@ init-default:
 	bin/fold --init --dir examples/example1
 
 #Serve
-
 run-new-example:
 	bin/fold --dir examples/new
 
